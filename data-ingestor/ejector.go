@@ -32,3 +32,29 @@ func FetchSessions(dbClient *mongo.Client, ctx context.Context, meetingKey int) 
 	}
 	return sessions, nil
 }
+
+func FetchDrivers(dbClient *mongo.Client, ctx context.Context, sessionKey int) ([]model.Driver, error) {
+	cursor, err := dbClient.Database("f1").Collection("drivers").Find(ctx, bson.D{{"sessionkey", sessionKey}})
+	if err != nil {
+		return nil, err
+	}
+	var drivers []model.Driver
+	err = cursor.All(ctx, &drivers)
+	if err != nil {
+		return nil, err
+	}
+	return drivers, nil
+}
+
+func FetchPositions(dbClient *mongo.Client, ctx context.Context, sessionKey int) ([]model.Position, error) {
+	cursor, err := dbClient.Database("f1").Collection("positions").Find(ctx, bson.D{{"sessionkey", sessionKey}})
+	if err != nil {
+		return nil, err
+	}
+	var positions []model.Position
+	err = cursor.All(ctx, &positions)
+	if err != nil {
+		return nil, err
+	}
+	return positions, nil
+}

@@ -4,8 +4,6 @@ import (
 	"F1Telemetry-new-server/data-ingestor"
 	"F1Telemetry-new-server/data-ingestor/collections"
 	"context"
-	"encoding/json"
-	"fmt"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"time"
@@ -109,18 +107,49 @@ func saveSessions(sessions []collections.Sessions) error {
 	_, err = dbClient.Database("f1").Collection("sessions").InsertMany(ctx, sessionsInterface)
 	return err
 }
+
+func savePositions(positions []collections.Position) error {
+	if err != nil {
+		return err
+	}
+	var positionsInterface []interface{}
+	for _, position := range positions {
+		positionsInterface = append(positionsInterface, position)
+	}
+	_, err = dbClient.Database("f1").Collection("positions").InsertMany(ctx, positionsInterface)
+	if err != nil {
+		return err
+	}
+	return err
+}
+
+func saveDrivers(drivers []collections.Driver) error {
+	var driversInterface []interface{}
+	for _, driver := range drivers {
+		driversInterface = append(driversInterface, driver)
+	}
+	if len(driversInterface) > 0 {
+		_, err = dbClient.Database("f1").Collection("drivers").InsertMany(ctx, driversInterface)
+		if err != nil {
+			return err
+		}
+		return err
+	}
+	return nil
+}
+
 func createIndex() error {
 	if err != nil {
 		return err
 	}
-	_, err = dbClient.Database("f1").Collection("sessions").Indexes().CreateOne(ctx, mongo.IndexModel{
-		Keys: bson.D{{"SessionKey", 1}},
+	var _, err = dbClient.Database("f1").Collection("drivers").Indexes().CreateOne(ctx, mongo.IndexModel{
+		Keys: bson.D{{"sessionkey", 1}},
 	})
 	if err != nil {
 		return err
 	}
-	_, err = dbClient.Database("f1").Collection("meetings").Indexes().CreateOne(ctx, mongo.IndexModel{
-		Keys: bson.D{{"MeetingKey", 1}},
+	_, err = dbClient.Database("f1").Collection("positions").Indexes().CreateOne(ctx, mongo.IndexModel{
+		Keys: bson.D{{"sessionkey", 1}},
 	})
 	return nil
 }
@@ -172,7 +201,23 @@ func FetchMeetings() ([]collections.Meeting, error) {
 	return meetings, nil
 }
 
-func main() {
+func FetchSessions(meetingKey int) ([]collections.Sessions, error) {
+	if err != nil {
+		return nil, err
+	}
+	cursor, err := dbClient.Database("f1").Collection("sessions").Find(ctx, bson.D{{"meetingkey", meetingKey}})
+	if err != nil {
+		return nil, err
+	}
+	var sessions []collections.Sessions
+	err = cursor.All(ctx, &sessions)
+	if err != nil {
+		return nil, err
+	}
+	return sessions, nil
+}
+
+/*func main() {
 	/*err = saveMeetings()
 	if err != nil {
 		panic(err)
@@ -180,18 +225,39 @@ func main() {
 	err = createIndex()
 	if err != nil {
 		panic(err)
-	}*/
+	}
 	meetings, err := FetchMeetings()
 	if err != nil {
 		panic(err)
 	}
-	jsonStr, err := json.Marshal(meetings)
+	for _, meeting := range meetings {
+		sessions, err := FetchSessions(meeting.MeetingKey)
+		if err != nil {
+			panic(err)
+		}
+		for _, session := range sessions {
+			drivers, err := data_ingestor.IngestDrivers(session.SessionKey)
+			if err != nil {
+				panic(err)
+			}
+			err = saveDrivers(drivers)
+			if err != nil {
+				panic(err)
+			}
+			positions, err := data_ingestor.IngestPositions(session.SessionKey)
+			if err != nil {
+				panic(err)
+			}
+			err = savePositions(positions)
+			time.Sleep(2 * time.Second)
+		}
+	}
+	err = createIndex()
 	if err != nil {
 		panic(err)
 	}
-	fmt.Println(string(jsonStr))
 }
-
+*/
 /*func IngestSession(year int, meetingKey string, sessionKey string) error {
 	if err != nil {
 		return err

@@ -5,8 +5,11 @@
 type Query {
   meetings: [Meeting]!
   sessions(meeting_keys: [Int]!): [Session]!
-  drivers(session_key: String!, driver_number: Int): [Driver]!
-  positions(session_key: String!): [Position]!
+  drivers(session_key: Int!): [Driver]!
+  positions(session_key: Int!): [Position]!
+  raceControls(session_key: String!): [RaceControl]!
+  carData(session_key: String!, driver_number: Int!): [CarData]!
+  laps(session_key: String!, driver_number: Int): [Lap]!
 }
 
 type Session {
@@ -62,4 +65,49 @@ type Position {
   driver_number: Int!
   date:          String!
   position: Int!
+}
+
+type RaceControl {
+  session_key: Int!
+  meeting_key: Int!
+  date: String!
+  category: String
+  flag: String
+  lap_number: Int
+  message: String
+  driver_number: Int
+  scope: String
+  sector: Int
+}
+
+type CarData {
+  brake: Int!
+  date: String!
+  driver_number: Int!
+  drs: Int!
+  meeting_key: Int!
+  n_gear: Int!
+  rpm: Int!
+  session_key: Int!
+  speed: Int!
+  throttle: Int!
+}
+
+type Lap {
+  meeting_key: Int!
+  session_key: Int!
+  driver_number: Int!
+  i1_speed: Int
+  i2_speed: Int
+  st_speed: Int
+  date_start: String!
+  lap_duration: Float
+  is_pit_out_lap: Boolean!
+  duration_sector_1: Float
+  duration_sector_2: Float
+  duration_sector_3: Float
+  segments_sector_1: [Int]
+  segments_sector_2: [Int]
+  segments_sector_3: [Int]
+  lap_number: Int!
 }

@@ -47,6 +47,38 @@ func (r *queryResolver) Sessions(ctx context.Context, meetingKeys []*int) ([]*mo
 	return sessionsInt, nil
 }
 
+// Drivers is the resolver for the drivers field.
+func (r *queryResolver) Drivers(ctx context.Context, sessionKey int) ([]*model.Driver, error) {
+	if err != nil {
+		return nil, err
+	}
+	drivers, err := dataingestor.FetchDrivers(dbClient, ctx, sessionKey)
+	if err != nil {
+		return nil, err
+	}
+	var driversInt []*model.Driver
+	for _, driver := range drivers {
+		driversInt = append(driversInt, &driver)
+	}
+	return driversInt, nil
+}
+
+// Positions is the resolver for the positions field.
+func (r *queryResolver) Positions(ctx context.Context, sessionKey int) ([]*model.Position, error) {
+	if err != nil {
+		return nil, err
+	}
+	positions, err := dataingestor.FetchPositions(dbClient, ctx, sessionKey)
+	if err != nil {
+		return nil, err
+	}
+	var positionsInt []*model.Position
+	for _, position := range positions {
+		positionsInt = append(positionsInt, &position)
+	}
+	return positionsInt, nil
+}
+
 // Query returns QueryResolver implementation.
 func (r *Resolver) Query() QueryResolver { return &queryResolver{r} }
 

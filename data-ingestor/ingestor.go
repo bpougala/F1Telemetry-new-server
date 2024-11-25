@@ -60,6 +60,56 @@ func IngestSession(meetingKey int) ([]collections.Sessions, error) {
 	return sessions, nil
 }
 
+func IngestDrivers(sessionKey int) ([]collections.Driver, error) {
+	uri := fmt.Sprintf("%s/drivers?session_key=%d", BASE_URL, sessionKey)
+	resp, err := http.Get(uri)
+	var drivers []collections.Driver
+	if err != nil {
+		return drivers, err
+	}
+	if resp.StatusCode != 200 {
+		return drivers, fmt.Errorf("error fetching data: %s", resp.Status)
+	}
+	defer func(Body io.ReadCloser) {
+		err := Body.Close()
+		if err != nil {
+			panic(err)
+		}
+	}(resp.Body)
+	body, err := io.ReadAll(resp.Body)
+
+	err = json.Unmarshal(body, &drivers)
+	if err != nil {
+		return drivers, err
+	}
+	return drivers, nil
+}
+
+func IngestPositions(sessionKey int) ([]collections.Position, error) {
+	uri := fmt.Sprintf("%s/position?session_key=%d", BASE_URL, sessionKey)
+	resp, err := http.Get(uri)
+	var positions []collections.Position
+	if err != nil {
+		return positions, err
+	}
+	if resp.StatusCode != 200 {
+		return positions, fmt.Errorf("error fetching data: %s", resp.Status)
+	}
+	defer func(Body io.ReadCloser) {
+		err := Body.Close()
+		if err != nil {
+			panic(err)
+		}
+	}(resp.Body)
+	body, err := io.ReadAll(resp.Body)
+
+	err = json.Unmarshal(body, &positions)
+	if err != nil {
+		return positions, err
+	}
+	return positions, nil
+}
+
 /*var BASE_URL = "https://livetiming.formula1.com/static"
 
 type Meetings struct {

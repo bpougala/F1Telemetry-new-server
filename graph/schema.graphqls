@@ -1,0 +1,65 @@
+# GraphQL schema example
+#
+# https://gqlgen.com/getting-started/
+
+type Query {
+  meetings: [Meeting]!
+  sessions(meeting_keys: [Int]!): [Session]!
+  drivers(session_key: String!, driver_number: Int): [Driver]!
+  positions(session_key: String!): [Position]!
+}
+
+type Session {
+  session_key: Int!
+  session_name: String!
+  date_start: String!
+  date_end: String!
+  gmt_offset: String!
+  session_type: String!
+  meeting_key: Int!
+  location: String!
+  country_key: Int!
+  country_code: String!
+  country_name: String!
+  circuit_key: Int!
+  circuit_short_name: String!
+  year: Int!
+}
+
+type Meeting {
+  meeting_name: String!
+  meeting_official_name: String!
+  location: String!
+  country_key: Int!
+  country_code: String!
+  country_name: String!
+  circuit_key: Int!
+  circuit_short_name: String!
+  date_start: String!
+  gmt_offset: String!
+  meeting_key: Int!
+  year: Int!
+}
+
+type Driver {
+  session_key:   Int!
+  meeting_key:    Int!
+  broadcast_name: String!
+  country_code:   String!
+  first_name: String!
+  full_name: String!
+  headshot_url:   String!
+  last_name:      String!
+  driver_number: Int!
+  team_colour: String
+  team_name: String
+  name_acronym: String
+}
+
+type Position {
+  session_key: Int!
+  meeting_key: Int!
+  driver_number: Int!
+  date:          String!
+  position: Int!
+}

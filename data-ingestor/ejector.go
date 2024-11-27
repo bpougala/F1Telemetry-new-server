@@ -58,3 +58,29 @@ func FetchPositions(dbClient *mongo.Client, ctx context.Context, sessionKey int)
 	}
 	return positions, nil
 }
+
+func FetchCarData(dbClient *mongo.Client, ctx context.Context, sessionKey int, driverNumber int) ([]model.CarData, error) {
+	cursor, err := dbClient.Database("f1").Collection("cardata").Find(ctx, bson.D{{"sessionkey", sessionKey}, {"drivernumber", driverNumber}})
+	if err != nil {
+		return nil, err
+	}
+	var carData []model.CarData
+	err = cursor.All(ctx, &carData)
+	if err != nil {
+		return nil, err
+	}
+	return carData, nil
+}
+
+func FetchLaps(dbClient *mongo.Client, ctx context.Context, sessionKey int, driverNumber int) ([]model.Lap, error) {
+	cursor, err := dbClient.Database("f1").Collection("laps").Find(ctx, bson.D{{"sessionkey", sessionKey}, {"drivernumber", driverNumber}})
+	if err != nil {
+		return nil, err
+	}
+	var laps []model.Lap
+	err = cursor.All(ctx, &laps)
+	if err != nil {
+		return nil, err
+	}
+	return laps, nil
+}

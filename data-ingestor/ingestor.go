@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"time"
 )
 
 var BASE_URL = "https://api.openf1.org/v1"
@@ -102,12 +103,112 @@ func IngestPositions(sessionKey int) ([]collections.Position, error) {
 		}
 	}(resp.Body)
 	body, err := io.ReadAll(resp.Body)
-
+	if err != nil {
+		return positions, err
+	}
 	err = json.Unmarshal(body, &positions)
 	if err != nil {
 		return positions, err
 	}
 	return positions, nil
+}
+
+func IngestRaceControl(sessionKey int) ([]collections.RaceControl, error) {
+	uri := fmt.Sprintf("%s/race_control?session_key=%d", BASE_URL, sessionKey)
+	resp, err := http.Get(uri)
+	var raceControls []collections.RaceControl
+	if err != nil {
+		return raceControls, err
+	}
+	if resp.StatusCode != 200 {
+		return raceControls, fmt.Errorf("error fetching data: %s", resp.Status)
+	}
+	defer func(Body io.ReadCloser) {
+		err := Body.Close()
+		if err != nil {
+			panic(err)
+		}
+	}(resp.Body)
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return raceControls, err
+	}
+	err = json.Unmarshal(body, &raceControls)
+	if err != nil {
+		return raceControls, err
+	}
+	return raceControls, nil
+}
+
+func IngestLaps(sessionKey int) ([]collections.Laps, error) {
+	url := fmt.Sprintf("%s/laps?session_key=%d", BASE_URL, sessionKey)
+	var laps []collections.Laps
+	resp, err := http.Get(url)
+	retries := 3
+	for retries > 0 {
+		if err != nil {
+			retries -= 1
+		} else if resp.StatusCode != 200 {
+			retries -= 1
+		} else {
+			defer func(Body io.ReadCloser) {
+				err := Body.Close()
+				if err != nil {
+					panic(err)
+				}
+			}(resp.Body)
+			body, err := io.ReadAll(resp.Body)
+			if err != nil {
+				retries -= 1
+			} else {
+				err = json.Unmarshal(body, &laps)
+				return laps, err
+			}
+		}
+	}
+	return laps, err
+}
+
+func IngestCarData(sessionKey int, driverNumber int) ([]collections.CarData, error) {
+	uri := fmt.Sprintf("%s/car_data?session_key=%d&driver_number=%d", BASE_URL, sessionKey, driverNumber)
+	client := http.Client{Timeout: 25 * time.Second}
+	retries := 3
+	var err error
+	var carData []collections.CarData
+
+	for retries > 0 {
+		fmt.Printf("number of retries: %d\n", retries)
+		resp, err := client.Get(uri)
+
+		if err != nil {
+			fmt.Printf("error fetching new data: %s\n", err.Error())
+			retries -= 1
+		} else if resp.StatusCode != 200 {
+			fmt.Printf("status code is not 200: %s\n", resp.Status)
+			retries -= 1
+		} else {
+			defer func(Body io.ReadCloser) {
+				err := Body.Close()
+				if err != nil {
+					panic(err)
+				}
+			}(resp.Body)
+			body, err := io.ReadAll(resp.Body)
+			if err != nil {
+				fmt.Printf("error reading body: %s\n", err.Error())
+				retries -= 1
+			} else {
+				err = json.Unmarshal(body, &carData)
+				if err != nil {
+					fmt.Printf("error unmarshalling data: %s\n", err.Error())
+					retries -= 1
+				}
+				return carData, nil
+			}
+		}
+	}
+	fmt.Println("what is going on")
+	return carData, err
 }
 
 /*var BASE_URL = "https://livetiming.formula1.com/static"

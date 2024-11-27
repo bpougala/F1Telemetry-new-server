@@ -2,6 +2,19 @@
 
 package model
 
+type CarData struct {
+	Brake        int    `json:"brake"`
+	Date         string `json:"date"`
+	DriverNumber int    `json:"driver_number"`
+	Drs          int    `json:"drs"`
+	MeetingKey   int    `json:"meeting_key"`
+	NGear        int    `json:"n_gear"`
+	Rpm          int    `json:"rpm"`
+	SessionKey   int    `json:"session_key"`
+	Speed        int    `json:"speed"`
+	Throttle     int    `json:"throttle"`
+}
+
 type Driver struct {
 	SessionKey    int     `json:"session_key"`
 	MeetingKey    int     `json:"meeting_key"`
@@ -15,6 +28,25 @@ type Driver struct {
 	TeamColour    *string `json:"team_colour,omitempty"`
 	TeamName      *string `json:"team_name,omitempty"`
 	NameAcronym   *string `json:"name_acronym,omitempty"`
+}
+
+type Lap struct {
+	MeetingKey      int      `json:"meeting_key"`
+	SessionKey      int      `json:"session_key"`
+	DriverNumber    int      `json:"driver_number"`
+	I1Speed         *int     `json:"i1_speed,omitempty"`
+	I2Speed         *int     `json:"i2_speed,omitempty"`
+	StSpeed         *int     `json:"st_speed,omitempty"`
+	DateStart       string   `json:"date_start"`
+	LapDuration     *float64 `json:"lap_duration,omitempty"`
+	IsPitOutLap     bool     `json:"is_pit_out_lap"`
+	DurationSector1 *float64 `json:"duration_sector_1,omitempty"`
+	DurationSector2 *float64 `json:"duration_sector_2,omitempty"`
+	DurationSector3 *float64 `json:"duration_sector_3,omitempty"`
+	SegmentsSector1 []*int   `json:"segments_sector_1,omitempty"`
+	SegmentsSector2 []*int   `json:"segments_sector_2,omitempty"`
+	SegmentsSector3 []*int   `json:"segments_sector_3,omitempty"`
+	LapNumber       int      `json:"lap_number"`
 }
 
 type Meeting struct {
@@ -41,6 +73,19 @@ type Position struct {
 }
 
 type Query struct {
+}
+
+type RaceControl struct {
+	SessionKey   int     `json:"session_key"`
+	MeetingKey   int     `json:"meeting_key"`
+	Date         string  `json:"date"`
+	Category     *string `json:"category,omitempty"`
+	Flag         *string `json:"flag,omitempty"`
+	LapNumber    *int    `json:"lap_number,omitempty"`
+	Message      *string `json:"message,omitempty"`
+	DriverNumber *int    `json:"driver_number,omitempty"`
+	Scope        *string `json:"scope,omitempty"`
+	Sector       *int    `json:"sector,omitempty"`
 }
 
 type Session struct {

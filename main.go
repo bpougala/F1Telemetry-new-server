@@ -4,6 +4,7 @@ import (
 	"F1Telemetry-new-server/data-ingestor"
 	"F1Telemetry-new-server/data-ingestor/collections"
 	"context"
+	"fmt"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"time"
@@ -151,7 +152,46 @@ func createIndex() error {
 	_, err = dbClient.Database("f1").Collection("positions").Indexes().CreateOne(ctx, mongo.IndexModel{
 		Keys: bson.D{{"sessionkey", 1}},
 	})
-	return nil
+	return err
+}
+
+func SaveRaceControl(raceControl []collections.RaceControl) error {
+	if err != nil {
+		return err
+	}
+	var raceControlInt []interface{}
+	for _, raceC := range raceControl {
+		raceControlInt = append(raceControlInt, raceC)
+	}
+	_, err = dbClient.Database("f1").Collection("racecontrol").InsertMany(ctx, raceControlInt)
+	return err
+}
+
+func SaveCarData(carData []collections.CarData) error {
+	if err != nil {
+		return err
+	}
+	var carDataInt []interface{}
+	for _, carD := range carData {
+		carDataInt = append(carDataInt, carD)
+	}
+	_, err = dbClient.Database("f1").Collection("cardata").InsertMany(ctx, carDataInt)
+	return err
+}
+
+func SaveLaps(laps []collections.Laps) error {
+	if err != nil {
+		return err
+	}
+	var lapsInt []interface{}
+	if len(laps) == 0 {
+		return nil
+	}
+	for _, lap := range laps {
+		lapsInt = append(lapsInt, lap)
+	}
+	_, err = dbClient.Database("f1").Collection("laps").InsertMany(ctx, lapsInt)
+	return err
 }
 
 /*func SaveSessions(meeting data_ingestor.Meeting) error {
@@ -217,8 +257,79 @@ func FetchSessions(meetingKey int) ([]collections.Sessions, error) {
 	return sessions, nil
 }
 
-/*func main() {
-	/*err = saveMeetings()
+func mainBis() {
+	if err != nil {
+		panic(err)
+	}
+	meetings, err := FetchMeetings()
+	if err != nil {
+		panic(err)
+	}
+	for _, meeting := range meetings {
+		sessions, err := FetchSessions(meeting.MeetingKey)
+		if err != nil {
+			fmt.Printf("error fetching sessions: %s, meeting key: %d\n", err.Error(), meeting.MeetingKey)
+			panic(err)
+		}
+		for _, session := range sessions {
+			laps, err := data_ingestor.IngestLaps(session.SessionKey)
+			if err != nil {
+				fmt.Printf("error fetching laps: %s, session key: %d\n", err.Error(), session.SessionKey)
+				panic(err)
+			}
+			err = SaveLaps(laps)
+			if err != nil {
+				fmt.Printf("error in SaveLaps: %s, session key: %d\n", err.Error(), session.SessionKey)
+				panic(err)
+			}
+		}
+	}
+	_, err = dbClient.Database("f1").Collection("laps").Indexes().CreateOne(ctx, mongo.IndexModel{
+		Keys: bson.D{{"sessionkey", 1}},
+	})
+	if err != nil {
+		panic(err)
+	}
+}
+
+/*sessions, err := FetchSessions(1229)
+	if err != nil {
+		fmt.Printf("error fetching sessions: %s, meeting key: %d\n", err.Error(), 1229)
+	}
+	sessionKey := 9468
+	fmt.Printf("session key: %d\n", sessionKey)
+	drivers, err := data_ingestor.FetchDrivers(dbClient, ctx, sessionKey)
+	if err != nil {
+		fmt.Printf("error fetching drivers: %s, session key: %d\n", err.Error(), sessionKey)
+	}
+	for _, driver := range drivers {
+		carDataMessages, err := data_ingestor.IngestCarData(sessionKey, driver.DriverNumber)
+		if err != nil {
+			fmt.Printf("error fetching car data: %s, session key: %d, driver number: %d\n", err.Error(), sessionKey, driver.DriverNumber)
+		}
+		//err = SaveRaceControl(raceControlMessages)
+		err = SaveCarData(carDataMessages)
+		if err != nil {
+			fmt.Printf("error in SaveCarData: %s, session key: %d, driver number: %d\n", err.Error(), sessionKey, driver.DriverNumber)
+		}
+		time.Sleep(8 * time.Second)
+		//raceControlMessages, err := data_ingestor.IngestRaceControl(9466)
+
+	}
+	/*var indexes []mongo.IndexModel
+	indexes = append(indexes, mongo.IndexModel{
+		Keys: bson.D{{"sessionkey", 1}},
+	})
+	indexes = append(indexes, mongo.IndexModel{
+		Keys: bson.D{{"drivernumber", 1}},
+	})
+	_, err = dbClient.Database("f1").Collection("cardata").Indexes().CreateMany(ctx, indexes)
+	if err != nil {
+		panic(err)
+	}
+}
+*/
+/*err = saveMeetings()
 	if err != nil {
 		panic(err)
 	}
@@ -236,7 +347,7 @@ func FetchSessions(meetingKey int) ([]collections.Sessions, error) {
 			panic(err)
 		}
 		for _, session := range sessions {
-			drivers, err := data_ingestor.IngestDrivers(session.SessionKey)
+			drivers, err := data_ingestor.IngestDrivers(9466)
 			if err != nil {
 				panic(err)
 			}
@@ -244,7 +355,7 @@ func FetchSessions(meetingKey int) ([]collections.Sessions, error) {
 			if err != nil {
 				panic(err)
 			}
-			positions, err := data_ingestor.IngestPositions(session.SessionKey)
+			positions, err := data_ingestor.IngestPositions(9466)
 			if err != nil {
 				panic(err)
 			}

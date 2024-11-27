@@ -120,6 +120,25 @@ func (r *queryResolver) Laps(ctx context.Context, sessionKey int, driverNumber *
 	return lapsInt, nil
 }
 
+// Intervals is the resolver for the intervals field.
+func (r *queryResolver) Intervals(ctx context.Context, sessionKey int) ([]*model.Interval, error) {
+	if err != nil {
+		return nil, err
+	}
+	intervals, err := dataingestor.FetchIntervals(dbClient, ctx, sessionKey)
+	if err != nil {
+		return nil, err
+	}
+	var intervalsInt []*model.Interval
+	if len(intervals) == 0 {
+		return intervalsInt, nil
+	}
+	for _, interval := range intervals {
+		intervalsInt = append(intervalsInt, &interval)
+	}
+	return intervalsInt, nil
+}
+
 // Query returns QueryResolver implementation.
 func (r *Resolver) Query() QueryResolver { return &queryResolver{r} }
 

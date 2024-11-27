@@ -10,7 +10,7 @@ type Query {
   raceControls(session_key: String!): [RaceControl]!
   carData(session_key: Int!, driver_number: Int!): [CarData]!
   laps(session_key: Int!, driver_number: Int): [Lap]!
-  intervals(session_key: String!): [Interval]!
+  intervals(session_key: Int!): [Interval]!
 }
 
 type Session {

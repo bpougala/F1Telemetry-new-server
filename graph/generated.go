@@ -74,6 +74,15 @@ type ComplexityRoot struct {
 		TeamName      func(childComplexity int) int
 	}
 
+	Interval struct {
+		Date         func(childComplexity int) int
+		DriverNumber func(childComplexity int) int
+		GapToLeader  func(childComplexity int) int
+		Interval     func(childComplexity int) int
+		MeetingKey   func(childComplexity int) int
+		SessionKey   func(childComplexity int) int
+	}
+
 	Lap struct {
 		DateStart       func(childComplexity int) int
 		DriverNumber    func(childComplexity int) int
@@ -119,6 +128,7 @@ type ComplexityRoot struct {
 	Query struct {
 		CarData      func(childComplexity int, sessionKey int, driverNumber int) int
 		Drivers      func(childComplexity int, sessionKey int) int
+		Intervals    func(childComplexity int, sessionKey int) int
 		Laps         func(childComplexity int, sessionKey int, driverNumber *int) int
 		Meetings     func(childComplexity int) int
 		Positions    func(childComplexity int, sessionKey int) int
@@ -165,6 +175,7 @@ type QueryResolver interface {
 	RaceControls(ctx context.Context, sessionKey string) ([]*model.RaceControl, error)
 	CarData(ctx context.Context, sessionKey int, driverNumber int) ([]*model.CarData, error)
 	Laps(ctx context.Context, sessionKey int, driverNumber *int) ([]*model.Lap, error)
+	Intervals(ctx context.Context, sessionKey int) ([]*model.Interval, error)
 }
 
 type executableSchema struct {
@@ -339,6 +350,48 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Driver.TeamName(childComplexity), true
+
+	case "Interval.date":
+		if e.complexity.Interval.Date == nil {
+			break
+		}
+
+		return e.complexity.Interval.Date(childComplexity), true
+
+	case "Interval.driver_number":
+		if e.complexity.Interval.DriverNumber == nil {
+			break
+		}
+
+		return e.complexity.Interval.DriverNumber(childComplexity), true
+
+	case "Interval.gap_to_leader":
+		if e.complexity.Interval.GapToLeader == nil {
+			break
+		}
+
+		return e.complexity.Interval.GapToLeader(childComplexity), true
+
+	case "Interval.interval":
+		if e.complexity.Interval.Interval == nil {
+			break
+		}
+
+		return e.complexity.Interval.Interval(childComplexity), true
+
+	case "Interval.meeting_key":
+		if e.complexity.Interval.MeetingKey == nil {
+			break
+		}
+
+		return e.complexity.Interval.MeetingKey(childComplexity), true
+
+	case "Interval.session_key":
+		if e.complexity.Interval.SessionKey == nil {
+			break
+		}
+
+		return e.complexity.Interval.SessionKey(childComplexity), true
 
 	case "Lap.date_start":
 		if e.complexity.Lap.DateStart == nil {
@@ -594,6 +647,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Query.Drivers(childComplexity, args["session_key"].(int)), true
+
+	case "Query.intervals":
+		if e.complexity.Query.Intervals == nil {
+			break
+		}
+
+		args, err := ec.field_Query_intervals_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.Intervals(childComplexity, args["session_key"].(int)), true
 
 	case "Query.laps":
 		if e.complexity.Query.Laps == nil {
@@ -1001,6 +1066,29 @@ func (ec *executionContext) field_Query_drivers_args(ctx context.Context, rawArg
 	return args, nil
 }
 func (ec *executionContext) field_Query_drivers_argsSessionKey(
+	ctx context.Context,
+	rawArgs map[string]interface{},
+) (int, error) {
+	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("session_key"))
+	if tmp, ok := rawArgs["session_key"]; ok {
+		return ec.unmarshalNInt2int(ctx, tmp)
+	}
+
+	var zeroVal int
+	return zeroVal, nil
+}
+
+func (ec *executionContext) field_Query_intervals_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	arg0, err := ec.field_Query_intervals_argsSessionKey(ctx, rawArgs)
+	if err != nil {
+		return nil, err
+	}
+	args["session_key"] = arg0
+	return args, nil
+}
+func (ec *executionContext) field_Query_intervals_argsSessionKey(
 	ctx context.Context,
 	rawArgs map[string]interface{},
 ) (int, error) {
@@ -2126,6 +2214,264 @@ func (ec *executionContext) _Driver_name_acronym(ctx context.Context, field grap
 func (ec *executionContext) fieldContext_Driver_name_acronym(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Driver",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Interval_date(ctx context.Context, field graphql.CollectedField, obj *model.Interval) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Interval_date(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Date, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Interval_date(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Interval",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Interval_driver_number(ctx context.Context, field graphql.CollectedField, obj *model.Interval) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Interval_driver_number(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.DriverNumber, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(int)
+	fc.Result = res
+	return ec.marshalNInt2int(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Interval_driver_number(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Interval",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Interval_meeting_key(ctx context.Context, field graphql.CollectedField, obj *model.Interval) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Interval_meeting_key(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.MeetingKey, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(int)
+	fc.Result = res
+	return ec.marshalNInt2int(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Interval_meeting_key(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Interval",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Interval_session_key(ctx context.Context, field graphql.CollectedField, obj *model.Interval) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Interval_session_key(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.SessionKey, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(int)
+	fc.Result = res
+	return ec.marshalNInt2int(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Interval_session_key(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Interval",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Interval_gap_to_leader(ctx context.Context, field graphql.CollectedField, obj *model.Interval) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Interval_gap_to_leader(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.GapToLeader, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Interval_gap_to_leader(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Interval",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Interval_interval(ctx context.Context, field graphql.CollectedField, obj *model.Interval) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Interval_interval(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Interval, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Interval_interval(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Interval",
 		Field:      field,
 		IsMethod:   false,
 		IsResolver: false,
@@ -4098,6 +4444,75 @@ func (ec *executionContext) fieldContext_Query_laps(ctx context.Context, field g
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
 	if fc.Args, err = ec.field_Query_laps_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Query_intervals(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Query_intervals(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Query().Intervals(rctx, fc.Args["session_key"].(int))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]*model.Interval)
+	fc.Result = res
+	return ec.marshalNInterval2ᚕᚖF1TelemetryᚑnewᚑserverᚋgraphᚋmodelᚐInterval(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Query_intervals(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "date":
+				return ec.fieldContext_Interval_date(ctx, field)
+			case "driver_number":
+				return ec.fieldContext_Interval_driver_number(ctx, field)
+			case "meeting_key":
+				return ec.fieldContext_Interval_meeting_key(ctx, field)
+			case "session_key":
+				return ec.fieldContext_Interval_session_key(ctx, field)
+			case "gap_to_leader":
+				return ec.fieldContext_Interval_gap_to_leader(ctx, field)
+			case "interval":
+				return ec.fieldContext_Interval_interval(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Interval", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Query_intervals_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return fc, err
 	}
@@ -7218,6 +7633,64 @@ func (ec *executionContext) _Driver(ctx context.Context, sel ast.SelectionSet, o
 	return out
 }
 
+var intervalImplementors = []string{"Interval"}
+
+func (ec *executionContext) _Interval(ctx context.Context, sel ast.SelectionSet, obj *model.Interval) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, intervalImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("Interval")
+		case "date":
+			out.Values[i] = ec._Interval_date(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "driver_number":
+			out.Values[i] = ec._Interval_driver_number(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "meeting_key":
+			out.Values[i] = ec._Interval_meeting_key(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "session_key":
+			out.Values[i] = ec._Interval_session_key(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "gap_to_leader":
+			out.Values[i] = ec._Interval_gap_to_leader(ctx, field, obj)
+		case "interval":
+			out.Values[i] = ec._Interval_interval(ctx, field, obj)
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.processDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
 var lapImplementors = []string{"Lap"}
 
 func (ec *executionContext) _Lap(ctx context.Context, sel ast.SelectionSet, obj *model.Lap) graphql.Marshaler {
@@ -7616,6 +8089,28 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 					}
 				}()
 				res = ec._Query_laps(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx,
+					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
+		case "intervals":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_intervals(ctx, field)
 				if res == graphql.Null {
 					atomic.AddUint32(&fs.Invalids, 1)
 				}
@@ -8284,6 +8779,44 @@ func (ec *executionContext) marshalNInt2ᚕᚖint(ctx context.Context, sel ast.S
 	return ret
 }
 
+func (ec *executionContext) marshalNInterval2ᚕᚖF1TelemetryᚑnewᚑserverᚋgraphᚋmodelᚐInterval(ctx context.Context, sel ast.SelectionSet, v []*model.Interval) graphql.Marshaler {
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalOInterval2ᚖF1TelemetryᚑnewᚑserverᚋgraphᚋmodelᚐInterval(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+
+	return ret
+}
+
 func (ec *executionContext) marshalNLap2ᚕᚖF1TelemetryᚑnewᚑserverᚋgraphᚋmodelᚐLap(ctx context.Context, sel ast.SelectionSet, v []*model.Lap) graphql.Marshaler {
 	ret := make(graphql.Array, len(v))
 	var wg sync.WaitGroup
@@ -8844,6 +9377,13 @@ func (ec *executionContext) marshalOInt2ᚖint(ctx context.Context, sel ast.Sele
 	}
 	res := graphql.MarshalInt(*v)
 	return res
+}
+
+func (ec *executionContext) marshalOInterval2ᚖF1TelemetryᚑnewᚑserverᚋgraphᚋmodelᚐInterval(ctx context.Context, sel ast.SelectionSet, v *model.Interval) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return ec._Interval(ctx, sel, v)
 }
 
 func (ec *executionContext) marshalOLap2ᚖF1TelemetryᚑnewᚑserverᚋgraphᚋmodelᚐLap(ctx context.Context, sel ast.SelectionSet, v *model.Lap) graphql.Marshaler {

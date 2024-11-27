@@ -2,6 +2,49 @@
 
 package model
 
+import (
+	"fmt"
+	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/bsontype"
+	"strconv"
+)
+
+type GapToLeader struct {
+	Value interface{}
+}
+
+func (g *GapToLeader) UnmarshalBSONValue(t bsontype.Type, data []byte) error {
+	var err error
+	switch t {
+	case bson.TypeDouble:
+		var floatValue float64
+		fmt.Printf("floatValue: %v\n", floatValue)
+		err = bson.Unmarshal(data, &floatValue)
+		fmt.Printf("error: %v\n", err)
+		g.Value = floatValue
+	case bson.TypeString:
+		var stringValue string
+		err = bson.Unmarshal(data, &stringValue)
+		fmt.Printf("error: %v\n", err)
+		g.Value = stringValue
+	default:
+		fmt.Printf("unexpected BSON type %v\n", t)
+		//err = fmt.Errorf("unexpected BSON type %v", t)
+	}
+	return nil
+}
+
+func (g GapToLeader) String() string {
+	switch v := g.Value.(type) {
+	case float64:
+		return strconv.FormatFloat(v, 'f', -1, 64)
+	case string:
+		return v
+	default:
+		return ""
+	}
+}
+
 type CarData struct {
 	Brake        int    `json:"brake"`
 	Date         string `json:"date"`
@@ -28,6 +71,15 @@ type Driver struct {
 	TeamColour    *string `json:"team_colour,omitempty"`
 	TeamName      *string `json:"team_name,omitempty"`
 	NameAcronym   *string `json:"name_acronym,omitempty"`
+}
+
+type Interval struct {
+	Date         string      `json:"date"`
+	DriverNumber int         `json:"driver_number"`
+	MeetingKey   int         `json:"meeting_key"`
+	SessionKey   int         `json:"session_key"`
+	GapToLeader  GapToLeader `bson:"gaptoleader"`
+	Interval     GapToLeader `bson:"interval"`
 }
 
 type Lap struct {

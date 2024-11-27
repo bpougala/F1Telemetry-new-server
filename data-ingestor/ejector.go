@@ -84,3 +84,16 @@ func FetchLaps(dbClient *mongo.Client, ctx context.Context, sessionKey int, driv
 	}
 	return laps, nil
 }
+
+func FetchIntervals(dbClient *mongo.Client, ctx context.Context, sessionKey int) ([]model.Interval, error) {
+	cursor, err := dbClient.Database("f1").Collection("intervals").Find(ctx, bson.D{{"sessionkey", sessionKey}})
+	if err != nil {
+		return nil, err
+	}
+	var intervals []model.Interval
+	err = cursor.All(ctx, &intervals)
+	if err != nil {
+		return nil, err
+	}
+	return intervals, nil
+}

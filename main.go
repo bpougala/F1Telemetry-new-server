@@ -194,6 +194,21 @@ func SaveLaps(laps []collections.Laps) error {
 	return err
 }
 
+func SaveIntervals(intervals []collections.Interval) error {
+	if err != nil {
+		return err
+	}
+	var intervalsInt []interface{}
+	if len(intervals) == 0 {
+		return nil
+	}
+	for _, interval := range intervals {
+		intervalsInt = append(intervalsInt, interval)
+	}
+	_, err = dbClient.Database("f1").Collection("intervals").InsertMany(ctx, intervalsInt)
+	return err
+}
+
 /*func SaveSessions(meeting data_ingestor.Meeting) error {
 	if err != nil {
 		return err
@@ -272,19 +287,19 @@ func mainBis() {
 			panic(err)
 		}
 		for _, session := range sessions {
-			laps, err := data_ingestor.IngestLaps(session.SessionKey)
+			intervals, err := data_ingestor.IngestIntervals(session.SessionKey)
 			if err != nil {
-				fmt.Printf("error fetching laps: %s, session key: %d\n", err.Error(), session.SessionKey)
+				fmt.Printf("error fetching intervals: %s, session key: %d\n", err.Error(), session.SessionKey)
 				panic(err)
 			}
-			err = SaveLaps(laps)
+			err = SaveIntervals(intervals)
 			if err != nil {
-				fmt.Printf("error in SaveLaps: %s, session key: %d\n", err.Error(), session.SessionKey)
+				fmt.Printf("error in SaveIntervals: %s, session key: %d\n", err.Error(), session.SessionKey)
 				panic(err)
 			}
 		}
 	}
-	_, err = dbClient.Database("f1").Collection("laps").Indexes().CreateOne(ctx, mongo.IndexModel{
+	_, err = dbClient.Database("f1").Collection("intervals").Indexes().CreateOne(ctx, mongo.IndexModel{
 		Keys: bson.D{{"sessionkey", 1}},
 	})
 	if err != nil {

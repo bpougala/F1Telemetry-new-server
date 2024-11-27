@@ -169,6 +169,33 @@ func IngestLaps(sessionKey int) ([]collections.Laps, error) {
 	return laps, err
 }
 
+func IngestIntervals(sessionKey int) ([]collections.Interval, error) {
+	uri := fmt.Sprintf("%s/intervals?session_key=%d", BASE_URL, sessionKey)
+	resp, err := http.Get(uri)
+	var intervals []collections.Interval
+	if err != nil {
+		return intervals, err
+	}
+	if resp.StatusCode != 200 {
+		return intervals, fmt.Errorf("error fetching data: %s", resp.Status)
+	}
+	defer func(Body io.ReadCloser) {
+		err := Body.Close()
+		if err != nil {
+			panic(err)
+		}
+	}(resp.Body)
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return intervals, err
+	}
+	err = json.Unmarshal(body, &intervals)
+	if err != nil {
+		return intervals, err
+	}
+	return intervals, nil
+}
+
 func IngestCarData(sessionKey int, driverNumber int) ([]collections.CarData, error) {
 	uri := fmt.Sprintf("%s/car_data?session_key=%d&driver_number=%d", BASE_URL, sessionKey, driverNumber)
 	client := http.Client{Timeout: 25 * time.Second}

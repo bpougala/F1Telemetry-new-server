@@ -129,10 +129,10 @@ type ComplexityRoot struct {
 		CarData      func(childComplexity int, sessionKey int, driverNumber int) int
 		Drivers      func(childComplexity int, sessionKey int) int
 		Intervals    func(childComplexity int, sessionKey int) int
-		Laps         func(childComplexity int, sessionKey int, driverNumber *int) int
+		Laps         func(childComplexity int, sessionKey int) int
 		Meetings     func(childComplexity int) int
 		Positions    func(childComplexity int, sessionKey int) int
-		RaceControls func(childComplexity int, sessionKey string) int
+		RaceControls func(childComplexity int, sessionKey int) int
 		Sessions     func(childComplexity int, meetingKeys []*int) int
 	}
 
@@ -172,9 +172,9 @@ type QueryResolver interface {
 	Sessions(ctx context.Context, meetingKeys []*int) ([]*model.Session, error)
 	Drivers(ctx context.Context, sessionKey int) ([]*model.Driver, error)
 	Positions(ctx context.Context, sessionKey int) ([]*model.Position, error)
-	RaceControls(ctx context.Context, sessionKey string) ([]*model.RaceControl, error)
+	RaceControls(ctx context.Context, sessionKey int) ([]*model.RaceControl, error)
 	CarData(ctx context.Context, sessionKey int, driverNumber int) ([]*model.CarData, error)
-	Laps(ctx context.Context, sessionKey int, driverNumber *int) ([]*model.Lap, error)
+	Laps(ctx context.Context, sessionKey int) ([]*model.Lap, error)
 	Intervals(ctx context.Context, sessionKey int) ([]*model.Interval, error)
 }
 
@@ -670,7 +670,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Query.Laps(childComplexity, args["session_key"].(int), args["driver_number"].(*int)), true
+		return e.complexity.Query.Laps(childComplexity, args["session_key"].(int)), true
 
 	case "Query.meetings":
 		if e.complexity.Query.Meetings == nil {
@@ -701,7 +701,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Query.RaceControls(childComplexity, args["session_key"].(string)), true
+		return e.complexity.Query.RaceControls(childComplexity, args["session_key"].(int)), true
 
 	case "Query.sessions":
 		if e.complexity.Query.Sessions == nil {
@@ -1109,11 +1109,6 @@ func (ec *executionContext) field_Query_laps_args(ctx context.Context, rawArgs m
 		return nil, err
 	}
 	args["session_key"] = arg0
-	arg1, err := ec.field_Query_laps_argsDriverNumber(ctx, rawArgs)
-	if err != nil {
-		return nil, err
-	}
-	args["driver_number"] = arg1
 	return args, nil
 }
 func (ec *executionContext) field_Query_laps_argsSessionKey(
@@ -1126,19 +1121,6 @@ func (ec *executionContext) field_Query_laps_argsSessionKey(
 	}
 
 	var zeroVal int
-	return zeroVal, nil
-}
-
-func (ec *executionContext) field_Query_laps_argsDriverNumber(
-	ctx context.Context,
-	rawArgs map[string]interface{},
-) (*int, error) {
-	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("driver_number"))
-	if tmp, ok := rawArgs["driver_number"]; ok {
-		return ec.unmarshalOInt2ᚖint(ctx, tmp)
-	}
-
-	var zeroVal *int
 	return zeroVal, nil
 }
 
@@ -1178,13 +1160,13 @@ func (ec *executionContext) field_Query_raceControls_args(ctx context.Context, r
 func (ec *executionContext) field_Query_raceControls_argsSessionKey(
 	ctx context.Context,
 	rawArgs map[string]interface{},
-) (string, error) {
+) (int, error) {
 	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("session_key"))
 	if tmp, ok := rawArgs["session_key"]; ok {
-		return ec.unmarshalNString2string(ctx, tmp)
+		return ec.unmarshalNInt2int(ctx, tmp)
 	}
 
-	var zeroVal string
+	var zeroVal int
 	return zeroVal, nil
 }
 
@@ -2423,9 +2405,9 @@ func (ec *executionContext) _Interval_gap_to_leader(ctx context.Context, field g
 	if resTmp == nil {
 		return graphql.Null
 	}
-	res := resTmp.(*string)
+	res := resTmp.(any)
 	fc.Result = res
-	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+	return ec.marshalOAny2interface(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Interval_gap_to_leader(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -2435,7 +2417,7 @@ func (ec *executionContext) fieldContext_Interval_gap_to_leader(_ context.Contex
 		IsMethod:   false,
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type String does not have child fields")
+			return nil, errors.New("field of type Any does not have child fields")
 		},
 	}
 	return fc, nil
@@ -2464,9 +2446,9 @@ func (ec *executionContext) _Interval_interval(ctx context.Context, field graphq
 	if resTmp == nil {
 		return graphql.Null
 	}
-	res := resTmp.(*string)
+	res := resTmp.(any)
 	fc.Result = res
-	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+	return ec.marshalOAny2interface(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Interval_interval(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -2476,7 +2458,7 @@ func (ec *executionContext) fieldContext_Interval_interval(_ context.Context, fi
 		IsMethod:   false,
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type String does not have child fields")
+			return nil, errors.New("field of type Any does not have child fields")
 		},
 	}
 	return fc, nil
@@ -4221,7 +4203,7 @@ func (ec *executionContext) _Query_raceControls(ctx context.Context, field graph
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Query().RaceControls(rctx, fc.Args["session_key"].(string))
+		return ec.resolvers.Query().RaceControls(rctx, fc.Args["session_key"].(int))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -4375,7 +4357,7 @@ func (ec *executionContext) _Query_laps(ctx context.Context, field graphql.Colle
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Query().Laps(rctx, fc.Args["session_key"].(int), fc.Args["driver_number"].(*int))
+		return ec.resolvers.Query().Laps(rctx, fc.Args["session_key"].(int))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -9272,6 +9254,22 @@ func (ec *executionContext) marshalN__TypeKind2string(ctx context.Context, sel a
 			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
 		}
 	}
+	return res
+}
+
+func (ec *executionContext) unmarshalOAny2interface(ctx context.Context, v interface{}) (any, error) {
+	if v == nil {
+		return nil, nil
+	}
+	res, err := graphql.UnmarshalAny(v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalOAny2interface(ctx context.Context, sel ast.SelectionSet, v any) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	res := graphql.MarshalAny(v)
 	return res
 }
 

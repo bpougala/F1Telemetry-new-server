@@ -3,6 +3,7 @@ package data_ingestor
 import (
 	"F1Telemetry-new-server/graph/model"
 	"context"
+	"fmt"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 )
@@ -72,8 +73,8 @@ func FetchCarData(dbClient *mongo.Client, ctx context.Context, sessionKey int, d
 	return carData, nil
 }
 
-func FetchLaps(dbClient *mongo.Client, ctx context.Context, sessionKey int, driverNumber int) ([]model.Lap, error) {
-	cursor, err := dbClient.Database("f1").Collection("laps").Find(ctx, bson.D{{"sessionkey", sessionKey}, {"drivernumber", driverNumber}})
+func FetchLaps(dbClient *mongo.Client, ctx context.Context, sessionKey int) ([]model.Lap, error) {
+	cursor, err := dbClient.Database("f1").Collection("laps").Find(ctx, bson.D{{"sessionkey", sessionKey}})
 	if err != nil {
 		return nil, err
 	}
@@ -93,6 +94,7 @@ func FetchIntervals(dbClient *mongo.Client, ctx context.Context, sessionKey int)
 	var intervals []model.Interval
 	err = cursor.All(ctx, &intervals)
 	if err != nil {
+		fmt.Println("error")
 		return nil, err
 	}
 	return intervals, nil

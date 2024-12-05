@@ -81,7 +81,7 @@ func (r *queryResolver) Positions(ctx context.Context, sessionKey int) ([]*model
 }
 
 // RaceControls is the resolver for the raceControls field.
-func (r *queryResolver) RaceControls(ctx context.Context, sessionKey string) ([]*model.RaceControl, error) {
+func (r *queryResolver) RaceControls(ctx context.Context, sessionKey int) ([]*model.RaceControl, error) {
 	panic(fmt.Errorf("not implemented: RaceControls - raceControls"))
 }
 
@@ -102,11 +102,11 @@ func (r *queryResolver) CarData(ctx context.Context, sessionKey int, driverNumbe
 }
 
 // Laps is the resolver for the laps field.
-func (r *queryResolver) Laps(ctx context.Context, sessionKey int, driverNumber *int) ([]*model.Lap, error) {
+func (r *queryResolver) Laps(ctx context.Context, sessionKey int) ([]*model.Lap, error) {
 	if err != nil {
 		return nil, err
 	}
-	laps, err := dataingestor.FetchLaps(dbClient, ctx, sessionKey, *driverNumber)
+	laps, err := dataingestor.FetchLaps(dbClient, ctx, sessionKey)
 	if err != nil {
 		return nil, err
 	}

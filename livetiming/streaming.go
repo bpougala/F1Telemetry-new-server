@@ -175,8 +175,22 @@ func CreateOriginalSessionMessage() SubscribeMessage {
 	}
 }
 
+func CreateDriverSubscribeMessage() SubscribeMessage {
+	var topics []string
+	topics = append(topics, "DriverList")
+	var topicsList [][]string
+	topicsList = append(topicsList, topics)
+	return SubscribeMessage{
+		H: "Streaming",
+		M: "Subscribe",
+		A: topicsList,
+		I: 3,
+	}
+}
+
 func ProcessSessionDataAndInfo(connection *websocket.Conn, dbClient *mongo.Client, ctx context.Context, sessionKeyChan chan int) {
 	defer close(sessionKeyChan)
+	fmt.Println("Processing session data and info")
 	subscribeMessage := CreateOriginalSessionMessage()
 	err := connection.WriteJSON(subscribeMessage)
 	if err != nil {
@@ -185,29 +199,65 @@ func ProcessSessionDataAndInfo(connection *websocket.Conn, dbClient *mongo.Clien
 	}
 	for {
 		_, message, err := connection.ReadMessage()
+		fmt.Println("received message")
 		if err != nil {
-			fmt.Println("read:", err)
+			if websocket.IsUnexpectedCloseError(err, websocket.CloseGoingAway, websocket.CloseAbnormalClosure) {
+				fmt.Printf("unexpected close error: %v", err)
+			} else {
+				fmt.Println("read:", err)
+			}
 			return
 		}
-		var qualifyingMessage QMessage
-		if !isEmptyJSON(message) {
-			if err = json.Unmarshal(message, &qualifyingMessage); err == nil {
-				qualifyingMessageR := qualifyingMessage.R
-				fmt.Println(qualifyingMessageR.SessionInfo)
-				sessionKey, err := IngestSessionInfo(dbClient, ctx, qualifyingMessageR.SessionInfo)
-				if err != nil {
-					fmt.Printf("Failed to ingest session info: %v\n", err)
-				} else {
-					sessionKeyChan <- sessionKey
-				}
+		meetingData, err := BuildMeetingData(message)
+		if err != nil {
+			fmt.Printf("Error building meeting data: %v\n", err)
+		}
+		sessionInfo, err := BuildSessionInfo(message)
+		if err != nil {
+			fmt.Printf("Error building session info: %v\n", err)
+		}
+		if err == nil {
+			sessionKeyChan <- sessionInfo.Key
+			meetingDB := convertMeetingToDB(meetingData)
+			err := dbClient.Database("f1").Collection("meetingdata").FindOneAndReplace(ctx, bson.D{{"_id", meetingDB.Key}}, meetingDB, options.FindOneAndReplace().SetUpsert(true))
+			if err != nil {
+				fmt.Printf("Error inserting meeting data: %v\n", err)
 			}
-			break
+			err = dbClient.Database("f1").Collection("sessioninfo2").FindOneAndReplace(ctx, bson.D{{"_id", sessionInfo.Key}}, sessionInfo, options.FindOneAndReplace().SetUpsert(true))
+			if err != nil {
+				fmt.Printf("Error inserting session info: %v\n", err)
+			}
 		}
 	}
 }
 
-func ProcessTimingData(connection *websocket.Conn, dbClient *mongo.Client, ctx context.Context, sessionKey int) {
-	subscribeMessage := CreateOriginalMessage()
+func convertMeetingToDB(meeting MeetingData) MeetingDataDB {
+	return MeetingDataDB{
+		Key:          meeting.Key,
+		Name:         meeting.Name,
+		OfficialName: meeting.OfficialName,
+		Location:     meeting.Location,
+		Number:       meeting.Number,
+		CountryName:  meeting.Country.Name,
+		CountryCode:  meeting.Country.Code,
+		Circuit:      meeting.Circuit.ShortName,
+	}
+}
+
+func convertSessionToDB(session SessionInfo) SessionInfoDB {
+	return SessionInfoDB{
+		Key:        session.Key,
+		MeetingKey: session.Meeting.Key,
+		Name:       session.Name,
+		StartDate:  session.StartDate,
+		EndDate:    session.EndDate,
+		Type:       session.Type,
+		GmtOffset:  session.GmtOffset,
+	}
+}
+
+func ProcessDriverData(connection *websocket.Conn, dbClient *mongo.Client, ctx context.Context, sessionKey int) {
+	subscribeMessage := CreateDriverSubscribeMessage()
 	err := connection.WriteJSON(subscribeMessage)
 	if err != nil {
 		fmt.Println("write:", err)
@@ -216,100 +266,22 @@ func ProcessTimingData(connection *websocket.Conn, dbClient *mongo.Client, ctx c
 	for {
 		_, message, err := connection.ReadMessage()
 		if err != nil {
-			fmt.Println("read:", err)
+			if websocket.IsUnexpectedCloseError(err, websocket.CloseGoingAway, websocket.CloseAbnormalClosure) {
+				fmt.Printf("unexpected close error: %v", err)
+			} else {
+				fmt.Println("read:", err)
+			}
 			return
 		}
-	}
-
-}
-
-func IngestRaceControlMessages(dbClient *mongo.Client, ctx context.Context, messages Messages) error {
-	var raceControlMessagesList []interface{}
-	for _, message := range messages.Messages {
-		raceControlMessagesList = append(raceControlMessagesList, message)
-	}
-	_, err := dbClient.Database("f1").Collection("racecontrol").InsertMany(ctx, raceControlMessagesList)
-	if err != nil {
-		return err
-	}
-	return nil
-}
-
-func IngestSessionInfo(dbClient *mongo.Client, ctx context.Context, sessionInfo SessionInfo) (int, error) {
-	if sessionInfo.Name == "" {
-		return 0, nil
-	}
-	sessionInfoDB := SessionInfoDB{
-		ArchiveStatus: sessionInfo.ArchiveStatus.Status,
-		StartDate:     sessionInfo.StartDate,
-		EndDate:       sessionInfo.EndDate,
-		Type:          sessionInfo.Type,
-		GmtOffset:     sessionInfo.GmtOffset,
-		Key:           sessionInfo.Key,
-		MeetingKey:    sessionInfo.Meeting.Key,
-		Name:          sessionInfo.Name,
-		Path:          sessionInfo.Path,
-	}
-	dbClient.Database("f1").Collection("sessioninfo").FindOneAndReplace(ctx, bson.M{"_id": sessionInfo.Key}, sessionInfoDB, options.FindOneAndReplace().SetUpsert(true))
-	meetingInfoDB := MeetingDataDB{
-		Key:          sessionInfo.Meeting.Key,
-		Name:         sessionInfo.Meeting.Name,
-		OfficialName: sessionInfo.Meeting.OfficialName,
-		Location:     sessionInfo.Meeting.Location,
-		Number:       sessionInfo.Meeting.Number,
-		Country:      sessionInfo.Meeting.Country.Name,
-		Circuit:      sessionInfo.Meeting.Circuit.ShortName,
-	}
-	dbClient.Database("f1").Collection("meetingdata").FindOneAndReplace(ctx, bson.M{"_id": sessionInfo.Meeting.Key}, meetingInfoDB, options.FindOneAndReplace().SetUpsert(true))
-	return sessionInfo.Key, nil
-}
-
-//
-//func IngestSessionData(dbClient *mongo.Client, ctx context.Context, sessionData SessionData) error {
-//	if sessionData.Name == "" {
-//		return nil
-//	}
-//	_, err := dbClient.Database("f1").Collection("sessiondata").InsertOne(ctx, sessionData)
-//	if err != nil {
-//		return err
-//	}
-//	return nil
-//}
-
-func Main() {
-	cookies, connObject, err := Negotiate()
-	if err != nil {
-		panic(err)
-	}
-	retries := 10
-	connection, resp, err := SetWebSocket(connObject.ConnectionToken, cookies)
-	for retries > 0 && err != nil {
-		connection, resp, err = SetWebSocket(connObject.ConnectionToken, cookies)
-		retries--
-	}
-	done := make(chan struct{})
-	if err != nil {
-		log.Printf("handshake failed with status %d", resp.StatusCode)
-		panic(err)
-	}
-	defer connection.Close()
-	go func() {
-		defer close(done)
-		for {
-			_, message, err := connection.ReadMessage()
-			if err != nil {
-				fmt.Println("read:", err)
-				return
+		drivers, err := BuildDriverList(message)
+		if err == nil {
+			var driverInterface []interface{}
+			for _, driver := range drivers {
+				driver.SessionKey = sessionKey
+				driverInterface = append(driverInterface, driver)
 			}
-			fmt.Printf("recv: %s", message)
+			_, err = dbClient.Database("f1").Collection("drivers").InsertMany(ctx, driverInterface)
+			break
 		}
-	}()
-}
-
-func isEmptyJSON(data []byte) bool {
-	var obj map[string]interface{}
-	if err := json.Unmarshal(data, &obj); err != nil {
-		return true
 	}
-	return len(obj) == 0
 }

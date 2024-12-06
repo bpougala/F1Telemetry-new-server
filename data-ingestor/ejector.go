@@ -9,7 +9,7 @@ import (
 )
 
 func FetchMeetings(dbClient *mongo.Client, ctx context.Context) ([]model.Meeting, error) {
-	cursor, err := dbClient.Database("f1").Collection("meetings").Find(ctx, bson.D{})
+	cursor, err := dbClient.Database("f1").Collection("meetingdata").Find(ctx, bson.D{})
 	if err != nil {
 		return nil, err
 	}

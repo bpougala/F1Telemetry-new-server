@@ -18,7 +18,8 @@ type MeetingDataDB struct {
 	OfficialName string `json:"OfficialName"`
 	Location     string `json:"Location"`
 	Number       int    `json:"Number"`
-	Country      string `json:"Country"`
+	CountryName  string `json:"CountryName"`
+	CountryCode  string `json:"CountryCode"`
 	Circuit      string `json:"Circuit"`
 }
 

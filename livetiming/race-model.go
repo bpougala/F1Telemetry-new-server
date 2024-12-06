@@ -1,5 +1,7 @@
 package livetiming
 
+import "time"
+
 type WebSocketMessage struct {
 	Control   string `json:"C"`
 	DataBlock []struct {
@@ -26,8 +28,9 @@ type PositionLine struct {
 }
 
 type Position struct {
-	DriverNumber int `json:"DriverNumber"`
-	Position     int `json:"Position"`
+	DriverNumber int    `json:"DriverNumber"`
+	Position     int    `json:"Position"`
+	Timestamp    string `json:"Timestamp"`
 }
 type StintLine struct {
 	Stints map[string]Stint `json:"Stints"`
@@ -54,6 +57,51 @@ type Value struct {
 }
 
 type LapTimeData struct {
+}
+
+type InitialSessionData struct {
+	R struct {
+		SessionData struct {
+			Series       []interface{} `json:"Series"`
+			StatusSeries []struct {
+				Utc           time.Time `json:"Utc"`
+				TrackStatus   string    `json:"TrackStatus,omitempty"`
+				SessionStatus string    `json:"SessionStatus,omitempty"`
+			} `json:"StatusSeries"`
+			Kf bool `json:"_kf"`
+		} `json:"SessionData"`
+		SessionInfo struct {
+			Meeting struct {
+				Key          int    `json:"Key"`
+				Name         string `json:"Name"`
+				OfficialName string `json:"OfficialName"`
+				Location     string `json:"Location"`
+				Number       int    `json:"Number"`
+				Country      struct {
+					Key  int    `json:"Key"`
+					Code string `json:"Code"`
+					Name string `json:"Name"`
+				} `json:"Country"`
+				Circuit struct {
+					Key       int    `json:"Key"`
+					ShortName string `json:"ShortName"`
+				} `json:"Circuit"`
+			} `json:"Meeting"`
+			ArchiveStatus struct {
+				Status string `json:"Status"`
+			} `json:"ArchiveStatus"`
+			Key       int    `json:"Key"`
+			Type      string `json:"Type"`
+			Number    int    `json:"Number"`
+			Name      string `json:"Name"`
+			StartDate string `json:"StartDate"`
+			EndDate   string `json:"EndDate"`
+			GmtOffset string `json:"GmtOffset"`
+			Path      string `json:"Path"`
+			Kf        bool   `json:"_kf"`
+		} `json:"SessionInfo"`
+	} `json:"R"`
+	I string `json:"I"`
 }
 
 type InitialData struct {
@@ -168,4 +216,25 @@ type InitialData struct {
 		} `json:"LapCount"`
 	} `json:"R"`
 	I string `json:"I"`
+}
+
+type DriverList struct {
+	R struct {
+		DriverList map[string]DriverData `json:"DriverList"`
+	} `json:"R"`
+	I string `json:"I"`
+}
+
+type Driver struct {
+	RacingNumber  int    `json:"RacingNumber"`
+	BroadcastName string `json:"BroadcastName"`
+	FullName      string `json:"FullName"`
+	Abbreviation  string `json:"Tla"`
+	TeamName      string `json:"TeamName"`
+	TeamColour    string `json:"TeamColour"`
+	FirstName     string `json:"FirstName"`
+	LastName      string `json:"LastName"`
+	HeadshotUrl   string `json:"HeadshotUrl"`
+	CountryCode   string `json:"CountryCode"`
+	SessionKey    int    `json:"SessionKey"`
 }

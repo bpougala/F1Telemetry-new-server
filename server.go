@@ -88,9 +88,6 @@ func main() {
 			log.Fatalf("Failed to start server: %v", err)
 		}
 	}()
-	/*if err != nil {
-		log.Fatalf("Failed to start server: %v", err)
-	}*/
 	cookies, connObject, err := livetiming.Negotiate()
 	if err != nil {
 		panic(err)
@@ -113,9 +110,9 @@ func main() {
 	sessionKeyChan := make(chan int)
 	go livetiming.ProcessSessionDataAndInfo(connection, dbClient, ctx, sessionKeyChan)
 	sessionKey := <-sessionKeyChan
-	go livetiming.ProcessDriverData(connection, dbClient, ctx, sessionKey)
-	//go livetiming.ProcessTimingData(connection, dbClient, ctx, sessionKey)
-
+	livetiming.ProcessDriverData(connection, dbClient, ctx, sessionKey)
+	connection, _, _ = livetiming.SetWebSocket(connObject.ConnectionToken, cookies)
+	go livetiming.ProcessTimingData(connection, dbClient, ctx, sessionKey)
 	c := make(chan os.Signal, 1)
 	signal.Notify(c, os.Interrupt, syscall.SIGTERM)
 	<-c

@@ -55,6 +55,72 @@ func serverSendingDriverList(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+func serverSendingTimingAppRaceUpdates(w http.ResponseWriter, r *http.Request) {
+	conn, err := upgrader.Upgrade(w, r, nil)
+	if err != nil {
+		return
+	}
+	defer conn.Close()
+	sessionData, err := os.ReadFile("test/timing-data-race.json")
+	if err != nil {
+		fmt.Printf("Error reading timing data: %v\n", err)
+		return
+	}
+	for {
+		messageType, _, err := conn.ReadMessage()
+		if err != nil {
+			return
+		}
+		if err := conn.WriteMessage(messageType, sessionData); err != nil {
+			return
+		}
+	}
+}
+
+func serverSendingTimingAppQualifyingUpdates(w http.ResponseWriter, r *http.Request) {
+	conn, err := upgrader.Upgrade(w, r, nil)
+	if err != nil {
+		return
+	}
+	defer conn.Close()
+	sessionData, err := os.ReadFile("test/timing-data-qualifying.json")
+	if err != nil {
+		fmt.Printf("Error reading timing data: %v\n", err)
+		return
+	}
+	for {
+		messageType, _, err := conn.ReadMessage()
+		if err != nil {
+			return
+		}
+		if err := conn.WriteMessage(messageType, sessionData); err != nil {
+			return
+		}
+	}
+}
+
+func serverSendingSessionUpdate(w http.ResponseWriter, r *http.Request) {
+	conn, err := upgrader.Upgrade(w, r, nil)
+	if err != nil {
+		return
+	}
+	defer conn.Close()
+	sessionData, err := os.ReadFile("test/session-update.json")
+	if err != nil {
+		fmt.Printf("Error reading session data: %v\n", err)
+		return
+	}
+	for {
+		messageType, _, err := conn.ReadMessage()
+		if err != nil {
+			return
+		}
+		if err := conn.WriteMessage(messageType, sessionData); err != nil {
+			return
+		}
+	}
+}
+
 func serverSendingDummyMessage(w http.ResponseWriter, r *http.Request) {
 	conn, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
@@ -226,6 +292,40 @@ func TestShouldNotCreateSessionInfoWhenOtherMessagesAreSent(t *testing.T) {
 	}
 }
 
+func TestShouldUpdateSessionInfoWhenNewMessageIsSent(t *testing.T) {
+	expectedSessionInfo := SessionInfoDB{
+		ArchiveStatus: "Generating",
+		StartDate:     "2024-12-06T13:30:00",
+		EndDate:       "2024-12-06T14:30:00",
+		Type:          "Practice",
+		GmtOffset:     "04:00:00",
+		Key:           9461,
+		MeetingKey:    1252,
+		Name:          "Practice 1",
+		Path:          "2024/2024-12-08_Abu_Dhabi_Grand_Prix/2024-12-06_Practice_1/",
+	}
+	server := httptest.NewServer(http.HandlerFunc(serverSendingTimingAppQualifyingUpdates))
+	url := "ws" + strings.TrimPrefix(server.URL, "http")
+	client, _, err := websocket.DefaultDialer.Dial(url, nil)
+	if err != nil {
+		t.Fatalf("Could not open a websocket connection: %v", err)
+	}
+	defer client.Close()
+	err = sendDummyMessage(client)
+	if err != nil {
+		t.Fatalf("Could not write message to websocket: %v", err)
+	}
+	_, response, err := client.ReadMessage()
+	if err != nil {
+		t.Fatalf("Could not read message from websocket: %v", err)
+	}
+	sessionInfo, err := BuildSessionInfo(response)
+	if err != nil {
+		t.Fatalf("Could not build session info: %v", err)
+	}
+
+}
+
 func TestShouldCreateDriverList(t *testing.T) {
 	maxVerstappen := Driver{
 		RacingNumber:  1,
@@ -289,5 +389,144 @@ func TestShouldNotCreateDriverListIfOtherMessageIsSent(t *testing.T) {
 	}
 	if driverList != nil {
 		t.Fatalf("Expected nil driver list, got: %v", driverList)
+	}
+}
+
+func TestShouldCreatePositionsWhenDriverListFirstSubscribes(t *testing.T) {
+	maxVerstappenPosition := Position{
+		SessionKey:   0,
+		RacingNumber: 1,
+		Position:     17,
+	}
+	server := httptest.NewServer(http.HandlerFunc(serverSendingDriverList))
+	url := "ws" + strings.TrimPrefix(server.URL, "http")
+	client, _, err := websocket.DefaultDialer.Dial(url, nil)
+	if err != nil {
+		t.Fatalf("Could not open a websocket connection: %v", err)
+	}
+	defer client.Close()
+	err = sendDummyMessage(client)
+	if err != nil {
+		t.Fatalf("Could not write message to websocket: %v", err)
+	}
+	_, response, err := client.ReadMessage()
+	if err != nil {
+		t.Fatalf("Could not read message from websocket: %v", err)
+	}
+	positionsList, err := BuildPositions(response)
+	if err != nil {
+		t.Fatalf("Could not build positions list: %v", err)
+	}
+	sort.Slice(positionsList, func(i, j int) bool {
+		return positionsList[i].RacingNumber < positionsList[j].RacingNumber
+	})
+	if len(positionsList) != 20 {
+		t.Fatalf("Expected 20 positions, got: %d", len(positionsList))
+	}
+	if positionsList[0] != maxVerstappenPosition {
+		t.Fatalf("Expected position: %v, got: %v", maxVerstappenPosition, positionsList[0])
+	}
+}
+
+func TestShouldCreatePositionsWhenTimingAppSendsUpdatesDuringRace(t *testing.T) {
+	maxVerstappenPosition := Position{
+		SessionKey:   0,
+		RacingNumber: 1,
+		Position:     2,
+		InPit:        false,
+		PitOut:       false,
+		Stopped:      false,
+		Status:       64,
+	}
+	server := httptest.NewServer(http.HandlerFunc(serverSendingTimingAppRaceUpdates))
+	url := "ws" + strings.TrimPrefix(server.URL, "http")
+	client, _, err := websocket.DefaultDialer.Dial(url, nil)
+	if err != nil {
+		t.Fatalf("Could not open a websocket connection: %v", err)
+	}
+	defer client.Close()
+	err = sendDummyMessage(client)
+	if err != nil {
+		t.Fatalf("Could not write message to websocket: %v", err)
+	}
+	_, response, err := client.ReadMessage()
+	if err != nil {
+		t.Fatalf("Could not read message from websocket: %v", err)
+	}
+	positionsList, err := BuildPositions(response)
+	if err != nil {
+		t.Fatalf("Could not build positions list: %v", err)
+	}
+	sort.Slice(positionsList, func(i, j int) bool {
+		return positionsList[i].RacingNumber < positionsList[j].RacingNumber
+	})
+	if len(positionsList) != 20 {
+		t.Fatalf("Expected 20 positions, got: %d", len(positionsList))
+	}
+	if positionsList[0] != maxVerstappenPosition {
+		t.Fatalf("Expected position: %v, got: %v", maxVerstappenPosition, positionsList[0])
+	}
+}
+
+func TestShouldCreatePositionsWhenTimingAppSendsUpdatesDuringQualifying(t *testing.T) {
+	maxVerstappenPosition := Position{
+		SessionKey:   0,
+		RacingNumber: 1,
+		Position:     11,
+		InPit:        true,
+		PitOut:       false,
+		Stopped:      false,
+		Status:       272,
+	}
+	server := httptest.NewServer(http.HandlerFunc(serverSendingTimingAppQualifyingUpdates))
+	url := "ws" + strings.TrimPrefix(server.URL, "http")
+	client, _, err := websocket.DefaultDialer.Dial(url, nil)
+	if err != nil {
+		t.Fatalf("Could not open a websocket connection: %v", err)
+	}
+	defer client.Close()
+	err = sendDummyMessage(client)
+	if err != nil {
+		t.Fatalf("Could not write message to websocket: %v", err)
+	}
+	_, response, err := client.ReadMessage()
+	if err != nil {
+		t.Fatalf("Could not read message from websocket: %v", err)
+	}
+	positionsList, err := BuildPositions(response)
+	if err != nil {
+		t.Fatalf("Could not build positions list: %v", err)
+	}
+	sort.Slice(positionsList, func(i, j int) bool {
+		return positionsList[i].RacingNumber < positionsList[j].RacingNumber
+	})
+	if len(positionsList) != 20 {
+		t.Fatalf("Expected 20 positions, got: %d", len(positionsList))
+	}
+	if positionsList[0] != maxVerstappenPosition {
+		t.Fatalf("Expected position: %v, got: %v", maxVerstappenPosition, positionsList[0])
+	}
+}
+
+func TestShouldNotCreatePositionsWhenDummyMessageIsSent(t *testing.T) {
+	client, err := prepareClientReturningDummyMessage()
+	defer client.Close()
+	if err != nil {
+		t.Fatalf("Could not prepare client: %v", err)
+	}
+	err = sendDummyMessage(client)
+	if err != nil {
+		t.Fatalf("Could not write message to websocket: %v", err)
+	}
+	_, response, err := client.ReadMessage()
+	if err != nil {
+		t.Fatalf("Could not read message from websocket: %v", err)
+	}
+	positionsList, err := BuildPositions(response)
+	if err == nil {
+		t.Fatalf("Expected error, got positions list: %v", positionsList)
+	}
+	if positionsList != nil {
+		t.Fatalf("Expected nil positions list, got: %v", positionsList)
 	}
 }

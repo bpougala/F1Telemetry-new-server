@@ -60,15 +60,14 @@ type ComplexityRoot struct {
 	}
 
 	Driver struct {
+		Abbreviation  func(childComplexity int) int
 		BroadcastName func(childComplexity int) int
 		CountryCode   func(childComplexity int) int
-		DriverNumber  func(childComplexity int) int
 		FirstName     func(childComplexity int) int
 		FullName      func(childComplexity int) int
 		HeadshotURL   func(childComplexity int) int
 		LastName      func(childComplexity int) int
-		MeetingKey    func(childComplexity int) int
-		NameAcronym   func(childComplexity int) int
+		RacingNumber  func(childComplexity int) int
 		SessionKey    func(childComplexity int) int
 		TeamColour    func(childComplexity int) int
 		TeamName      func(childComplexity int) int
@@ -103,24 +102,17 @@ type ComplexityRoot struct {
 	}
 
 	Meeting struct {
-		CircuitKey          func(childComplexity int) int
 		CircuitShortName    func(childComplexity int) int
 		CountryCode         func(childComplexity int) int
-		CountryKey          func(childComplexity int) int
 		CountryName         func(childComplexity int) int
-		DateStart           func(childComplexity int) int
-		GmtOffset           func(childComplexity int) int
 		Location            func(childComplexity int) int
 		MeetingKey          func(childComplexity int) int
 		MeetingName         func(childComplexity int) int
 		MeetingOfficialName func(childComplexity int) int
-		Year                func(childComplexity int) int
 	}
 
 	Position struct {
-		Date         func(childComplexity int) int
 		DriverNumber func(childComplexity int) int
-		MeetingKey   func(childComplexity int) int
 		Position     func(childComplexity int) int
 		SessionKey   func(childComplexity int) int
 	}
@@ -150,20 +142,13 @@ type ComplexityRoot struct {
 	}
 
 	Session struct {
-		CircuitKey       func(childComplexity int) int
-		CircuitShortName func(childComplexity int) int
-		CountryCode      func(childComplexity int) int
-		CountryKey       func(childComplexity int) int
-		CountryName      func(childComplexity int) int
-		DateEnd          func(childComplexity int) int
-		DateStart        func(childComplexity int) int
-		GmtOffset        func(childComplexity int) int
-		Location         func(childComplexity int) int
-		MeetingKey       func(childComplexity int) int
-		SessionKey       func(childComplexity int) int
-		SessionName      func(childComplexity int) int
-		SessionType      func(childComplexity int) int
-		Year             func(childComplexity int) int
+		DateEnd     func(childComplexity int) int
+		DateStart   func(childComplexity int) int
+		GmtOffset   func(childComplexity int) int
+		MeetingKey  func(childComplexity int) int
+		SessionKey  func(childComplexity int) int
+		SessionName func(childComplexity int) int
+		SessionType func(childComplexity int) int
 	}
 }
 
@@ -267,6 +252,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.CarData.Throttle(childComplexity), true
 
+	case "Driver.abbreviation":
+		if e.complexity.Driver.Abbreviation == nil {
+			break
+		}
+
+		return e.complexity.Driver.Abbreviation(childComplexity), true
+
 	case "Driver.broadcast_name":
 		if e.complexity.Driver.BroadcastName == nil {
 			break
@@ -280,13 +272,6 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Driver.CountryCode(childComplexity), true
-
-	case "Driver.driver_number":
-		if e.complexity.Driver.DriverNumber == nil {
-			break
-		}
-
-		return e.complexity.Driver.DriverNumber(childComplexity), true
 
 	case "Driver.first_name":
 		if e.complexity.Driver.FirstName == nil {
@@ -316,19 +301,12 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Driver.LastName(childComplexity), true
 
-	case "Driver.meeting_key":
-		if e.complexity.Driver.MeetingKey == nil {
+	case "Driver.racing_number":
+		if e.complexity.Driver.RacingNumber == nil {
 			break
 		}
 
-		return e.complexity.Driver.MeetingKey(childComplexity), true
-
-	case "Driver.name_acronym":
-		if e.complexity.Driver.NameAcronym == nil {
-			break
-		}
-
-		return e.complexity.Driver.NameAcronym(childComplexity), true
+		return e.complexity.Driver.RacingNumber(childComplexity), true
 
 	case "Driver.session_key":
 		if e.complexity.Driver.SessionKey == nil {
@@ -505,13 +483,6 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Lap.StSpeed(childComplexity), true
 
-	case "Meeting.circuit_key":
-		if e.complexity.Meeting.CircuitKey == nil {
-			break
-		}
-
-		return e.complexity.Meeting.CircuitKey(childComplexity), true
-
 	case "Meeting.circuit_short_name":
 		if e.complexity.Meeting.CircuitShortName == nil {
 			break
@@ -526,33 +497,12 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Meeting.CountryCode(childComplexity), true
 
-	case "Meeting.country_key":
-		if e.complexity.Meeting.CountryKey == nil {
-			break
-		}
-
-		return e.complexity.Meeting.CountryKey(childComplexity), true
-
 	case "Meeting.country_name":
 		if e.complexity.Meeting.CountryName == nil {
 			break
 		}
 
 		return e.complexity.Meeting.CountryName(childComplexity), true
-
-	case "Meeting.date_start":
-		if e.complexity.Meeting.DateStart == nil {
-			break
-		}
-
-		return e.complexity.Meeting.DateStart(childComplexity), true
-
-	case "Meeting.gmt_offset":
-		if e.complexity.Meeting.GmtOffset == nil {
-			break
-		}
-
-		return e.complexity.Meeting.GmtOffset(childComplexity), true
 
 	case "Meeting.location":
 		if e.complexity.Meeting.Location == nil {
@@ -582,33 +532,12 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Meeting.MeetingOfficialName(childComplexity), true
 
-	case "Meeting.year":
-		if e.complexity.Meeting.Year == nil {
-			break
-		}
-
-		return e.complexity.Meeting.Year(childComplexity), true
-
-	case "Position.date":
-		if e.complexity.Position.Date == nil {
-			break
-		}
-
-		return e.complexity.Position.Date(childComplexity), true
-
 	case "Position.driver_number":
 		if e.complexity.Position.DriverNumber == nil {
 			break
 		}
 
 		return e.complexity.Position.DriverNumber(childComplexity), true
-
-	case "Position.meeting_key":
-		if e.complexity.Position.MeetingKey == nil {
-			break
-		}
-
-		return e.complexity.Position.MeetingKey(childComplexity), true
 
 	case "Position.position":
 		if e.complexity.Position.Position == nil {
@@ -785,41 +714,6 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.RaceControl.SessionKey(childComplexity), true
 
-	case "Session.circuit_key":
-		if e.complexity.Session.CircuitKey == nil {
-			break
-		}
-
-		return e.complexity.Session.CircuitKey(childComplexity), true
-
-	case "Session.circuit_short_name":
-		if e.complexity.Session.CircuitShortName == nil {
-			break
-		}
-
-		return e.complexity.Session.CircuitShortName(childComplexity), true
-
-	case "Session.country_code":
-		if e.complexity.Session.CountryCode == nil {
-			break
-		}
-
-		return e.complexity.Session.CountryCode(childComplexity), true
-
-	case "Session.country_key":
-		if e.complexity.Session.CountryKey == nil {
-			break
-		}
-
-		return e.complexity.Session.CountryKey(childComplexity), true
-
-	case "Session.country_name":
-		if e.complexity.Session.CountryName == nil {
-			break
-		}
-
-		return e.complexity.Session.CountryName(childComplexity), true
-
 	case "Session.date_end":
 		if e.complexity.Session.DateEnd == nil {
 			break
@@ -840,13 +734,6 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Session.GmtOffset(childComplexity), true
-
-	case "Session.location":
-		if e.complexity.Session.Location == nil {
-			break
-		}
-
-		return e.complexity.Session.Location(childComplexity), true
 
 	case "Session.meeting_key":
 		if e.complexity.Session.MeetingKey == nil {
@@ -875,13 +762,6 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Session.SessionType(childComplexity), true
-
-	case "Session.year":
-		if e.complexity.Session.Year == nil {
-			break
-		}
-
-		return e.complexity.Session.Year(childComplexity), true
 
 	}
 	return 0, false
@@ -1731,50 +1611,6 @@ func (ec *executionContext) fieldContext_Driver_session_key(_ context.Context, f
 	return fc, nil
 }
 
-func (ec *executionContext) _Driver_meeting_key(ctx context.Context, field graphql.CollectedField, obj *model.Driver) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Driver_meeting_key(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.MeetingKey, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(int)
-	fc.Result = res
-	return ec.marshalNInt2int(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_Driver_meeting_key(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Driver",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type Int does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
 func (ec *executionContext) _Driver_broadcast_name(ctx context.Context, field graphql.CollectedField, obj *model.Driver) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Driver_broadcast_name(ctx, field)
 	if err != nil {
@@ -2039,8 +1875,8 @@ func (ec *executionContext) fieldContext_Driver_last_name(_ context.Context, fie
 	return fc, nil
 }
 
-func (ec *executionContext) _Driver_driver_number(ctx context.Context, field graphql.CollectedField, obj *model.Driver) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Driver_driver_number(ctx, field)
+func (ec *executionContext) _Driver_racing_number(ctx context.Context, field graphql.CollectedField, obj *model.Driver) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Driver_racing_number(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -2053,7 +1889,7 @@ func (ec *executionContext) _Driver_driver_number(ctx context.Context, field gra
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.DriverNumber, nil
+		return obj.RacingNumber, nil
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -2070,7 +1906,7 @@ func (ec *executionContext) _Driver_driver_number(ctx context.Context, field gra
 	return ec.marshalNInt2int(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_Driver_driver_number(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_Driver_racing_number(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Driver",
 		Field:      field,
@@ -2165,8 +2001,8 @@ func (ec *executionContext) fieldContext_Driver_team_name(_ context.Context, fie
 	return fc, nil
 }
 
-func (ec *executionContext) _Driver_name_acronym(ctx context.Context, field graphql.CollectedField, obj *model.Driver) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Driver_name_acronym(ctx, field)
+func (ec *executionContext) _Driver_abbreviation(ctx context.Context, field graphql.CollectedField, obj *model.Driver) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Driver_abbreviation(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -2179,7 +2015,7 @@ func (ec *executionContext) _Driver_name_acronym(ctx context.Context, field grap
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.NameAcronym, nil
+		return obj.Abbreviation, nil
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -2193,7 +2029,7 @@ func (ec *executionContext) _Driver_name_acronym(ctx context.Context, field grap
 	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_Driver_name_acronym(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_Driver_abbreviation(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Driver",
 		Field:      field,
@@ -3270,50 +3106,6 @@ func (ec *executionContext) fieldContext_Meeting_location(_ context.Context, fie
 	return fc, nil
 }
 
-func (ec *executionContext) _Meeting_country_key(ctx context.Context, field graphql.CollectedField, obj *model.Meeting) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Meeting_country_key(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.CountryKey, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(int)
-	fc.Result = res
-	return ec.marshalNInt2int(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_Meeting_country_key(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Meeting",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type Int does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
 func (ec *executionContext) _Meeting_country_code(ctx context.Context, field graphql.CollectedField, obj *model.Meeting) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Meeting_country_code(ctx, field)
 	if err != nil {
@@ -3402,50 +3194,6 @@ func (ec *executionContext) fieldContext_Meeting_country_name(_ context.Context,
 	return fc, nil
 }
 
-func (ec *executionContext) _Meeting_circuit_key(ctx context.Context, field graphql.CollectedField, obj *model.Meeting) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Meeting_circuit_key(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.CircuitKey, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(int)
-	fc.Result = res
-	return ec.marshalNInt2int(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_Meeting_circuit_key(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Meeting",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type Int does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
 func (ec *executionContext) _Meeting_circuit_short_name(ctx context.Context, field graphql.CollectedField, obj *model.Meeting) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Meeting_circuit_short_name(ctx, field)
 	if err != nil {
@@ -3478,94 +3226,6 @@ func (ec *executionContext) _Meeting_circuit_short_name(ctx context.Context, fie
 }
 
 func (ec *executionContext) fieldContext_Meeting_circuit_short_name(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Meeting",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type String does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _Meeting_date_start(ctx context.Context, field graphql.CollectedField, obj *model.Meeting) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Meeting_date_start(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.DateStart, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(string)
-	fc.Result = res
-	return ec.marshalNString2string(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_Meeting_date_start(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Meeting",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type String does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _Meeting_gmt_offset(ctx context.Context, field graphql.CollectedField, obj *model.Meeting) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Meeting_gmt_offset(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.GmtOffset, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(string)
-	fc.Result = res
-	return ec.marshalNString2string(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_Meeting_gmt_offset(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Meeting",
 		Field:      field,
@@ -3622,50 +3282,6 @@ func (ec *executionContext) fieldContext_Meeting_meeting_key(_ context.Context, 
 	return fc, nil
 }
 
-func (ec *executionContext) _Meeting_year(ctx context.Context, field graphql.CollectedField, obj *model.Meeting) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Meeting_year(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.Year, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(int)
-	fc.Result = res
-	return ec.marshalNInt2int(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_Meeting_year(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Meeting",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type Int does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
 func (ec *executionContext) _Position_session_key(ctx context.Context, field graphql.CollectedField, obj *model.Position) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Position_session_key(ctx, field)
 	if err != nil {
@@ -3698,50 +3314,6 @@ func (ec *executionContext) _Position_session_key(ctx context.Context, field gra
 }
 
 func (ec *executionContext) fieldContext_Position_session_key(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Position",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type Int does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _Position_meeting_key(ctx context.Context, field graphql.CollectedField, obj *model.Position) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Position_meeting_key(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.MeetingKey, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(int)
-	fc.Result = res
-	return ec.marshalNInt2int(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_Position_meeting_key(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Position",
 		Field:      field,
@@ -3793,50 +3365,6 @@ func (ec *executionContext) fieldContext_Position_driver_number(_ context.Contex
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			return nil, errors.New("field of type Int does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _Position_date(ctx context.Context, field graphql.CollectedField, obj *model.Position) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Position_date(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.Date, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(string)
-	fc.Result = res
-	return ec.marshalNString2string(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_Position_date(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Position",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type String does not have child fields")
 		},
 	}
 	return fc, nil
@@ -3931,24 +3459,14 @@ func (ec *executionContext) fieldContext_Query_meetings(_ context.Context, field
 				return ec.fieldContext_Meeting_meeting_official_name(ctx, field)
 			case "location":
 				return ec.fieldContext_Meeting_location(ctx, field)
-			case "country_key":
-				return ec.fieldContext_Meeting_country_key(ctx, field)
 			case "country_code":
 				return ec.fieldContext_Meeting_country_code(ctx, field)
 			case "country_name":
 				return ec.fieldContext_Meeting_country_name(ctx, field)
-			case "circuit_key":
-				return ec.fieldContext_Meeting_circuit_key(ctx, field)
 			case "circuit_short_name":
 				return ec.fieldContext_Meeting_circuit_short_name(ctx, field)
-			case "date_start":
-				return ec.fieldContext_Meeting_date_start(ctx, field)
-			case "gmt_offset":
-				return ec.fieldContext_Meeting_gmt_offset(ctx, field)
 			case "meeting_key":
 				return ec.fieldContext_Meeting_meeting_key(ctx, field)
-			case "year":
-				return ec.fieldContext_Meeting_year(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Meeting", field.Name)
 		},
@@ -4009,20 +3527,6 @@ func (ec *executionContext) fieldContext_Query_sessions(ctx context.Context, fie
 				return ec.fieldContext_Session_session_type(ctx, field)
 			case "meeting_key":
 				return ec.fieldContext_Session_meeting_key(ctx, field)
-			case "location":
-				return ec.fieldContext_Session_location(ctx, field)
-			case "country_key":
-				return ec.fieldContext_Session_country_key(ctx, field)
-			case "country_code":
-				return ec.fieldContext_Session_country_code(ctx, field)
-			case "country_name":
-				return ec.fieldContext_Session_country_name(ctx, field)
-			case "circuit_key":
-				return ec.fieldContext_Session_circuit_key(ctx, field)
-			case "circuit_short_name":
-				return ec.fieldContext_Session_circuit_short_name(ctx, field)
-			case "year":
-				return ec.fieldContext_Session_year(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Session", field.Name)
 		},
@@ -4082,8 +3586,6 @@ func (ec *executionContext) fieldContext_Query_drivers(ctx context.Context, fiel
 			switch field.Name {
 			case "session_key":
 				return ec.fieldContext_Driver_session_key(ctx, field)
-			case "meeting_key":
-				return ec.fieldContext_Driver_meeting_key(ctx, field)
 			case "broadcast_name":
 				return ec.fieldContext_Driver_broadcast_name(ctx, field)
 			case "country_code":
@@ -4096,14 +3598,14 @@ func (ec *executionContext) fieldContext_Query_drivers(ctx context.Context, fiel
 				return ec.fieldContext_Driver_headshot_url(ctx, field)
 			case "last_name":
 				return ec.fieldContext_Driver_last_name(ctx, field)
-			case "driver_number":
-				return ec.fieldContext_Driver_driver_number(ctx, field)
+			case "racing_number":
+				return ec.fieldContext_Driver_racing_number(ctx, field)
 			case "team_colour":
 				return ec.fieldContext_Driver_team_colour(ctx, field)
 			case "team_name":
 				return ec.fieldContext_Driver_team_name(ctx, field)
-			case "name_acronym":
-				return ec.fieldContext_Driver_name_acronym(ctx, field)
+			case "abbreviation":
+				return ec.fieldContext_Driver_abbreviation(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Driver", field.Name)
 		},
@@ -4163,12 +3665,8 @@ func (ec *executionContext) fieldContext_Query_positions(ctx context.Context, fi
 			switch field.Name {
 			case "session_key":
 				return ec.fieldContext_Position_session_key(ctx, field)
-			case "meeting_key":
-				return ec.fieldContext_Position_meeting_key(ctx, field)
 			case "driver_number":
 				return ec.fieldContext_Position_driver_number(ctx, field)
-			case "date":
-				return ec.fieldContext_Position_date(ctx, field)
 			case "position":
 				return ec.fieldContext_Position_position(ctx, field)
 			}
@@ -5345,314 +4843,6 @@ func (ec *executionContext) _Session_meeting_key(ctx context.Context, field grap
 }
 
 func (ec *executionContext) fieldContext_Session_meeting_key(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Session",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type Int does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _Session_location(ctx context.Context, field graphql.CollectedField, obj *model.Session) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Session_location(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.Location, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(string)
-	fc.Result = res
-	return ec.marshalNString2string(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_Session_location(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Session",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type String does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _Session_country_key(ctx context.Context, field graphql.CollectedField, obj *model.Session) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Session_country_key(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.CountryKey, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(int)
-	fc.Result = res
-	return ec.marshalNInt2int(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_Session_country_key(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Session",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type Int does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _Session_country_code(ctx context.Context, field graphql.CollectedField, obj *model.Session) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Session_country_code(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.CountryCode, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(string)
-	fc.Result = res
-	return ec.marshalNString2string(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_Session_country_code(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Session",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type String does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _Session_country_name(ctx context.Context, field graphql.CollectedField, obj *model.Session) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Session_country_name(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.CountryName, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(string)
-	fc.Result = res
-	return ec.marshalNString2string(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_Session_country_name(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Session",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type String does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _Session_circuit_key(ctx context.Context, field graphql.CollectedField, obj *model.Session) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Session_circuit_key(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.CircuitKey, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(int)
-	fc.Result = res
-	return ec.marshalNInt2int(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_Session_circuit_key(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Session",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type Int does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _Session_circuit_short_name(ctx context.Context, field graphql.CollectedField, obj *model.Session) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Session_circuit_short_name(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.CircuitShortName, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(string)
-	fc.Result = res
-	return ec.marshalNString2string(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_Session_circuit_short_name(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Session",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type String does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _Session_year(ctx context.Context, field graphql.CollectedField, obj *model.Session) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Session_year(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.Year, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(int)
-	fc.Result = res
-	return ec.marshalNInt2int(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_Session_year(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Session",
 		Field:      field,
@@ -7546,11 +6736,6 @@ func (ec *executionContext) _Driver(ctx context.Context, sel ast.SelectionSet, o
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
-		case "meeting_key":
-			out.Values[i] = ec._Driver_meeting_key(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				out.Invalids++
-			}
 		case "broadcast_name":
 			out.Values[i] = ec._Driver_broadcast_name(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
@@ -7581,8 +6766,8 @@ func (ec *executionContext) _Driver(ctx context.Context, sel ast.SelectionSet, o
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
-		case "driver_number":
-			out.Values[i] = ec._Driver_driver_number(ctx, field, obj)
+		case "racing_number":
+			out.Values[i] = ec._Driver_racing_number(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
@@ -7590,8 +6775,8 @@ func (ec *executionContext) _Driver(ctx context.Context, sel ast.SelectionSet, o
 			out.Values[i] = ec._Driver_team_colour(ctx, field, obj)
 		case "team_name":
 			out.Values[i] = ec._Driver_team_name(ctx, field, obj)
-		case "name_acronym":
-			out.Values[i] = ec._Driver_name_acronym(ctx, field, obj)
+		case "abbreviation":
+			out.Values[i] = ec._Driver_abbreviation(ctx, field, obj)
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -7783,11 +6968,6 @@ func (ec *executionContext) _Meeting(ctx context.Context, sel ast.SelectionSet, 
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
-		case "country_key":
-			out.Values[i] = ec._Meeting_country_key(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				out.Invalids++
-			}
 		case "country_code":
 			out.Values[i] = ec._Meeting_country_code(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
@@ -7798,33 +6978,13 @@ func (ec *executionContext) _Meeting(ctx context.Context, sel ast.SelectionSet, 
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
-		case "circuit_key":
-			out.Values[i] = ec._Meeting_circuit_key(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				out.Invalids++
-			}
 		case "circuit_short_name":
 			out.Values[i] = ec._Meeting_circuit_short_name(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
-		case "date_start":
-			out.Values[i] = ec._Meeting_date_start(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				out.Invalids++
-			}
-		case "gmt_offset":
-			out.Values[i] = ec._Meeting_gmt_offset(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				out.Invalids++
-			}
 		case "meeting_key":
 			out.Values[i] = ec._Meeting_meeting_key(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				out.Invalids++
-			}
-		case "year":
-			out.Values[i] = ec._Meeting_year(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
@@ -7867,18 +7027,8 @@ func (ec *executionContext) _Position(ctx context.Context, sel ast.SelectionSet,
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
-		case "meeting_key":
-			out.Values[i] = ec._Position_meeting_key(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				out.Invalids++
-			}
 		case "driver_number":
 			out.Values[i] = ec._Position_driver_number(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				out.Invalids++
-			}
-		case "date":
-			out.Values[i] = ec._Position_date(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
@@ -8242,41 +7392,6 @@ func (ec *executionContext) _Session(ctx context.Context, sel ast.SelectionSet, 
 			}
 		case "meeting_key":
 			out.Values[i] = ec._Session_meeting_key(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				out.Invalids++
-			}
-		case "location":
-			out.Values[i] = ec._Session_location(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				out.Invalids++
-			}
-		case "country_key":
-			out.Values[i] = ec._Session_country_key(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				out.Invalids++
-			}
-		case "country_code":
-			out.Values[i] = ec._Session_country_code(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				out.Invalids++
-			}
-		case "country_name":
-			out.Values[i] = ec._Session_country_name(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				out.Invalids++
-			}
-		case "circuit_key":
-			out.Values[i] = ec._Session_circuit_key(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				out.Invalids++
-			}
-		case "circuit_short_name":
-			out.Values[i] = ec._Session_circuit_short_name(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				out.Invalids++
-			}
-		case "year":
-			out.Values[i] = ec._Session_year(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}

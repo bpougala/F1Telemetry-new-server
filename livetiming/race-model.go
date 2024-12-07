@@ -28,10 +28,16 @@ type PositionLine struct {
 }
 
 type Position struct {
-	DriverNumber int    `json:"DriverNumber"`
-	Position     int    `json:"Position"`
-	Timestamp    string `json:"Timestamp"`
+	SessionKey   int  `json:"SessionKey"`
+	RacingNumber int  `json:"DriverNumber"`
+	Position     int  `json:"Position"`
+	Retired      bool `json:"Retired"`
+	InPit        bool `json:"InPit"`
+	PitOut       bool `json:"PitOut"`
+	Stopped      bool `json:"Stopped"`
+	Status       int  `json:"Status"`
 }
+
 type StintLine struct {
 	Stints map[string]Stint `json:"Stints"`
 }

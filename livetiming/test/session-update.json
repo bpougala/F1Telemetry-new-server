@@ -1,0 +1,21 @@
+{
+  "C": "d-C41746DD-B,0|BVO,0|BVP,4|L,1|M,2|N,C",
+  "M": [
+    {
+      "H": "Streaming",
+      "M": "feed",
+      "A": [
+        "SessionData",
+        {
+          "StatusSeries": {
+            "1": {
+              "Utc": "2024-12-07T10:30:00.095Z",
+              "SessionStatus": "Started"
+            }
+          }
+        },
+        "2024-12-07T10:30:00.095Z"
+      ]
+    }
+  ]
+}

@@ -51,9 +51,7 @@ type Driver {
 
 type Position {
   session_key: Int!
-  meeting_key: Int!
   driver_number: Int!
-  date:          String!
   position: Int!
 }
 

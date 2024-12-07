@@ -2,6 +2,7 @@ package data_ingestor
 
 import (
 	"F1Telemetry-new-server/graph/model"
+	"F1Telemetry-new-server/livetiming"
 	"context"
 	"fmt"
 	"go.mongodb.org/mongo-driver/bson"
@@ -13,23 +14,49 @@ func FetchMeetings(dbClient *mongo.Client, ctx context.Context) ([]model.Meeting
 	if err != nil {
 		return nil, err
 	}
+	var rawMeetings []livetiming.MeetingDataDB
 	var meetings []model.Meeting
-	err = cursor.All(ctx, &meetings)
+	err = cursor.All(ctx, &rawMeetings)
 	if err != nil {
 		return nil, err
+	}
+	for _, rawMeeting := range rawMeetings {
+		meeting := model.Meeting{
+			MeetingKey:          rawMeeting.Key,
+			MeetingName:         rawMeeting.Name,
+			MeetingOfficialName: rawMeeting.OfficialName,
+			Location:            rawMeeting.Location,
+			CountryName:         rawMeeting.CountryName,
+			CountryCode:         rawMeeting.CountryCode,
+			CircuitShortName:    rawMeeting.Circuit,
+		}
+		meetings = append(meetings, meeting)
 	}
 	return meetings, nil
 }
 
 func FetchSessions(dbClient *mongo.Client, ctx context.Context, meetingKey int) ([]model.Session, error) {
-	cursor, err := dbClient.Database("f1").Collection("sessions").Find(ctx, bson.D{{"meetingkey", meetingKey}})
+	cursor, err := dbClient.Database("f1").Collection("sessioninfo").Find(ctx, bson.D{{"meetingkey", meetingKey}})
 	if err != nil {
 		return nil, err
 	}
+	var rawSessions []livetiming.SessionInfoDB
 	var sessions []model.Session
-	err = cursor.All(ctx, &sessions)
+	err = cursor.All(ctx, &rawSessions)
 	if err != nil {
 		return nil, err
+	}
+	for _, rawSession := range rawSessions {
+		session := model.Session{
+			SessionKey:  rawSession.Key,
+			MeetingKey:  rawSession.MeetingKey,
+			SessionName: rawSession.Name,
+			DateStart:   rawSession.StartDate,
+			DateEnd:     rawSession.EndDate,
+			SessionType: rawSession.Type,
+			GmtOffset:   rawSession.GmtOffset,
+		}
+		sessions = append(sessions, session)
 	}
 	return sessions, nil
 }
@@ -39,10 +66,24 @@ func FetchDrivers(dbClient *mongo.Client, ctx context.Context, sessionKey int) (
 	if err != nil {
 		return nil, err
 	}
+	var rawDrivers []livetiming.Driver
 	var drivers []model.Driver
-	err = cursor.All(ctx, &drivers)
+	err = cursor.All(ctx, &rawDrivers)
 	if err != nil {
 		return nil, err
+	}
+	for _, rawDriver := range rawDrivers {
+		driver := model.Driver{
+			SessionKey:   rawDriver.SessionKey,
+			RacingNumber: rawDriver.RacingNumber,
+			FirstName:    rawDriver.FirstName,
+			LastName:     rawDriver.LastName,
+			TeamColour:   &rawDriver.TeamColour,
+			TeamName:     &rawDriver.TeamName,
+			Abbreviation: &rawDriver.Abbreviation,
+			FullName:     rawDriver.FullName,
+		}
+		drivers = append(drivers, driver)
 	}
 	return drivers, nil
 }

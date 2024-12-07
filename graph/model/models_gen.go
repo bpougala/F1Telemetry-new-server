@@ -17,17 +17,16 @@ type CarData struct {
 
 type Driver struct {
 	SessionKey    int     `json:"session_key"`
-	MeetingKey    int     `json:"meeting_key"`
 	BroadcastName string  `json:"broadcast_name"`
 	CountryCode   string  `json:"country_code"`
 	FirstName     string  `json:"first_name"`
 	FullName      string  `json:"full_name"`
 	HeadshotURL   string  `json:"headshot_url"`
 	LastName      string  `json:"last_name"`
-	DriverNumber  int     `json:"driver_number"`
+	RacingNumber  int     `json:"racing_number"`
 	TeamColour    *string `json:"team_colour,omitempty"`
 	TeamName      *string `json:"team_name,omitempty"`
-	NameAcronym   *string `json:"name_acronym,omitempty"`
+	Abbreviation  *string `json:"abbreviation,omitempty"`
 }
 
 type Interval struct {
@@ -62,23 +61,16 @@ type Meeting struct {
 	MeetingName         string `json:"meeting_name"`
 	MeetingOfficialName string `json:"meeting_official_name"`
 	Location            string `json:"location"`
-	CountryKey          int    `json:"country_key"`
 	CountryCode         string `json:"country_code"`
 	CountryName         string `json:"country_name"`
-	CircuitKey          int    `json:"circuit_key"`
 	CircuitShortName    string `json:"circuit_short_name"`
-	DateStart           string `json:"date_start"`
-	GmtOffset           string `json:"gmt_offset"`
 	MeetingKey          int    `json:"meeting_key"`
-	Year                int    `json:"year"`
 }
 
 type Position struct {
-	SessionKey   int    `json:"session_key"`
-	MeetingKey   int    `json:"meeting_key"`
-	DriverNumber int    `json:"driver_number"`
-	Date         string `json:"date"`
-	Position     int    `json:"position"`
+	SessionKey   int `json:"session_key"`
+	DriverNumber int `json:"driver_number"`
+	Position     int `json:"position"`
 }
 
 type Query struct {
@@ -98,18 +90,11 @@ type RaceControl struct {
 }
 
 type Session struct {
-	SessionKey       int    `json:"session_key"`
-	SessionName      string `json:"session_name"`
-	DateStart        string `json:"date_start"`
-	DateEnd          string `json:"date_end"`
-	GmtOffset        string `json:"gmt_offset"`
-	SessionType      string `json:"session_type"`
-	MeetingKey       int    `json:"meeting_key"`
-	Location         string `json:"location"`
-	CountryKey       int    `json:"country_key"`
-	CountryCode      string `json:"country_code"`
-	CountryName      string `json:"country_name"`
-	CircuitKey       int    `json:"circuit_key"`
-	CircuitShortName string `json:"circuit_short_name"`
-	Year             int    `json:"year"`
+	SessionKey  int    `json:"session_key"`
+	SessionName string `json:"session_name"`
+	DateStart   string `json:"date_start"`
+	DateEnd     string `json:"date_end"`
+	GmtOffset   string `json:"gmt_offset"`
+	SessionType string `json:"session_type"`
+	MeetingKey  int    `json:"meeting_key"`
 }

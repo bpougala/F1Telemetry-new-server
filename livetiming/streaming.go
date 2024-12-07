@@ -93,15 +93,6 @@ type ConnectionData struct {
 	Name string `json:"name"`
 }
 
-/*
-{
-	"H": "Streaming",
-	"M": "Subscribe",
-	"A": [["TimingData", "Position.z", "SessionData"]],
-	"I": 1
-}
-*/
-
 type SubscribeMessage struct {
 	H string     `json:"H"`
 	M string     `json:"M"`
@@ -149,7 +140,7 @@ func SetWebSocket(connectionToken string, cookies []*http.Cookie) (*websocket.Co
 	return connection, resp, nil
 }
 
-func CreateOriginalMessage() SubscribeMessage {
+func CreateTimingSubscribeMessage() SubscribeMessage {
 	var topics []string
 	topics = append(topics, "TimingData", "TimingStats", "TimingAppData", "LapCount")
 	var topicsList [][]string
@@ -190,7 +181,6 @@ func CreateDriverSubscribeMessage() SubscribeMessage {
 
 func ProcessSessionDataAndInfo(connection *websocket.Conn, dbClient *mongo.Client, ctx context.Context, sessionKeyChan chan int) {
 	defer close(sessionKeyChan)
-	fmt.Println("Processing session data and info")
 	subscribeMessage := CreateOriginalSessionMessage()
 	err := connection.WriteJSON(subscribeMessage)
 	if err != nil {
@@ -199,7 +189,6 @@ func ProcessSessionDataAndInfo(connection *websocket.Conn, dbClient *mongo.Clien
 	}
 	for {
 		_, message, err := connection.ReadMessage()
-		fmt.Println("received message")
 		if err != nil {
 			if websocket.IsUnexpectedCloseError(err, websocket.CloseGoingAway, websocket.CloseAbnormalClosure) {
 				fmt.Printf("unexpected close error: %v", err)
@@ -209,24 +198,12 @@ func ProcessSessionDataAndInfo(connection *websocket.Conn, dbClient *mongo.Clien
 			return
 		}
 		meetingData, err := BuildMeetingData(message)
-		if err != nil {
-			fmt.Printf("Error building meeting data: %v\n", err)
-		}
 		sessionInfo, err := BuildSessionInfo(message)
-		if err != nil {
-			fmt.Printf("Error building session info: %v\n", err)
-		}
 		if err == nil {
 			sessionKeyChan <- sessionInfo.Key
 			meetingDB := convertMeetingToDB(meetingData)
-			err := dbClient.Database("f1").Collection("meetingdata").FindOneAndReplace(ctx, bson.D{{"_id", meetingDB.Key}}, meetingDB, options.FindOneAndReplace().SetUpsert(true))
-			if err != nil {
-				fmt.Printf("Error inserting meeting data: %v\n", err)
-			}
-			err = dbClient.Database("f1").Collection("sessioninfo2").FindOneAndReplace(ctx, bson.D{{"_id", sessionInfo.Key}}, sessionInfo, options.FindOneAndReplace().SetUpsert(true))
-			if err != nil {
-				fmt.Printf("Error inserting session info: %v\n", err)
-			}
+			dbClient.Database("f1").Collection("meetingdata").FindOneAndReplace(ctx, bson.D{{"_id", meetingDB.Key}}, meetingDB, options.FindOneAndReplace().SetUpsert(true))
+			dbClient.Database("f1").Collection("sessioninfo").FindOneAndReplace(ctx, bson.D{{"_id", sessionInfo.Key}}, sessionInfo, options.FindOneAndReplace().SetUpsert(true))
 		}
 	}
 }
@@ -263,6 +240,43 @@ func ProcessDriverData(connection *websocket.Conn, dbClient *mongo.Client, ctx c
 		fmt.Println("write:", err)
 		return
 	}
+	fmt.Println("subscribing to driver data")
+	for {
+		_, message, err := connection.ReadMessage()
+		if err != nil {
+			if websocket.IsUnexpectedCloseError(err, websocket.CloseGoingAway, websocket.CloseAbnormalClosure) {
+				fmt.Printf("unexpected close error: %v", err)
+			} else {
+				fmt.Println("read:", err)
+			}
+		}
+		fmt.Printf("message: %s\n", string(message))
+		drivers, err := BuildDriverList(message)
+		if err == nil {
+			var driverInterface []interface{}
+			for _, driver := range drivers {
+				driver.SessionKey = sessionKey
+				driverInterface = append(driverInterface, driver)
+			}
+			fmt.Println("inserting drivers")
+			_, err = dbClient.Database("f1").Collection("drivers").InsertMany(ctx, driverInterface)
+			if err != nil {
+				fmt.Println(err)
+			}
+			break
+		} else {
+			fmt.Printf("error: %v\n", err)
+		}
+	}
+}
+
+func ProcessTimingData(connection *websocket.Conn, dbClient *mongo.Client, ctx context.Context, sessionKey int) {
+	subscribeMessage := CreateTimingSubscribeMessage()
+	err := connection.WriteJSON(subscribeMessage)
+	if err != nil {
+		fmt.Println("write:", err)
+		return
+	}
 	for {
 		_, message, err := connection.ReadMessage()
 		if err != nil {
@@ -273,15 +287,17 @@ func ProcessDriverData(connection *websocket.Conn, dbClient *mongo.Client, ctx c
 			}
 			return
 		}
-		drivers, err := BuildDriverList(message)
+		positions, err := BuildPositions(message)
 		if err == nil {
-			var driverInterface []interface{}
-			for _, driver := range drivers {
-				driver.SessionKey = sessionKey
-				driverInterface = append(driverInterface, driver)
+			var positionsInterface []interface{}
+			for _, position := range positions {
+				position.SessionKey = sessionKey
+				positionsInterface = append(positionsInterface, position)
 			}
-			_, err = dbClient.Database("f1").Collection("drivers").InsertMany(ctx, driverInterface)
-			break
+			_, err = dbClient.Database("f1").Collection("positions").InsertMany(ctx, positionsInterface)
+			if err != nil {
+				fmt.Println(err)
+			}
 		}
 	}
 }

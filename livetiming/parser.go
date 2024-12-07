@@ -85,3 +85,48 @@ func BuildDriverList(data []byte) ([]Driver, error) {
 	}
 	return drivers, nil
 }
+
+func BuildPositions(data []byte) ([]Position, error) {
+	var positions []Position
+	var obj map[string]interface{}
+	if err := json.Unmarshal(data, &obj); err != nil {
+		return positions, err
+	}
+	var rawDriverList DriverList
+	if err := json.Unmarshal(data, &rawDriverList); err != nil {
+		return positions, nil
+	}
+	if rawDriverList.R.DriverList == nil {
+		return buildRacePositions(data)
+	}
+	for key, value := range rawDriverList.R.DriverList {
+		var position Position
+		position.RacingNumber, _ = strconv.Atoi(key)
+		position.Position = value.Line
+		positions = append(positions, position)
+	}
+	return positions, nil
+}
+
+func buildRacePositions(data []byte) ([]Position, error) {
+	var initialData InitialData
+	var positions []Position
+	if err := json.Unmarshal(data, &initialData); err != nil {
+		return positions, err
+	}
+	if initialData.R.TimingData.Lines == nil {
+		return positions, fmt.Errorf("Incorrect input data")
+	}
+
+	for key, value := range initialData.R.TimingData.Lines {
+		var position Position
+		position.RacingNumber, _ = strconv.Atoi(key)
+		position.Position = value.Line
+		position.InPit = value.InPit
+		position.PitOut = value.PitOut
+		position.Stopped = value.Stopped
+		position.Status = value.Status
+		positions = append(positions, position)
+	}
+	return positions, nil
+}

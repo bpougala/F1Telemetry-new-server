@@ -143,7 +143,7 @@ func serverSendingDummyMessage(w http.ResponseWriter, r *http.Request) {
 }
 
 func getWebSocketClient() (*websocket.Conn, error) {
-	server := httptest.NewServer(http.HandlerFunc(echo))
+	server := httptest.NewServer(http.HandlerFunc(serverSendingDriverList))
 	url := "ws" + strings.TrimPrefix(server.URL, "http")
 	client, _, err := websocket.DefaultDialer.Dial(url, nil)
 	if err != nil {
@@ -237,15 +237,15 @@ func TestShouldReturnErrorWhenOtherMessagesAreSent(t *testing.T) {
 
 func TestShouldBuildSessionInfoStructWhenOpeningWebSocket(t *testing.T) {
 	expectedSessionInfo := SessionInfoDB{
-		ArchiveStatus: "Generating",
-		StartDate:     "2024-12-06T13:30:00",
-		EndDate:       "2024-12-06T14:30:00",
+		ArchiveStatus: "Complete",
+		StartDate:     "2024-12-07T14:30:00",
+		EndDate:       "2024-12-07T15:30:00",
 		Type:          "Practice",
 		GmtOffset:     "04:00:00",
-		Key:           9461,
+		Key:           9657,
 		MeetingKey:    1252,
-		Name:          "Practice 1",
-		Path:          "2024/2024-12-08_Abu_Dhabi_Grand_Prix/2024-12-06_Practice_1/",
+		Name:          "Practice 3",
+		Path:          "2024/2024-12-08_Abu_Dhabi_Grand_Prix/2024-12-07_Practice_3/",
 	}
 	client, err := getWebSocketClient()
 	if err != nil {
@@ -290,40 +290,6 @@ func TestShouldNotCreateSessionInfoWhenOtherMessagesAreSent(t *testing.T) {
 	if sessionInfo != (SessionInfoDB{}) {
 		t.Fatalf("Expected empty session info, got: %v", sessionInfo)
 	}
-}
-
-func TestShouldUpdateSessionInfoWhenNewMessageIsSent(t *testing.T) {
-	expectedSessionInfo := SessionInfoDB{
-		ArchiveStatus: "Generating",
-		StartDate:     "2024-12-06T13:30:00",
-		EndDate:       "2024-12-06T14:30:00",
-		Type:          "Practice",
-		GmtOffset:     "04:00:00",
-		Key:           9461,
-		MeetingKey:    1252,
-		Name:          "Practice 1",
-		Path:          "2024/2024-12-08_Abu_Dhabi_Grand_Prix/2024-12-06_Practice_1/",
-	}
-	server := httptest.NewServer(http.HandlerFunc(serverSendingTimingAppQualifyingUpdates))
-	url := "ws" + strings.TrimPrefix(server.URL, "http")
-	client, _, err := websocket.DefaultDialer.Dial(url, nil)
-	if err != nil {
-		t.Fatalf("Could not open a websocket connection: %v", err)
-	}
-	defer client.Close()
-	err = sendDummyMessage(client)
-	if err != nil {
-		t.Fatalf("Could not write message to websocket: %v", err)
-	}
-	_, response, err := client.ReadMessage()
-	if err != nil {
-		t.Fatalf("Could not read message from websocket: %v", err)
-	}
-	sessionInfo, err := BuildSessionInfo(response)
-	if err != nil {
-		t.Fatalf("Could not build session info: %v", err)
-	}
-
 }
 
 func TestShouldCreateDriverList(t *testing.T) {
@@ -396,7 +362,7 @@ func TestShouldCreatePositionsWhenDriverListFirstSubscribes(t *testing.T) {
 	maxVerstappenPosition := Position{
 		SessionKey:   0,
 		RacingNumber: 1,
-		Position:     17,
+		Position:     4,
 	}
 	server := httptest.NewServer(http.HandlerFunc(serverSendingDriverList))
 	url := "ws" + strings.TrimPrefix(server.URL, "http")

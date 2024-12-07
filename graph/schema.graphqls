@@ -10,7 +10,7 @@ type Query {
   drivers(session_key: Int!): [Driver]!
   positions(session_key: Int!): [Position]!
   raceControls(session_key: Int!): [RaceControl]!
-  carData(session_key: Int!, driver_number: Int!): [CarData]!
+  carData(session_key: Int!, racing_number: Int!): [CarData]!
   laps(session_key: Int!): [Lap]!
   intervals(session_key: Int!): [Interval]!
 }
@@ -51,7 +51,7 @@ type Driver {
 
 type Position {
   session_key: Int!
-  driver_number: Int!
+  racing_number: Int!
   position: Int!
 }
 
@@ -63,7 +63,7 @@ type RaceControl {
   flag: String
   lap_number: Int
   message: String
-  driver_number: Int
+  racing_number: Int
   scope: String
   sector: Int
 }
@@ -71,7 +71,7 @@ type RaceControl {
 type CarData {
   brake: Int!
   date: String!
-  driver_number: Int!
+  racing_number: Int!
   drs: Int!
   meeting_key: Int!
   n_gear: Int!
@@ -84,7 +84,7 @@ type CarData {
 type Lap {
   meeting_key: Int!
   session_key: Int!
-  driver_number: Int!
+  racing_number: Int!
   i1_speed: Int
   i2_speed: Int
   st_speed: Int
@@ -102,7 +102,7 @@ type Lap {
 
 type Interval {
   date:  String!
-  driver_number: Int!
+  racing_number: Int!
   meeting_key: Int!
   session_key: Int!
   gap_to_leader:  Any

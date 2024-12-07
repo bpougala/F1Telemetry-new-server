@@ -49,10 +49,10 @@ type ComplexityRoot struct {
 	CarData struct {
 		Brake        func(childComplexity int) int
 		Date         func(childComplexity int) int
-		DriverNumber func(childComplexity int) int
 		Drs          func(childComplexity int) int
 		MeetingKey   func(childComplexity int) int
 		NGear        func(childComplexity int) int
+		RacingNumber func(childComplexity int) int
 		Rpm          func(childComplexity int) int
 		SessionKey   func(childComplexity int) int
 		Speed        func(childComplexity int) int
@@ -75,16 +75,15 @@ type ComplexityRoot struct {
 
 	Interval struct {
 		Date         func(childComplexity int) int
-		DriverNumber func(childComplexity int) int
 		GapToLeader  func(childComplexity int) int
 		Interval     func(childComplexity int) int
 		MeetingKey   func(childComplexity int) int
+		RacingNumber func(childComplexity int) int
 		SessionKey   func(childComplexity int) int
 	}
 
 	Lap struct {
 		DateStart       func(childComplexity int) int
-		DriverNumber    func(childComplexity int) int
 		DurationSector1 func(childComplexity int) int
 		DurationSector2 func(childComplexity int) int
 		DurationSector3 func(childComplexity int) int
@@ -94,6 +93,7 @@ type ComplexityRoot struct {
 		LapDuration     func(childComplexity int) int
 		LapNumber       func(childComplexity int) int
 		MeetingKey      func(childComplexity int) int
+		RacingNumber    func(childComplexity int) int
 		SegmentsSector1 func(childComplexity int) int
 		SegmentsSector2 func(childComplexity int) int
 		SegmentsSector3 func(childComplexity int) int
@@ -112,13 +112,13 @@ type ComplexityRoot struct {
 	}
 
 	Position struct {
-		DriverNumber func(childComplexity int) int
 		Position     func(childComplexity int) int
+		RacingNumber func(childComplexity int) int
 		SessionKey   func(childComplexity int) int
 	}
 
 	Query struct {
-		CarData      func(childComplexity int, sessionKey int, driverNumber int) int
+		CarData      func(childComplexity int, sessionKey int, racingNumber int) int
 		Drivers      func(childComplexity int, sessionKey int) int
 		Intervals    func(childComplexity int, sessionKey int) int
 		Laps         func(childComplexity int, sessionKey int) int
@@ -131,11 +131,11 @@ type ComplexityRoot struct {
 	RaceControl struct {
 		Category     func(childComplexity int) int
 		Date         func(childComplexity int) int
-		DriverNumber func(childComplexity int) int
 		Flag         func(childComplexity int) int
 		LapNumber    func(childComplexity int) int
 		MeetingKey   func(childComplexity int) int
 		Message      func(childComplexity int) int
+		RacingNumber func(childComplexity int) int
 		Scope        func(childComplexity int) int
 		Sector       func(childComplexity int) int
 		SessionKey   func(childComplexity int) int
@@ -158,7 +158,7 @@ type QueryResolver interface {
 	Drivers(ctx context.Context, sessionKey int) ([]*model.Driver, error)
 	Positions(ctx context.Context, sessionKey int) ([]*model.Position, error)
 	RaceControls(ctx context.Context, sessionKey int) ([]*model.RaceControl, error)
-	CarData(ctx context.Context, sessionKey int, driverNumber int) ([]*model.CarData, error)
+	CarData(ctx context.Context, sessionKey int, racingNumber int) ([]*model.CarData, error)
 	Laps(ctx context.Context, sessionKey int) ([]*model.Lap, error)
 	Intervals(ctx context.Context, sessionKey int) ([]*model.Interval, error)
 }
@@ -196,13 +196,6 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.CarData.Date(childComplexity), true
 
-	case "CarData.driver_number":
-		if e.complexity.CarData.DriverNumber == nil {
-			break
-		}
-
-		return e.complexity.CarData.DriverNumber(childComplexity), true
-
 	case "CarData.drs":
 		if e.complexity.CarData.Drs == nil {
 			break
@@ -223,6 +216,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.CarData.NGear(childComplexity), true
+
+	case "CarData.racing_number":
+		if e.complexity.CarData.RacingNumber == nil {
+			break
+		}
+
+		return e.complexity.CarData.RacingNumber(childComplexity), true
 
 	case "CarData.rpm":
 		if e.complexity.CarData.Rpm == nil {
@@ -336,13 +336,6 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Interval.Date(childComplexity), true
 
-	case "Interval.driver_number":
-		if e.complexity.Interval.DriverNumber == nil {
-			break
-		}
-
-		return e.complexity.Interval.DriverNumber(childComplexity), true
-
 	case "Interval.gap_to_leader":
 		if e.complexity.Interval.GapToLeader == nil {
 			break
@@ -364,6 +357,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Interval.MeetingKey(childComplexity), true
 
+	case "Interval.racing_number":
+		if e.complexity.Interval.RacingNumber == nil {
+			break
+		}
+
+		return e.complexity.Interval.RacingNumber(childComplexity), true
+
 	case "Interval.session_key":
 		if e.complexity.Interval.SessionKey == nil {
 			break
@@ -377,13 +377,6 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Lap.DateStart(childComplexity), true
-
-	case "Lap.driver_number":
-		if e.complexity.Lap.DriverNumber == nil {
-			break
-		}
-
-		return e.complexity.Lap.DriverNumber(childComplexity), true
 
 	case "Lap.duration_sector_1":
 		if e.complexity.Lap.DurationSector1 == nil {
@@ -447,6 +440,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Lap.MeetingKey(childComplexity), true
+
+	case "Lap.racing_number":
+		if e.complexity.Lap.RacingNumber == nil {
+			break
+		}
+
+		return e.complexity.Lap.RacingNumber(childComplexity), true
 
 	case "Lap.segments_sector_1":
 		if e.complexity.Lap.SegmentsSector1 == nil {
@@ -532,19 +532,19 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Meeting.MeetingOfficialName(childComplexity), true
 
-	case "Position.driver_number":
-		if e.complexity.Position.DriverNumber == nil {
-			break
-		}
-
-		return e.complexity.Position.DriverNumber(childComplexity), true
-
 	case "Position.position":
 		if e.complexity.Position.Position == nil {
 			break
 		}
 
 		return e.complexity.Position.Position(childComplexity), true
+
+	case "Position.racing_number":
+		if e.complexity.Position.RacingNumber == nil {
+			break
+		}
+
+		return e.complexity.Position.RacingNumber(childComplexity), true
 
 	case "Position.session_key":
 		if e.complexity.Position.SessionKey == nil {
@@ -563,7 +563,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Query.CarData(childComplexity, args["session_key"].(int), args["driver_number"].(int)), true
+		return e.complexity.Query.CarData(childComplexity, args["session_key"].(int), args["racing_number"].(int)), true
 
 	case "Query.drivers":
 		if e.complexity.Query.Drivers == nil {
@@ -658,13 +658,6 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.RaceControl.Date(childComplexity), true
 
-	case "RaceControl.driver_number":
-		if e.complexity.RaceControl.DriverNumber == nil {
-			break
-		}
-
-		return e.complexity.RaceControl.DriverNumber(childComplexity), true
-
 	case "RaceControl.flag":
 		if e.complexity.RaceControl.Flag == nil {
 			break
@@ -692,6 +685,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.RaceControl.Message(childComplexity), true
+
+	case "RaceControl.racing_number":
+		if e.complexity.RaceControl.RacingNumber == nil {
+			break
+		}
+
+		return e.complexity.RaceControl.RacingNumber(childComplexity), true
 
 	case "RaceControl.scope":
 		if e.complexity.RaceControl.Scope == nil {
@@ -902,11 +902,11 @@ func (ec *executionContext) field_Query_carData_args(ctx context.Context, rawArg
 		return nil, err
 	}
 	args["session_key"] = arg0
-	arg1, err := ec.field_Query_carData_argsDriverNumber(ctx, rawArgs)
+	arg1, err := ec.field_Query_carData_argsRacingNumber(ctx, rawArgs)
 	if err != nil {
 		return nil, err
 	}
-	args["driver_number"] = arg1
+	args["racing_number"] = arg1
 	return args, nil
 }
 func (ec *executionContext) field_Query_carData_argsSessionKey(
@@ -922,12 +922,12 @@ func (ec *executionContext) field_Query_carData_argsSessionKey(
 	return zeroVal, nil
 }
 
-func (ec *executionContext) field_Query_carData_argsDriverNumber(
+func (ec *executionContext) field_Query_carData_argsRacingNumber(
 	ctx context.Context,
 	rawArgs map[string]interface{},
 ) (int, error) {
-	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("driver_number"))
-	if tmp, ok := rawArgs["driver_number"]; ok {
+	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("racing_number"))
+	if tmp, ok := rawArgs["racing_number"]; ok {
 		return ec.unmarshalNInt2int(ctx, tmp)
 	}
 
@@ -1215,8 +1215,8 @@ func (ec *executionContext) fieldContext_CarData_date(_ context.Context, field g
 	return fc, nil
 }
 
-func (ec *executionContext) _CarData_driver_number(ctx context.Context, field graphql.CollectedField, obj *model.CarData) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_CarData_driver_number(ctx, field)
+func (ec *executionContext) _CarData_racing_number(ctx context.Context, field graphql.CollectedField, obj *model.CarData) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_CarData_racing_number(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -1229,7 +1229,7 @@ func (ec *executionContext) _CarData_driver_number(ctx context.Context, field gr
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.DriverNumber, nil
+		return obj.RacingNumber, nil
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -1246,7 +1246,7 @@ func (ec *executionContext) _CarData_driver_number(ctx context.Context, field gr
 	return ec.marshalNInt2int(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_CarData_driver_number(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_CarData_racing_number(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "CarData",
 		Field:      field,
@@ -2086,8 +2086,8 @@ func (ec *executionContext) fieldContext_Interval_date(_ context.Context, field 
 	return fc, nil
 }
 
-func (ec *executionContext) _Interval_driver_number(ctx context.Context, field graphql.CollectedField, obj *model.Interval) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Interval_driver_number(ctx, field)
+func (ec *executionContext) _Interval_racing_number(ctx context.Context, field graphql.CollectedField, obj *model.Interval) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Interval_racing_number(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -2100,7 +2100,7 @@ func (ec *executionContext) _Interval_driver_number(ctx context.Context, field g
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.DriverNumber, nil
+		return obj.RacingNumber, nil
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -2117,7 +2117,7 @@ func (ec *executionContext) _Interval_driver_number(ctx context.Context, field g
 	return ec.marshalNInt2int(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_Interval_driver_number(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_Interval_racing_number(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Interval",
 		Field:      field,
@@ -2388,8 +2388,8 @@ func (ec *executionContext) fieldContext_Lap_session_key(_ context.Context, fiel
 	return fc, nil
 }
 
-func (ec *executionContext) _Lap_driver_number(ctx context.Context, field graphql.CollectedField, obj *model.Lap) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Lap_driver_number(ctx, field)
+func (ec *executionContext) _Lap_racing_number(ctx context.Context, field graphql.CollectedField, obj *model.Lap) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Lap_racing_number(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -2402,7 +2402,7 @@ func (ec *executionContext) _Lap_driver_number(ctx context.Context, field graphq
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.DriverNumber, nil
+		return obj.RacingNumber, nil
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -2419,7 +2419,7 @@ func (ec *executionContext) _Lap_driver_number(ctx context.Context, field graphq
 	return ec.marshalNInt2int(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_Lap_driver_number(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_Lap_racing_number(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Lap",
 		Field:      field,
@@ -3326,8 +3326,8 @@ func (ec *executionContext) fieldContext_Position_session_key(_ context.Context,
 	return fc, nil
 }
 
-func (ec *executionContext) _Position_driver_number(ctx context.Context, field graphql.CollectedField, obj *model.Position) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Position_driver_number(ctx, field)
+func (ec *executionContext) _Position_racing_number(ctx context.Context, field graphql.CollectedField, obj *model.Position) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Position_racing_number(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -3340,7 +3340,7 @@ func (ec *executionContext) _Position_driver_number(ctx context.Context, field g
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.DriverNumber, nil
+		return obj.RacingNumber, nil
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -3357,7 +3357,7 @@ func (ec *executionContext) _Position_driver_number(ctx context.Context, field g
 	return ec.marshalNInt2int(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_Position_driver_number(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_Position_racing_number(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Position",
 		Field:      field,
@@ -3665,8 +3665,8 @@ func (ec *executionContext) fieldContext_Query_positions(ctx context.Context, fi
 			switch field.Name {
 			case "session_key":
 				return ec.fieldContext_Position_session_key(ctx, field)
-			case "driver_number":
-				return ec.fieldContext_Position_driver_number(ctx, field)
+			case "racing_number":
+				return ec.fieldContext_Position_racing_number(ctx, field)
 			case "position":
 				return ec.fieldContext_Position_position(ctx, field)
 			}
@@ -3740,8 +3740,8 @@ func (ec *executionContext) fieldContext_Query_raceControls(ctx context.Context,
 				return ec.fieldContext_RaceControl_lap_number(ctx, field)
 			case "message":
 				return ec.fieldContext_RaceControl_message(ctx, field)
-			case "driver_number":
-				return ec.fieldContext_RaceControl_driver_number(ctx, field)
+			case "racing_number":
+				return ec.fieldContext_RaceControl_racing_number(ctx, field)
 			case "scope":
 				return ec.fieldContext_RaceControl_scope(ctx, field)
 			case "sector":
@@ -3778,7 +3778,7 @@ func (ec *executionContext) _Query_carData(ctx context.Context, field graphql.Co
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Query().CarData(rctx, fc.Args["session_key"].(int), fc.Args["driver_number"].(int))
+		return ec.resolvers.Query().CarData(rctx, fc.Args["session_key"].(int), fc.Args["racing_number"].(int))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -3807,8 +3807,8 @@ func (ec *executionContext) fieldContext_Query_carData(ctx context.Context, fiel
 				return ec.fieldContext_CarData_brake(ctx, field)
 			case "date":
 				return ec.fieldContext_CarData_date(ctx, field)
-			case "driver_number":
-				return ec.fieldContext_CarData_driver_number(ctx, field)
+			case "racing_number":
+				return ec.fieldContext_CarData_racing_number(ctx, field)
 			case "drs":
 				return ec.fieldContext_CarData_drs(ctx, field)
 			case "meeting_key":
@@ -3884,8 +3884,8 @@ func (ec *executionContext) fieldContext_Query_laps(ctx context.Context, field g
 				return ec.fieldContext_Lap_meeting_key(ctx, field)
 			case "session_key":
 				return ec.fieldContext_Lap_session_key(ctx, field)
-			case "driver_number":
-				return ec.fieldContext_Lap_driver_number(ctx, field)
+			case "racing_number":
+				return ec.fieldContext_Lap_racing_number(ctx, field)
 			case "i1_speed":
 				return ec.fieldContext_Lap_i1_speed(ctx, field)
 			case "i2_speed":
@@ -3971,8 +3971,8 @@ func (ec *executionContext) fieldContext_Query_intervals(ctx context.Context, fi
 			switch field.Name {
 			case "date":
 				return ec.fieldContext_Interval_date(ctx, field)
-			case "driver_number":
-				return ec.fieldContext_Interval_driver_number(ctx, field)
+			case "racing_number":
+				return ec.fieldContext_Interval_racing_number(ctx, field)
 			case "meeting_key":
 				return ec.fieldContext_Interval_meeting_key(ctx, field)
 			case "session_key":
@@ -4424,8 +4424,8 @@ func (ec *executionContext) fieldContext_RaceControl_message(_ context.Context, 
 	return fc, nil
 }
 
-func (ec *executionContext) _RaceControl_driver_number(ctx context.Context, field graphql.CollectedField, obj *model.RaceControl) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_RaceControl_driver_number(ctx, field)
+func (ec *executionContext) _RaceControl_racing_number(ctx context.Context, field graphql.CollectedField, obj *model.RaceControl) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_RaceControl_racing_number(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -4438,7 +4438,7 @@ func (ec *executionContext) _RaceControl_driver_number(ctx context.Context, fiel
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.DriverNumber, nil
+		return obj.RacingNumber, nil
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -4452,7 +4452,7 @@ func (ec *executionContext) _RaceControl_driver_number(ctx context.Context, fiel
 	return ec.marshalOInt2ᚖint(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_RaceControl_driver_number(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_RaceControl_racing_number(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "RaceControl",
 		Field:      field,
@@ -6657,8 +6657,8 @@ func (ec *executionContext) _CarData(ctx context.Context, sel ast.SelectionSet, 
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
-		case "driver_number":
-			out.Values[i] = ec._CarData_driver_number(ctx, field, obj)
+		case "racing_number":
+			out.Values[i] = ec._CarData_racing_number(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
@@ -6816,8 +6816,8 @@ func (ec *executionContext) _Interval(ctx context.Context, sel ast.SelectionSet,
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
-		case "driver_number":
-			out.Values[i] = ec._Interval_driver_number(ctx, field, obj)
+		case "racing_number":
+			out.Values[i] = ec._Interval_racing_number(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
@@ -6879,8 +6879,8 @@ func (ec *executionContext) _Lap(ctx context.Context, sel ast.SelectionSet, obj 
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
-		case "driver_number":
-			out.Values[i] = ec._Lap_driver_number(ctx, field, obj)
+		case "racing_number":
+			out.Values[i] = ec._Lap_racing_number(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
@@ -7027,8 +7027,8 @@ func (ec *executionContext) _Position(ctx context.Context, sel ast.SelectionSet,
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
-		case "driver_number":
-			out.Values[i] = ec._Position_driver_number(ctx, field, obj)
+		case "racing_number":
+			out.Values[i] = ec._Position_racing_number(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
@@ -7320,8 +7320,8 @@ func (ec *executionContext) _RaceControl(ctx context.Context, sel ast.SelectionS
 			out.Values[i] = ec._RaceControl_lap_number(ctx, field, obj)
 		case "message":
 			out.Values[i] = ec._RaceControl_message(ctx, field, obj)
-		case "driver_number":
-			out.Values[i] = ec._RaceControl_driver_number(ctx, field, obj)
+		case "racing_number":
+			out.Values[i] = ec._RaceControl_racing_number(ctx, field, obj)
 		case "scope":
 			out.Values[i] = ec._RaceControl_scope(ctx, field, obj)
 		case "sector":

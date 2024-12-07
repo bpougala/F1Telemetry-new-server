@@ -109,10 +109,6 @@ func main() {
 	fmt.Println("connected to websocket")
 	sessionKeyChan := make(chan int)
 	go livetiming.ProcessSessionDataAndInfo(connection, dbClient, ctx, sessionKeyChan)
-	sessionKey := <-sessionKeyChan
-	livetiming.ProcessDriverData(connection, dbClient, ctx, sessionKey)
-	connection, _, _ = livetiming.SetWebSocket(connObject.ConnectionToken, cookies)
-	go livetiming.ProcessTimingData(connection, dbClient, ctx, sessionKey)
 	c := make(chan os.Signal, 1)
 	signal.Notify(c, os.Interrupt, syscall.SIGTERM)
 	<-c

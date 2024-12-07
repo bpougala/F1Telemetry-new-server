@@ -155,7 +155,7 @@ func CreateTimingSubscribeMessage() SubscribeMessage {
 
 func CreateOriginalSessionMessage() SubscribeMessage {
 	var topics []string
-	topics = append(topics, "SessionInfo", "SessionData")
+	topics = append(topics, "SessionInfo", "SessionData", "DriverList", "TimingData", "TimingStats", "TimingAppData", "LapCount")
 	var topicsList [][]string
 	topicsList = append(topicsList, topics)
 	return SubscribeMessage{
@@ -175,7 +175,7 @@ func CreateDriverSubscribeMessage() SubscribeMessage {
 		H: "Streaming",
 		M: "Subscribe",
 		A: topicsList,
-		I: 3,
+		I: 1,
 	}
 }
 
@@ -199,11 +199,24 @@ func ProcessSessionDataAndInfo(connection *websocket.Conn, dbClient *mongo.Clien
 		}
 		meetingData, err := BuildMeetingData(message)
 		sessionInfo, err := BuildSessionInfo(message)
+		drivers, err := BuildDriverList(message)
+		positions, err := BuildPositions(message)
 		if err == nil {
-			sessionKeyChan <- sessionInfo.Key
 			meetingDB := convertMeetingToDB(meetingData)
+			var driverInterface []interface{}
+			var positionsInterface []interface{}
+			for _, driver := range drivers {
+				driver.SessionKey = sessionInfo.Key
+				driverInterface = append(driverInterface, driver)
+			}
+			for _, position := range positions {
+				position.SessionKey = sessionInfo.Key
+				positionsInterface = append(positionsInterface, position)
+			}
 			dbClient.Database("f1").Collection("meetingdata").FindOneAndReplace(ctx, bson.D{{"_id", meetingDB.Key}}, meetingDB, options.FindOneAndReplace().SetUpsert(true))
 			dbClient.Database("f1").Collection("sessioninfo").FindOneAndReplace(ctx, bson.D{{"_id", sessionInfo.Key}}, sessionInfo, options.FindOneAndReplace().SetUpsert(true))
+			_, err = dbClient.Database("f1").Collection("drivers").InsertMany(ctx, driverInterface)
+			_, err = dbClient.Database("f1").Collection("positions").InsertMany(ctx, positionsInterface)
 		}
 	}
 }
@@ -235,9 +248,10 @@ func convertSessionToDB(session SessionInfo) SessionInfoDB {
 
 func ProcessDriverData(connection *websocket.Conn, dbClient *mongo.Client, ctx context.Context, sessionKey int) {
 	subscribeMessage := CreateDriverSubscribeMessage()
+	fmt.Printf("subscribe message: %v\n", subscribeMessage)
 	err := connection.WriteJSON(subscribeMessage)
 	if err != nil {
-		fmt.Println("write:", err)
+		fmt.Println("An error has occurred:", err)
 		return
 	}
 	fmt.Println("subscribing to driver data")
@@ -250,7 +264,7 @@ func ProcessDriverData(connection *websocket.Conn, dbClient *mongo.Client, ctx c
 				fmt.Println("read:", err)
 			}
 		}
-		fmt.Printf("message: %s\n", string(message))
+		fmt.Printf("driver message: %s\n", string(message))
 		drivers, err := BuildDriverList(message)
 		if err == nil {
 			var driverInterface []interface{}

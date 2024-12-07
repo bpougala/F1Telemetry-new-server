@@ -74,14 +74,17 @@ func FetchDrivers(dbClient *mongo.Client, ctx context.Context, sessionKey int) (
 	}
 	for _, rawDriver := range rawDrivers {
 		driver := model.Driver{
-			SessionKey:   rawDriver.SessionKey,
-			RacingNumber: rawDriver.RacingNumber,
-			FirstName:    rawDriver.FirstName,
-			LastName:     rawDriver.LastName,
-			TeamColour:   &rawDriver.TeamColour,
-			TeamName:     &rawDriver.TeamName,
-			Abbreviation: &rawDriver.Abbreviation,
-			FullName:     rawDriver.FullName,
+			SessionKey:    rawDriver.SessionKey,
+			RacingNumber:  rawDriver.RacingNumber,
+			FirstName:     rawDriver.FirstName,
+			LastName:      rawDriver.LastName,
+			TeamColour:    &rawDriver.TeamColour,
+			TeamName:      &rawDriver.TeamName,
+			Abbreviation:  &rawDriver.Abbreviation,
+			FullName:      rawDriver.FullName,
+			HeadshotURL:   rawDriver.HeadshotUrl,
+			BroadcastName: rawDriver.BroadcastName,
+			CountryCode:   rawDriver.CountryCode,
 		}
 		drivers = append(drivers, driver)
 	}
@@ -93,10 +96,19 @@ func FetchPositions(dbClient *mongo.Client, ctx context.Context, sessionKey int)
 	if err != nil {
 		return nil, err
 	}
+	var rawPositions []livetiming.Position
 	var positions []model.Position
-	err = cursor.All(ctx, &positions)
+	err = cursor.All(ctx, &rawPositions)
 	if err != nil {
 		return nil, err
+	}
+	for _, rawPosition := range rawPositions {
+		position := model.Position{
+			SessionKey:   rawPosition.SessionKey,
+			Position:     rawPosition.Position,
+			RacingNumber: rawPosition.RacingNumber,
+		}
+		positions = append(positions, position)
 	}
 	return positions, nil
 }

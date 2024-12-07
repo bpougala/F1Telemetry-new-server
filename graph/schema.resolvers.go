@@ -86,11 +86,11 @@ func (r *queryResolver) RaceControls(ctx context.Context, sessionKey int) ([]*mo
 }
 
 // CarData is the resolver for the carData field.
-func (r *queryResolver) CarData(ctx context.Context, sessionKey int, driverNumber int) ([]*model.CarData, error) {
+func (r *queryResolver) CarData(ctx context.Context, sessionKey int, racingNumber int) ([]*model.CarData, error) {
 	if err != nil {
 		return nil, err
 	}
-	carData, err := dataingestor.FetchCarData(dbClient, ctx, sessionKey, driverNumber)
+	carData, err := dataingestor.FetchCarData(dbClient, ctx, sessionKey, racingNumber)
 	if err != nil {
 		return nil, err
 	}

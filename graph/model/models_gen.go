@@ -5,7 +5,7 @@ package model
 type CarData struct {
 	Brake        int    `json:"brake"`
 	Date         string `json:"date"`
-	DriverNumber int    `json:"driver_number"`
+	RacingNumber int    `json:"racing_number"`
 	Drs          int    `json:"drs"`
 	MeetingKey   int    `json:"meeting_key"`
 	NGear        int    `json:"n_gear"`
@@ -31,7 +31,7 @@ type Driver struct {
 
 type Interval struct {
 	Date         string `json:"date"`
-	DriverNumber int    `json:"driver_number"`
+	RacingNumber int    `json:"racing_number"`
 	MeetingKey   int    `json:"meeting_key"`
 	SessionKey   int    `json:"session_key"`
 	GapToLeader  any    `json:"gap_to_leader,omitempty"`
@@ -41,7 +41,7 @@ type Interval struct {
 type Lap struct {
 	MeetingKey      int      `json:"meeting_key"`
 	SessionKey      int      `json:"session_key"`
-	DriverNumber    int      `json:"driver_number"`
+	RacingNumber    int      `json:"racing_number"`
 	I1Speed         *int     `json:"i1_speed,omitempty"`
 	I2Speed         *int     `json:"i2_speed,omitempty"`
 	StSpeed         *int     `json:"st_speed,omitempty"`
@@ -69,7 +69,7 @@ type Meeting struct {
 
 type Position struct {
 	SessionKey   int `json:"session_key"`
-	DriverNumber int `json:"driver_number"`
+	RacingNumber int `json:"racing_number"`
 	Position     int `json:"position"`
 }
 
@@ -84,7 +84,7 @@ type RaceControl struct {
 	Flag         *string `json:"flag,omitempty"`
 	LapNumber    *int    `json:"lap_number,omitempty"`
 	Message      *string `json:"message,omitempty"`
-	DriverNumber *int    `json:"driver_number,omitempty"`
+	RacingNumber *int    `json:"racing_number,omitempty"`
 	Scope        *string `json:"scope,omitempty"`
 	Sector       *int    `json:"sector,omitempty"`
 }

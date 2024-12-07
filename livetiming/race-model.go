@@ -1,6 +1,9 @@
 package livetiming
 
-import "time"
+import (
+	"encoding/json"
+	"time"
+)
 
 type WebSocketMessage struct {
 	Control   string `json:"C"`
@@ -106,8 +109,24 @@ type InitialSessionData struct {
 			Path      string `json:"Path"`
 			Kf        bool   `json:"_kf"`
 		} `json:"SessionInfo"`
+		DriverList map[string]DriverData `json:"DriverList"`
 	} `json:"R"`
 	I string `json:"I"`
+}
+
+func (d *DriverData) UnmarshalJSON(data []byte) error {
+	var isBool bool
+	if err := json.Unmarshal(data, &isBool); err == nil {
+		return nil
+	}
+
+	type Alias DriverData
+	var alias Alias
+	if err := json.Unmarshal(data, &alias); err != nil {
+		return err
+	}
+	*d = DriverData(alias)
+	return nil
 }
 
 type InitialData struct {
@@ -220,6 +239,7 @@ type InitialData struct {
 			TotalLaps  int  `json:"TotalLaps"`
 			Kf         bool `json:"_kf"`
 		} `json:"LapCount"`
+		DriverList map[string]DriverData `json:"DriverList"`
 	} `json:"R"`
 	I string `json:"I"`
 }

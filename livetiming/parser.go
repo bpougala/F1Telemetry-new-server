@@ -62,7 +62,7 @@ func BuildDriverList(data []byte) ([]Driver, error) {
 	if err := json.Unmarshal(data, &obj); err != nil {
 		return drivers, err
 	}
-	var rawDriverList DriverList
+	var rawDriverList InitialSessionData
 	if err := json.Unmarshal(data, &rawDriverList); err != nil {
 		return drivers, err
 	}
@@ -70,6 +70,9 @@ func BuildDriverList(data []byte) ([]Driver, error) {
 		return drivers, fmt.Errorf("Incorrect input data")
 	}
 	for key, value := range rawDriverList.R.DriverList {
+		if key == "_kf" {
+			continue
+		}
 		var driver Driver
 		driver.RacingNumber, _ = strconv.Atoi(key)
 		driver.BroadcastName = value.BroadcastName
@@ -100,6 +103,9 @@ func BuildPositions(data []byte) ([]Position, error) {
 		return buildRacePositions(data)
 	}
 	for key, value := range rawDriverList.R.DriverList {
+		if key == "_kf" {
+			continue
+		}
 		var position Position
 		position.RacingNumber, _ = strconv.Atoi(key)
 		position.Position = value.Line
@@ -119,6 +125,9 @@ func buildRacePositions(data []byte) ([]Position, error) {
 	}
 
 	for key, value := range initialData.R.TimingData.Lines {
+		if key == "_kf" {
+			continue
+		}
 		var position Position
 		position.RacingNumber, _ = strconv.Atoi(key)
 		position.Position = value.Line

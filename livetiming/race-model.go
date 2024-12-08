@@ -14,12 +14,49 @@ type WebSocketMessage struct {
 	} `json:"M"`
 }
 
-type IntervalData struct {
-	Lines map[string]IntervalLine `json:"Lines"`
+type MeetingData struct {
+	Key          int         `json:"Key"`
+	Name         string      `json:"Name"`
+	OfficialName string      `json:"OfficialName"`
+	Location     string      `json:"Location"`
+	Number       int         `json:"Number"`
+	Country      CountryData `json:"Country"`
+	Circuit      CircuitData `json:"Circuit"`
+}
+type CountryData struct {
+	Key  int    `json:"Key"`
+	Code string `json:"Code"`
+	Name string `json:"Name"`
 }
 
-type StintData struct {
-	StintLines map[string]StintLine `json:"Lines"`
+type CircuitData struct {
+	Key       int    `json:"Key"`
+	ShortName string `json:"ShortName"`
+}
+
+type SessionInfo struct {
+	Meeting       Meeting       `json:"Meeting"`
+	ArchiveStatus ArchiveStatus `json:"ArchiveStatus"`
+	Key           int           `json:"Key"`
+	Type          string        `json:"Type"`
+	Name          string        `json:"Name"`
+	StartDate     string        `json:"StartDate"`
+	EndDate       string        `json:"EndDate"`
+	GmtOffset     string        `json:"GmtOffset"`
+	Path          string        `json:"Path"`
+	Kf            bool          `json:"_kf"`
+}
+type Meeting struct {
+	Key          int         `json:"Key"`
+	Name         string      `json:"Name"`
+	OfficialName string      `json:"OfficialName"`
+	Location     string      `json:"Location"`
+	Number       int         `json:"Number"`
+	Country      CountryData `json:"Country"`
+	Circuit      CircuitData `json:"Circuit"`
+}
+type ArchiveStatus struct {
+	Status string `json:"Status"`
 }
 
 type PositionData struct {
@@ -65,7 +102,19 @@ type Value struct {
 	Value string `json:"Value"`
 }
 
-type LapTimeData struct {
+type UpdateData struct {
+	C string    `json:"C"`
+	M []Message `json:"M"`
+}
+
+type Message struct {
+	H string        `json:"H"`
+	M string        `json:"M"`
+	A []interface{} `json:"A"`
+}
+
+type TimingData struct {
+	Lines map[string]interface{} `json:"Lines"`
 }
 
 type InitialSessionData struct {
@@ -263,4 +312,41 @@ type Driver struct {
 	HeadshotUrl   string `json:"HeadshotUrl"`
 	CountryCode   string `json:"CountryCode"`
 	SessionKey    int    `json:"SessionKey"`
+}
+
+type LapTimeMetric struct {
+	SessionKey   int `json:"SessionKey"`
+	RacingNumber int `json:"RacingNumber"`
+	NumberOfLaps int `json:"NumberOfLaps"`
+	BestLapTime  struct {
+		Value string `json:"Value"`
+		Lap   int    `json:"Lap"`
+	} `json:"BestLapTimes"`
+	LastLapTime struct {
+		Value           string `json:"Value"`
+		OverallFastest  bool   `json:"OverallFastest"`
+		PersonalFastest bool   `json:"PersonalFastest"`
+	} `json:"LastLapTime"`
+}
+
+type SectorTime struct {
+	SectorNumber    int     `json:"SectorNumber"`
+	Value           float64 `json:"Value"`
+	PersonalFastest bool    `json:"PersonalFastest"`
+	OverallFastest  bool    `json:"OverallFastest"`
+}
+
+type DriverData struct {
+	RacingNumber  string `json:"RacingNumber"`
+	BroadcastName string `json:"BroadcastName"`
+	FullName      string `json:"FullName"`
+	Tla           string `json:"Tla"`
+	Line          int    `json:"Line"`
+	TeamName      string `json:"TeamName"`
+	TeamColour    string `json:"TeamColour"`
+	FirstName     string `json:"FirstName"`
+	LastName      string `json:"LastName"`
+	Reference     string `json:"Reference"`
+	HeadshotUrl   string `json:"HeadshotUrl"`
+	CountryCode   string `json:"CountryCode"`
 }

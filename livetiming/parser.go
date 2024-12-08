@@ -3,6 +3,7 @@ package livetiming
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/mitchellh/mapstructure"
 	"strconv"
 )
 
@@ -121,7 +122,7 @@ func buildRacePositions(data []byte) ([]Position, error) {
 		return positions, err
 	}
 	if initialData.R.TimingData.Lines == nil {
-		return positions, fmt.Errorf("Incorrect input data")
+		return buildUpdatedPositions(data)
 	}
 
 	for key, value := range initialData.R.TimingData.Lines {
@@ -138,4 +139,81 @@ func buildRacePositions(data []byte) ([]Position, error) {
 		positions = append(positions, position)
 	}
 	return positions, nil
+}
+
+func buildUpdatedPositions(data []byte) ([]Position, error) {
+	var updateTimingData UpdateData
+	if err := json.Unmarshal(data, &updateTimingData); err != nil {
+		return nil, err
+	}
+	var positions []Position
+	for _, message := range updateTimingData.M {
+		elements := message.A
+		if len(elements) != 3 {
+			continue
+		}
+		if elements[0] != "DriverList" {
+			continue
+		}
+		var positionData map[string]PositionLine
+		err := mapstructure.Decode(elements[1], &positionData)
+		if err != nil {
+			continue
+		}
+		for key, value := range positionData {
+			var position Position
+			position.RacingNumber, _ = strconv.Atoi(key)
+			position.Position = value.Line
+			positions = append(positions, position)
+		}
+	}
+	if len(positions) == 0 {
+		return nil, fmt.Errorf("No positions found")
+	}
+	return positions, nil
+}
+
+func BuildTimingData(data []byte) ([]LapTimeMetric, error) {
+	var updateTimingData UpdateData
+	if err := json.Unmarshal(data, &updateTimingData); err != nil {
+		return nil, err
+	}
+	var lapTimeMetrics []LapTimeMetric
+	for _, message := range updateTimingData.M {
+		elements := message.A
+		if len(elements) != 3 {
+			continue
+		}
+		if elements[0] != "TimingData" {
+			continue
+		}
+		var timingDataMap map[string]interface{}
+		timingDataMap = elements[1].(map[string]interface{})
+		timingDataMapBytes, err := json.Marshal(timingDataMap)
+		if err != nil {
+			continue
+		}
+		var timingData TimingData
+		if err := json.Unmarshal(timingDataMapBytes, &timingData); err != nil {
+			continue
+		}
+		for key, value := range timingData.Lines {
+			var timing LapTimeMetric
+			err := mapstructure.Decode(value, &timing)
+			if err != nil {
+				continue
+			}
+			if timing.BestLapTime.Lap == 0 || timing.BestLapTime.Value == "" {
+				continue
+			}
+			timing.RacingNumber, _ = strconv.Atoi(key)
+			lapTimeMetrics = append(lapTimeMetrics, timing)
+		}
+
+	}
+	if len(lapTimeMetrics) == 0 {
+		return nil, fmt.Errorf("No lap time metrics found")
+	}
+
+	return lapTimeMetrics, nil
 }

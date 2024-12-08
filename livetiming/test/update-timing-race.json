@@ -1,0 +1,111 @@
+{
+  "C": "d-9517D6BB-B,0|C7c,0|C7d,7|O,BC|Q,3|R,13|T,38D8|L,328|K,3CB",
+  "M": [
+    {
+      "H": "Streaming",
+      "M": "feed",
+      "A": [
+        "TimingData",
+        {
+          "Lines": {
+            "55": {
+              "Line": 4,
+              "Position": "4"
+            },
+            "63": {
+              "BestLapTimes": {
+                "1": {
+                  "Value": "1:23.805",
+                  "Lap": 6
+                }
+              },
+              "Stats": {
+                "1": {
+                  "TimeDiffToFastest": "+0.807",
+                  "TimeDifftoPositionAhead": "+0.807"
+                }
+              },
+              "Line": 2,
+              "Position": "2",
+              "NumberOfLaps": 10,
+              "Sectors": {
+                "2": {
+                  "Value": "30.403"
+                }
+              },
+              "Speeds": {
+                "FL": {
+                  "Value": "220"
+                }
+              },
+              "BestLapTime": {
+                "Value": "1:23.805",
+                "Lap": 6
+              },
+              "LastLapTime": {
+                "Value": "1:23.805",
+                "PersonalFastest": true
+              }
+            },
+            "20": {
+              "Line": 5,
+              "Position": "5"
+            },
+            "16": {
+              "Line": 3,
+              "Position": "3"
+            }
+          }
+        },
+        "2024-12-07T14:33:13.195Z"
+      ]
+    },
+    {
+      "H": "Streaming",
+      "M": "feed",
+      "A": [
+        "TimingData",
+        {
+          "Lines": {
+            "63": {
+              "Sectors": {
+                "2": {
+                  "Segments": {
+                    "8": {
+                      "Status": 2048
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "2024-12-07T14:33:13.248Z"
+      ]
+    },
+    {
+      "H": "Streaming",
+      "M": "feed",
+      "A": [
+        "TimingAppData",
+        {
+          "Lines": {
+            "16": {
+              "Line": 3
+            },
+            "20": {
+              "Line": 5
+            },
+            "55": {
+              "Line": 4
+            },
+            "63": {
+              "Line": 2
+            }
+          }
+        },
+        "2024-12-07T14:33:13.195Z"
+      ]
+    }
+  ]
+}

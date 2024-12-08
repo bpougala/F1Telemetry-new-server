@@ -201,6 +201,7 @@ func ProcessSessionDataAndInfo(connection *websocket.Conn, dbClient *mongo.Clien
 		sessionInfo, err := BuildSessionInfo(message)
 		drivers, err := BuildDriverList(message)
 		positions, err := BuildPositions(message)
+		timings, err := BuildTimingData(message)
 		if err == nil {
 			meetingDB := convertMeetingToDB(meetingData)
 			var driverInterface []interface{}

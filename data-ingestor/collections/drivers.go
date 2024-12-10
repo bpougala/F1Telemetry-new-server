@@ -14,3 +14,17 @@ type Driver struct {
 	TeamName      *string `json:"team_name,omitempty"`
 	NameAcronym   *string `json:"name_acronym,omitempty"`
 }
+
+type DriverDB struct {
+	RacingNumber  int    `json:"RacingNumber"`
+	BroadcastName string `json:"BroadcastName"`
+	FullName      string `json:"FullName"`
+	Abbreviation  string `json:"Tla"`
+	TeamName      string `json:"TeamName"`
+	TeamColour    string `json:"TeamColour"`
+	FirstName     string `json:"FirstName"`
+	LastName      string `json:"LastName"`
+	HeadshotUrl   string `json:"HeadshotUrl"`
+	CountryCode   string `json:"CountryCode"`
+	SessionKey    int    `json:"SessionKey"`
+}

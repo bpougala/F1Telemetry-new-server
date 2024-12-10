@@ -15,6 +15,11 @@ type Query {
   intervals(session_key: Int!): [Interval]!
 }
 
+type Subscription {
+  lapTimes: [LapTime]!
+  positions: [Position]!
+}
+
 type Session {
   session_key: Int!
   session_name: String!
@@ -98,6 +103,14 @@ type Lap {
   segments_sector_2: [Int]
   segments_sector_3: [Int]
   lap_number: Int!
+}
+
+type LapTime {
+  session_key: Int!
+  racing_number: Int!
+  number_of_laps: Int!
+  best_lap_time: Any
+  last_lap_time: Any
 }
 
 type Interval {

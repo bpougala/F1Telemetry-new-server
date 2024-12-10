@@ -57,6 +57,14 @@ type Lap struct {
 	LapNumber       int      `json:"lap_number"`
 }
 
+type LapTime struct {
+	SessionKey   int `json:"session_key"`
+	RacingNumber int `json:"racing_number"`
+	NumberOfLaps int `json:"number_of_laps"`
+	BestLapTime  any `json:"best_lap_time,omitempty"`
+	LastLapTime  any `json:"last_lap_time,omitempty"`
+}
+
 type Meeting struct {
 	MeetingName         string `json:"meeting_name"`
 	MeetingOfficialName string `json:"meeting_official_name"`
@@ -97,4 +105,7 @@ type Session struct {
 	GmtOffset   string `json:"gmt_offset"`
 	SessionType string `json:"session_type"`
 	MeetingKey  int    `json:"meeting_key"`
+}
+
+type Subscription struct {
 }

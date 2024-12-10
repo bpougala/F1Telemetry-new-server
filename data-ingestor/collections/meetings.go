@@ -15,3 +15,14 @@ type Meeting struct {
 	DateStart           string `json:"date_start"`
 	Year                int    `json:"year"`
 }
+
+type MeetingDataDB struct {
+	Key          int    `json:"_id"`
+	Name         string `json:"Name"`
+	OfficialName string `json:"OfficialName"`
+	Location     string `json:"Location"`
+	Number       int    `json:"Number"`
+	CountryName  string `json:"CountryName"`
+	CountryCode  string `json:"CountryCode"`
+	Circuit      string `json:"Circuit"`
+}

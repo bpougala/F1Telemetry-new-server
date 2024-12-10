@@ -3,13 +3,17 @@ package main
 import (
 	dataingestor "F1Telemetry-new-server/data-ingestor"
 	"F1Telemetry-new-server/graph"
+	"F1Telemetry-new-server/livetiming"
 	"context"
+	"fmt"
 	"github.com/99designs/gqlgen/graphql/handler"
 	"github.com/99designs/gqlgen/graphql/handler/transport"
 	"github.com/99designs/gqlgen/graphql/playground"
 	"log"
 	"net/http"
 	"os"
+	"os/signal"
+	"syscall"
 )
 
 const defaultPort = "8080"
@@ -24,7 +28,8 @@ func main() {
 	if port == "" {
 		port = defaultPort
 	}
-	server := handler.NewDefaultServer(graph.NewExecutableSchema(graph.Config{Resolvers: &graph.Resolver{}}))
+	resolver := graph.NewResolver()
+	server := handler.NewDefaultServer(graph.NewExecutableSchema(graph.Config{Resolvers: resolver}))
 	server.AddTransport(&transport.Websocket{})
 
 	http.Handle("/", playground.Handler("GraphQL playground", "/query"))
@@ -37,7 +42,7 @@ func main() {
 			log.Fatalf("Failed to start server: %v", err)
 		}
 	}()
-	/*cookies, connObject, err := livetiming.Negotiate()
+	cookies, connObject, err := livetiming.Negotiate()
 	if err != nil {
 		panic(err)
 	}
@@ -57,9 +62,10 @@ func main() {
 
 	fmt.Println("connected to websocket")
 	sessionKeyChan := make(chan int)
-	go livetiming.ProcessSessionDataAndInfo(connection, dbClient, ctx, sessionKeyChan)
+
+	go livetiming.ProcessSessionDataAndInfo(connection, dbClient, ctx, sessionKeyChan, resolver)
 	c := make(chan os.Signal, 1)
 	signal.Notify(c, os.Interrupt, syscall.SIGTERM)
 	<-c
-	fmt.Println("Shutting down")*/
+	fmt.Println("Shutting down")
 }

@@ -1,8 +1,8 @@
 package data_ingestor
 
 import (
+	"F1Telemetry-new-server/data-ingestor/collections"
 	"F1Telemetry-new-server/graph/model"
-	"F1Telemetry-new-server/livetiming"
 	"context"
 	"fmt"
 	"go.mongodb.org/mongo-driver/bson"
@@ -14,7 +14,7 @@ func FetchMeetings(dbClient *mongo.Client, ctx context.Context) ([]model.Meeting
 	if err != nil {
 		return nil, err
 	}
-	var rawMeetings []livetiming.MeetingDataDB
+	var rawMeetings []collections.MeetingDataDB
 	var meetings []model.Meeting
 	err = cursor.All(ctx, &rawMeetings)
 	if err != nil {
@@ -40,7 +40,7 @@ func FetchSessions(dbClient *mongo.Client, ctx context.Context, meetingKey int) 
 	if err != nil {
 		return nil, err
 	}
-	var rawSessions []livetiming.SessionInfoDB
+	var rawSessions []collections.SessionInfoDB
 	var sessions []model.Session
 	err = cursor.All(ctx, &rawSessions)
 	if err != nil {
@@ -66,7 +66,7 @@ func FetchDrivers(dbClient *mongo.Client, ctx context.Context, sessionKey int) (
 	if err != nil {
 		return nil, err
 	}
-	var rawDrivers []livetiming.Driver
+	var rawDrivers []collections.DriverDB
 	var drivers []model.Driver
 	err = cursor.All(ctx, &rawDrivers)
 	if err != nil {
@@ -96,7 +96,7 @@ func FetchPositions(dbClient *mongo.Client, ctx context.Context, sessionKey int)
 	if err != nil {
 		return nil, err
 	}
-	var rawPositions []livetiming.Position
+	var rawPositions []collections.PositionsDB
 	var positions []model.Position
 	err = cursor.All(ctx, &rawPositions)
 	if err != nil {

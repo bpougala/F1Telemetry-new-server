@@ -139,10 +139,50 @@ func (r *queryResolver) Intervals(ctx context.Context, sessionKey int) ([]*model
 	return intervalsInt, nil
 }
 
+// LapTimes is the resolver for the lapTimes field.
+func (r *subscriptionResolver) LapTimes(ctx context.Context) (<-chan []*model.LapTime, error) {
+	id := dataingestor.GenerateRandomString(8)
+	lapTimes := make(chan []*model.LapTime, 1)
+
+	go func() {
+		<-ctx.Done()
+		r.mu.Lock()
+		delete(r.LapTimeObservers, id)
+		r.mu.Unlock()
+	}()
+	r.mu.Lock()
+	r.LapTimeObservers[id] = lapTimes
+	r.mu.Unlock()
+	r.LapTimeObservers[id] <- r.CurrentLapTimes
+	return lapTimes, nil
+}
+
+// Positions is the resolver for the positions field.
+func (r *subscriptionResolver) Positions(ctx context.Context) (<-chan []*model.Position, error) {
+	id := dataingestor.GenerateRandomString(8)
+	positions := make(chan []*model.Position, 1)
+
+	go func() {
+		<-ctx.Done()
+		r.mu.Lock()
+		delete(r.PositionObservers, id)
+		r.mu.Unlock()
+	}()
+	r.mu.Lock()
+	r.PositionObservers[id] = positions
+	r.mu.Unlock()
+	r.PositionObservers[id] <- r.CurrentPositions
+	return positions, nil
+}
+
 // Query returns QueryResolver implementation.
 func (r *Resolver) Query() QueryResolver { return &queryResolver{r} }
 
+// Subscription returns SubscriptionResolver implementation.
+func (r *Resolver) Subscription() SubscriptionResolver { return &subscriptionResolver{r} }
+
 type queryResolver struct{ *Resolver }
+type subscriptionResolver struct{ *Resolver }
 
 // !!! WARNING !!!
 // The code below was going to be deleted when updating resolvers. It has been copied here so you have

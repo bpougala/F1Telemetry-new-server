@@ -33,7 +33,7 @@ type IntervalsDB struct {
 
 type PositionsDB struct {
 	SessionKey   int    `json:"sessionkey"`
-	DriverNumber int    `json:"drivernumber"`
+	RacingNumber int    `json:"racingnumber"`
 	Position     int    `json:"position"`
 	Timestamp    string `json:"timestamp"`
 }

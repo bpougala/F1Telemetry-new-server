@@ -8,3 +8,11 @@ type Interval struct {
 	GapToLeader  *any   `json:"gap_to_leader,omitempty"`
 	Interval     *any   `json:"interval,omitempty"`
 }
+
+type IntervalsDB struct {
+	SessionKey   int    `json:"sessionkey"`
+	DriverNumber int    `json:"drivernumber"`
+	Interval     string `json:"interval"`
+	GapToLeader  string `json:"gaptoleader"`
+	Timestamp    string `json:"timestamp"`
+}

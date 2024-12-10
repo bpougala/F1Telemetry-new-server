@@ -9,6 +9,7 @@ import (
 	"embed"
 	"errors"
 	"fmt"
+	"io"
 	"strconv"
 	"sync"
 	"sync/atomic"
@@ -40,6 +41,7 @@ type Config struct {
 
 type ResolverRoot interface {
 	Query() QueryResolver
+	Subscription() SubscriptionResolver
 }
 
 type DirectiveRoot struct {
@@ -101,6 +103,14 @@ type ComplexityRoot struct {
 		StSpeed         func(childComplexity int) int
 	}
 
+	LapTime struct {
+		BestLapTime  func(childComplexity int) int
+		LastLapTime  func(childComplexity int) int
+		NumberOfLaps func(childComplexity int) int
+		RacingNumber func(childComplexity int) int
+		SessionKey   func(childComplexity int) int
+	}
+
 	Meeting struct {
 		CircuitShortName    func(childComplexity int) int
 		CountryCode         func(childComplexity int) int
@@ -150,6 +160,11 @@ type ComplexityRoot struct {
 		SessionName func(childComplexity int) int
 		SessionType func(childComplexity int) int
 	}
+
+	Subscription struct {
+		LapTimes  func(childComplexity int) int
+		Positions func(childComplexity int) int
+	}
 }
 
 type QueryResolver interface {
@@ -161,6 +176,10 @@ type QueryResolver interface {
 	CarData(ctx context.Context, sessionKey int, racingNumber int) ([]*model.CarData, error)
 	Laps(ctx context.Context, sessionKey int) ([]*model.Lap, error)
 	Intervals(ctx context.Context, sessionKey int) ([]*model.Interval, error)
+}
+type SubscriptionResolver interface {
+	LapTimes(ctx context.Context) (<-chan []*model.LapTime, error)
+	Positions(ctx context.Context) (<-chan []*model.Position, error)
 }
 
 type executableSchema struct {
@@ -483,6 +502,41 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Lap.StSpeed(childComplexity), true
 
+	case "LapTime.best_lap_time":
+		if e.complexity.LapTime.BestLapTime == nil {
+			break
+		}
+
+		return e.complexity.LapTime.BestLapTime(childComplexity), true
+
+	case "LapTime.last_lap_time":
+		if e.complexity.LapTime.LastLapTime == nil {
+			break
+		}
+
+		return e.complexity.LapTime.LastLapTime(childComplexity), true
+
+	case "LapTime.number_of_laps":
+		if e.complexity.LapTime.NumberOfLaps == nil {
+			break
+		}
+
+		return e.complexity.LapTime.NumberOfLaps(childComplexity), true
+
+	case "LapTime.racing_number":
+		if e.complexity.LapTime.RacingNumber == nil {
+			break
+		}
+
+		return e.complexity.LapTime.RacingNumber(childComplexity), true
+
+	case "LapTime.session_key":
+		if e.complexity.LapTime.SessionKey == nil {
+			break
+		}
+
+		return e.complexity.LapTime.SessionKey(childComplexity), true
+
 	case "Meeting.circuit_short_name":
 		if e.complexity.Meeting.CircuitShortName == nil {
 			break
@@ -763,6 +817,20 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Session.SessionType(childComplexity), true
 
+	case "Subscription.lapTimes":
+		if e.complexity.Subscription.LapTimes == nil {
+			break
+		}
+
+		return e.complexity.Subscription.LapTimes(childComplexity), true
+
+	case "Subscription.positions":
+		if e.complexity.Subscription.Positions == nil {
+			break
+		}
+
+		return e.complexity.Subscription.Positions(childComplexity), true
+
 	}
 	return 0, false
 }
@@ -803,6 +871,23 @@ func (e *executableSchema) Exec(ctx context.Context) graphql.ResponseHandler {
 			}
 
 			return &response
+		}
+	case ast.Subscription:
+		next := ec._Subscription(ctx, rc.Operation.SelectionSet)
+
+		var buf bytes.Buffer
+		return func(ctx context.Context) *graphql.Response {
+			buf.Reset()
+			data := next(ctx)
+
+			if data == nil {
+				return nil
+			}
+			data.MarshalGQL(&buf)
+
+			return &graphql.Response{
+				Data: buf.Bytes(),
+			}
 		}
 
 	default:
@@ -2974,6 +3059,220 @@ func (ec *executionContext) fieldContext_Lap_lap_number(_ context.Context, field
 	return fc, nil
 }
 
+func (ec *executionContext) _LapTime_session_key(ctx context.Context, field graphql.CollectedField, obj *model.LapTime) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_LapTime_session_key(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.SessionKey, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(int)
+	fc.Result = res
+	return ec.marshalNInt2int(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_LapTime_session_key(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "LapTime",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _LapTime_racing_number(ctx context.Context, field graphql.CollectedField, obj *model.LapTime) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_LapTime_racing_number(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.RacingNumber, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(int)
+	fc.Result = res
+	return ec.marshalNInt2int(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_LapTime_racing_number(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "LapTime",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _LapTime_number_of_laps(ctx context.Context, field graphql.CollectedField, obj *model.LapTime) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_LapTime_number_of_laps(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.NumberOfLaps, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(int)
+	fc.Result = res
+	return ec.marshalNInt2int(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_LapTime_number_of_laps(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "LapTime",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _LapTime_best_lap_time(ctx context.Context, field graphql.CollectedField, obj *model.LapTime) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_LapTime_best_lap_time(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.BestLapTime, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(any)
+	fc.Result = res
+	return ec.marshalOAny2interface(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_LapTime_best_lap_time(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "LapTime",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Any does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _LapTime_last_lap_time(ctx context.Context, field graphql.CollectedField, obj *model.LapTime) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_LapTime_last_lap_time(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.LastLapTime, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(any)
+	fc.Result = res
+	return ec.marshalOAny2interface(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_LapTime_last_lap_time(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "LapTime",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Any does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Meeting_meeting_name(ctx context.Context, field graphql.CollectedField, obj *model.Meeting) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Meeting_meeting_name(ctx, field)
 	if err != nil {
@@ -4850,6 +5149,142 @@ func (ec *executionContext) fieldContext_Session_meeting_key(_ context.Context, 
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			return nil, errors.New("field of type Int does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Subscription_lapTimes(ctx context.Context, field graphql.CollectedField) (ret func(ctx context.Context) graphql.Marshaler) {
+	fc, err := ec.fieldContext_Subscription_lapTimes(ctx, field)
+	if err != nil {
+		return nil
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = nil
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Subscription().LapTimes(rctx)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return nil
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return nil
+	}
+	return func(ctx context.Context) graphql.Marshaler {
+		select {
+		case res, ok := <-resTmp.(<-chan []*model.LapTime):
+			if !ok {
+				return nil
+			}
+			return graphql.WriterFunc(func(w io.Writer) {
+				w.Write([]byte{'{'})
+				graphql.MarshalString(field.Alias).MarshalGQL(w)
+				w.Write([]byte{':'})
+				ec.marshalNLapTime2ᚕᚖF1TelemetryᚑnewᚑserverᚋgraphᚋmodelᚐLapTime(ctx, field.Selections, res).MarshalGQL(w)
+				w.Write([]byte{'}'})
+			})
+		case <-ctx.Done():
+			return nil
+		}
+	}
+}
+
+func (ec *executionContext) fieldContext_Subscription_lapTimes(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Subscription",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "session_key":
+				return ec.fieldContext_LapTime_session_key(ctx, field)
+			case "racing_number":
+				return ec.fieldContext_LapTime_racing_number(ctx, field)
+			case "number_of_laps":
+				return ec.fieldContext_LapTime_number_of_laps(ctx, field)
+			case "best_lap_time":
+				return ec.fieldContext_LapTime_best_lap_time(ctx, field)
+			case "last_lap_time":
+				return ec.fieldContext_LapTime_last_lap_time(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type LapTime", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Subscription_positions(ctx context.Context, field graphql.CollectedField) (ret func(ctx context.Context) graphql.Marshaler) {
+	fc, err := ec.fieldContext_Subscription_positions(ctx, field)
+	if err != nil {
+		return nil
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = nil
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Subscription().Positions(rctx)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return nil
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return nil
+	}
+	return func(ctx context.Context) graphql.Marshaler {
+		select {
+		case res, ok := <-resTmp.(<-chan []*model.Position):
+			if !ok {
+				return nil
+			}
+			return graphql.WriterFunc(func(w io.Writer) {
+				w.Write([]byte{'{'})
+				graphql.MarshalString(field.Alias).MarshalGQL(w)
+				w.Write([]byte{':'})
+				ec.marshalNPosition2ᚕᚖF1TelemetryᚑnewᚑserverᚋgraphᚋmodelᚐPosition(ctx, field.Selections, res).MarshalGQL(w)
+				w.Write([]byte{'}'})
+			})
+		case <-ctx.Done():
+			return nil
+		}
+	}
+}
+
+func (ec *executionContext) fieldContext_Subscription_positions(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Subscription",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "session_key":
+				return ec.fieldContext_Position_session_key(ctx, field)
+			case "racing_number":
+				return ec.fieldContext_Position_racing_number(ctx, field)
+			case "position":
+				return ec.fieldContext_Position_position(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Position", field.Name)
 		},
 	}
 	return fc, nil
@@ -6942,6 +7377,59 @@ func (ec *executionContext) _Lap(ctx context.Context, sel ast.SelectionSet, obj 
 	return out
 }
 
+var lapTimeImplementors = []string{"LapTime"}
+
+func (ec *executionContext) _LapTime(ctx context.Context, sel ast.SelectionSet, obj *model.LapTime) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, lapTimeImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("LapTime")
+		case "session_key":
+			out.Values[i] = ec._LapTime_session_key(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "racing_number":
+			out.Values[i] = ec._LapTime_racing_number(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "number_of_laps":
+			out.Values[i] = ec._LapTime_number_of_laps(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "best_lap_time":
+			out.Values[i] = ec._LapTime_best_lap_time(ctx, field, obj)
+		case "last_lap_time":
+			out.Values[i] = ec._LapTime_last_lap_time(ctx, field, obj)
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.processDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
 var meetingImplementors = []string{"Meeting"}
 
 func (ec *executionContext) _Meeting(ctx context.Context, sel ast.SelectionSet, obj *model.Meeting) graphql.Marshaler {
@@ -7416,6 +7904,28 @@ func (ec *executionContext) _Session(ctx context.Context, sel ast.SelectionSet, 
 	}
 
 	return out
+}
+
+var subscriptionImplementors = []string{"Subscription"}
+
+func (ec *executionContext) _Subscription(ctx context.Context, sel ast.SelectionSet) func(ctx context.Context) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, subscriptionImplementors)
+	ctx = graphql.WithFieldContext(ctx, &graphql.FieldContext{
+		Object: "Subscription",
+	})
+	if len(fields) != 1 {
+		ec.Errorf(ctx, "must subscribe to exactly one stream")
+		return nil
+	}
+
+	switch fields[0].Name {
+	case "lapTimes":
+		return ec._Subscription_lapTimes(ctx, fields[0])
+	case "positions":
+		return ec._Subscription_positions(ctx, fields[0])
+	default:
+		panic("unknown field " + strconv.Quote(fields[0].Name))
+	}
 }
 
 var __DirectiveImplementors = []string{"__Directive"}
@@ -7939,6 +8449,44 @@ func (ec *executionContext) marshalNLap2ᚕᚖF1Telemetryᚑnewᚑserverᚋgraph
 				defer wg.Done()
 			}
 			ret[i] = ec.marshalOLap2ᚖF1TelemetryᚑnewᚑserverᚋgraphᚋmodelᚐLap(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+
+	return ret
+}
+
+func (ec *executionContext) marshalNLapTime2ᚕᚖF1TelemetryᚑnewᚑserverᚋgraphᚋmodelᚐLapTime(ctx context.Context, sel ast.SelectionSet, v []*model.LapTime) graphql.Marshaler {
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalOLapTime2ᚖF1TelemetryᚑnewᚑserverᚋgraphᚋmodelᚐLapTime(ctx, sel, v[i])
 		}
 		if isLen1 {
 			f(i)
@@ -8504,6 +9052,13 @@ func (ec *executionContext) marshalOLap2ᚖF1Telemetryᚑnewᚑserverᚋgraphᚋ
 		return graphql.Null
 	}
 	return ec._Lap(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalOLapTime2ᚖF1TelemetryᚑnewᚑserverᚋgraphᚋmodelᚐLapTime(ctx context.Context, sel ast.SelectionSet, v *model.LapTime) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return ec._LapTime(ctx, sel, v)
 }
 
 func (ec *executionContext) marshalOMeeting2ᚖF1TelemetryᚑnewᚑserverᚋgraphᚋmodelᚐMeeting(ctx context.Context, sel ast.SelectionSet, v *model.Meeting) graphql.Marshaler {

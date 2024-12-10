@@ -16,3 +16,15 @@ type Sessions struct {
 	GmtOffset        string `json:"gmt_offset"`
 	Year             int    `json:"year"`
 }
+
+type SessionInfoDB struct {
+	ArchiveStatus string `json:"ArchiveStatus"`
+	StartDate     string `json:"StartDate"`
+	EndDate       string `json:"EndDate"`
+	Type          string `json:"Type"`
+	GmtOffset     string `json:"GmtOffset"`
+	Key           int    `json:"_id"`
+	MeetingKey    int    `json:"MeetingKey"`
+	Name          string `json:"Name"`
+	Path          string `json:"Path"`
+}

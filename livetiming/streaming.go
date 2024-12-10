@@ -1,6 +1,8 @@
 package livetiming
 
 import (
+	"F1Telemetry-new-server/graph"
+	"F1Telemetry-new-server/graph/model"
 	"context"
 	"encoding/json"
 	"fmt"
@@ -155,7 +157,7 @@ func CreateTimingSubscribeMessage() SubscribeMessage {
 
 func CreateOriginalSessionMessage() SubscribeMessage {
 	var topics []string
-	topics = append(topics, "SessionInfo", "SessionData", "DriverList", "TimingData", "TimingStats", "TimingAppData", "LapCount")
+	topics = append(topics, "SessionInfo", "SessionData", "TimingData", "TimingStats", "TimingAppData", "LapCount")
 	var topicsList [][]string
 	topicsList = append(topicsList, topics)
 	return SubscribeMessage{
@@ -179,7 +181,7 @@ func CreateDriverSubscribeMessage() SubscribeMessage {
 	}
 }
 
-func ProcessSessionDataAndInfo(connection *websocket.Conn, dbClient *mongo.Client, ctx context.Context, sessionKeyChan chan int) {
+func ProcessSessionDataAndInfo(connection *websocket.Conn, dbClient *mongo.Client, ctx context.Context, sessionKeyChan chan int, resolver *graph.Resolver) {
 	defer close(sessionKeyChan)
 	subscribeMessage := CreateOriginalSessionMessage()
 	err := connection.WriteJSON(subscribeMessage)
@@ -197,27 +199,57 @@ func ProcessSessionDataAndInfo(connection *websocket.Conn, dbClient *mongo.Clien
 			}
 			return
 		}
+		isError := false
 		meetingData, err := BuildMeetingData(message)
+		if err != nil {
+			isError = true
+		}
 		sessionInfo, err := BuildSessionInfo(message)
-		drivers, err := BuildDriverList(message)
+		if err != nil {
+			isError = true
+		}
+		//drivers, err := BuildDriverList(message)
 		positions, err := BuildPositions(message)
-		timings, err := BuildTimingData(message)
-		if err == nil {
-			meetingDB := convertMeetingToDB(meetingData)
-			var driverInterface []interface{}
+		if err == nil && !isError {
 			var positionsInterface []interface{}
-			for _, driver := range drivers {
-				driver.SessionKey = sessionInfo.Key
-				driverInterface = append(driverInterface, driver)
-			}
+			var modelPositions []*model.Position
 			for _, position := range positions {
+				var modelPosition model.Position
+				modelPosition.Position = position.Position
+				modelPosition.RacingNumber = position.RacingNumber
+				modelPosition.SessionKey = sessionInfo.Key
+				modelPositions = append(modelPositions, &modelPosition)
 				position.SessionKey = sessionInfo.Key
 				positionsInterface = append(positionsInterface, position)
 			}
+			_, err = dbClient.Database("f1").Collection("positions").InsertMany(ctx, positionsInterface)
+			resolver.NotifyPositionSubscribers(modelPositions)
+		}
+		timingData, err := BuildTimingData(message)
+		if err == nil && !isError {
+			var laptimes []*model.LapTime
+			for _, timing := range timingData {
+				var lapTime model.LapTime
+				lapTime.SessionKey = sessionInfo.Key
+				lapTime.BestLapTime = timing.BestLapTime.Value
+				lapTime.NumberOfLaps = timing.NumberOfLaps
+				lapTime.RacingNumber = timing.RacingNumber
+				lapTime.LastLapTime = timing.LastLapTime.Value
+				laptimes = append(laptimes, &lapTime)
+				fmt.Printf("notify laptimes: %v\n", laptimes)
+				resolver.NotifyLapTimeSubscribers(laptimes)
+			}
+		}
+		if !isError {
+			meetingDB := convertMeetingToDB(meetingData)
+			var driverInterface []interface{}
+			/*for _, driver := range drivers {
+				driver.SessionKey = sessionInfo.Key
+				driverInterface = append(driverInterface, driver)
+			}*/
 			dbClient.Database("f1").Collection("meetingdata").FindOneAndReplace(ctx, bson.D{{"_id", meetingDB.Key}}, meetingDB, options.FindOneAndReplace().SetUpsert(true))
 			dbClient.Database("f1").Collection("sessioninfo").FindOneAndReplace(ctx, bson.D{{"_id", sessionInfo.Key}}, sessionInfo, options.FindOneAndReplace().SetUpsert(true))
 			_, err = dbClient.Database("f1").Collection("drivers").InsertMany(ctx, driverInterface)
-			_, err = dbClient.Database("f1").Collection("positions").InsertMany(ctx, positionsInterface)
 		}
 	}
 }

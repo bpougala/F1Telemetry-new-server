@@ -7,6 +7,7 @@ import (
 	"net/http/httptest"
 	"os"
 	"sort"
+	"strconv"
 	"strings"
 	"testing"
 )
@@ -420,11 +421,11 @@ func TestShouldCreatePositionsWhenTimingAppSendsUpdatesDuringRace(t *testing.T) 
 	maxVerstappenPosition := Position{
 		SessionKey:   0,
 		RacingNumber: 1,
-		Position:     2,
+		Position:     6,
 		InPit:        false,
 		PitOut:       false,
 		Stopped:      false,
-		Status:       64,
+		Status:       1088,
 	}
 	server := httptest.NewServer(http.HandlerFunc(serverSendingTimingAppRaceUpdates))
 	url := "ws" + strings.TrimPrefix(server.URL, "http")
@@ -519,10 +520,62 @@ func TestShouldNotCreatePositionsWhenDummyMessageIsSent(t *testing.T) {
 	}
 }
 
+func TestShouldCreateLapTimeWhenFirstSubscribing(t *testing.T) {
+	expectedTimingData := LapTimeMetric{
+		SessionKey:   0,
+		RacingNumber: "1",
+		NumberOfLaps: 58,
+		GapToLeader:  "+49.847",
+		IntervalToPositionAhead: struct {
+			Value    string `json:"Value"`
+			Catching bool   `json:"Catching"`
+		}{Value: "+12.309", Catching: true},
+		LastLapTime: struct {
+			Value           string `json:"Value"`
+			OverallFastest  bool   `json:"OverallFastest"`
+			PersonalFastest bool   `json:"PersonalFastest"`
+		}{Value: "1:28.780", OverallFastest: false, PersonalFastest: false},
+		BestLapTime: struct {
+			Value string `json:"Value"`
+			Lap   int    `json:"Lap"`
+		}{Value: "1:27.765", Lap: 56},
+	}
+	server := httptest.NewServer(http.HandlerFunc(serverSendingTimingAppRaceUpdates))
+	url := "ws" + strings.TrimPrefix(server.URL, "http")
+	client, _, err := websocket.DefaultDialer.Dial(url, nil)
+	if err != nil {
+		t.Fatalf("Could not open a websocket connection: %v", err)
+	}
+	defer client.Close()
+	err = sendDummyMessage(client)
+	if err != nil {
+		t.Fatalf("Could not write message to websocket: %v", err)
+	}
+	_, response, err := client.ReadMessage()
+	if err != nil {
+		t.Fatalf("Could not read message from websocket: %v", err)
+	}
+	timingData, err := BuildTimingData(response)
+	if err != nil {
+		t.Fatalf("Could not build timing data: %v", err)
+	}
+	if len(timingData) != 19 {
+		t.Fatalf("Expected 19 timing data, got: %d", len(timingData))
+	}
+	sort.Slice(timingData, func(i, j int) bool {
+		racingNumberI, _ := strconv.Atoi(timingData[i].RacingNumber)
+		racingNumberJ, _ := strconv.Atoi(timingData[j].RacingNumber)
+		return racingNumberI < racingNumberJ
+	})
+	if timingData[0] != expectedTimingData {
+		t.Fatalf("Expected timing data: %v, got: %v", expectedTimingData, timingData[0])
+	}
+}
+
 func TestShouldCreateLapTimeWhenReceivingUpdate(t *testing.T) {
 	expectedTimingData := LapTimeMetric{
 		SessionKey:   0,
-		RacingNumber: 63,
+		RacingNumber: "63",
 		NumberOfLaps: 10,
 		BestLapTime: struct {
 			Value string `json:"Value"`
@@ -629,4 +682,8 @@ func TestShouldNotCreateLapTimeWhenDummyMessageIsSent(t *testing.T) {
 	if timingData != nil {
 		t.Fatalf("Expected nil timing data, got: %v", timingData)
 	}
+}
+
+func TestShouldCreateRaceControlMessageWhenReceivingUpdate(t *testing.T) {
+
 }

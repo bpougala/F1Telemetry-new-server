@@ -141,6 +141,36 @@ func buildRacePositions(data []byte) ([]Position, error) {
 	return positions, nil
 }
 
+func buildRaceTimingData(data []byte) ([]LapTimeMetric, error) {
+	var initialData InitialData
+	var lapTimeMetrics []LapTimeMetric
+	if err := json.Unmarshal(data, &initialData); err != nil {
+		return lapTimeMetrics, err
+	}
+	if initialData.R.TimingData.Lines == nil {
+		return lapTimeMetrics, fmt.Errorf("No timing data found")
+	}
+	for key, value := range initialData.R.TimingData.Lines {
+		if key == "_kf" {
+			continue
+		}
+		var timing LapTimeMetric
+		err := mapstructure.Decode(value, &timing)
+		if err != nil {
+			continue
+		}
+		if timing.BestLapTime.Lap == 0 && timing.BestLapTime.Value == "" {
+			continue
+		}
+		timing.RacingNumber = key
+		lapTimeMetrics = append(lapTimeMetrics, timing)
+	}
+	if len(lapTimeMetrics) == 0 {
+		return lapTimeMetrics, fmt.Errorf("No lap time metrics found")
+	}
+	return lapTimeMetrics, nil
+}
+
 func buildUpdatedPositions(data []byte) ([]Position, error) {
 	var updateTimingData UpdateData
 	if err := json.Unmarshal(data, &updateTimingData); err != nil {
@@ -178,6 +208,9 @@ func BuildTimingData(data []byte) ([]LapTimeMetric, error) {
 	if err := json.Unmarshal(data, &updateTimingData); err != nil {
 		return nil, err
 	}
+	if updateTimingData.M == nil {
+		return buildRaceTimingData(data)
+	}
 	var lapTimeMetrics []LapTimeMetric
 	for _, message := range updateTimingData.M {
 		elements := message.A
@@ -206,7 +239,7 @@ func BuildTimingData(data []byte) ([]LapTimeMetric, error) {
 			if timing.BestLapTime.Lap == 0 || timing.BestLapTime.Value == "" {
 				continue
 			}
-			timing.RacingNumber, _ = strconv.Atoi(key)
+			timing.RacingNumber = key
 			lapTimeMetrics = append(lapTimeMetrics, timing)
 		}
 

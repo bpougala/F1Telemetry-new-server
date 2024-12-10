@@ -196,6 +196,7 @@ type InitialData struct {
 				PitOut       bool   `json:"PitOut"`
 				Stopped      bool   `json:"Stopped"`
 				Status       int    `json:"Status"`
+				NumberOfLaps int    `json:"NumberOfLaps"`
 				Sectors      []struct {
 					Stopped         bool   `json:"Stopped"`
 					Value           string `json:"Value"`
@@ -234,6 +235,7 @@ type InitialData struct {
 				} `json:"Speeds"`
 				BestLapTime struct {
 					Value string `json:"Value"`
+					Lap   int    `json:"Lap"`
 				} `json:"BestLapTime"`
 				LastLapTime struct {
 					Value           string `json:"Value"`
@@ -315,10 +317,15 @@ type Driver struct {
 }
 
 type LapTimeMetric struct {
-	SessionKey   int `json:"SessionKey"`
-	RacingNumber int `json:"RacingNumber"`
-	NumberOfLaps int `json:"NumberOfLaps"`
-	BestLapTime  struct {
+	SessionKey              int    `json:"SessionKey"`
+	RacingNumber            string `json:"RacingNumber"`
+	NumberOfLaps            int    `json:"NumberOfLaps"`
+	GapToLeader             string `json:"GapToLeader"`
+	IntervalToPositionAhead struct {
+		Value    string `json:"Value"`
+		Catching bool   `json:"Catching"`
+	}
+	BestLapTime struct {
 		Value string `json:"Value"`
 		Lap   int    `json:"Lap"`
 	} `json:"BestLapTimes"`

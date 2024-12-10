@@ -107,10 +107,12 @@ type Lap {
 
 type LapTime {
   session_key: Int!
-  racing_number: Int!
+  racing_number: String!
   number_of_laps: Int!
   best_lap_time: Any
   last_lap_time: Any
+  gap_to_leader: String
+  interval_to_position_ahead: Any
 }
 
 type Interval {

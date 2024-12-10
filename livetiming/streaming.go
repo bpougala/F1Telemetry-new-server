@@ -235,8 +235,9 @@ func ProcessSessionDataAndInfo(connection *websocket.Conn, dbClient *mongo.Clien
 				lapTime.NumberOfLaps = timing.NumberOfLaps
 				lapTime.RacingNumber = timing.RacingNumber
 				lapTime.LastLapTime = timing.LastLapTime.Value
+				lapTime.GapToLeader = &timing.GapToLeader
+				lapTime.IntervalToPositionAhead = &timing.IntervalToPositionAhead
 				laptimes = append(laptimes, &lapTime)
-				fmt.Printf("notify laptimes: %v\n", laptimes)
 				resolver.NotifyLapTimeSubscribers(laptimes)
 			}
 		}

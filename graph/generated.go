@@ -104,11 +104,13 @@ type ComplexityRoot struct {
 	}
 
 	LapTime struct {
-		BestLapTime  func(childComplexity int) int
-		LastLapTime  func(childComplexity int) int
-		NumberOfLaps func(childComplexity int) int
-		RacingNumber func(childComplexity int) int
-		SessionKey   func(childComplexity int) int
+		BestLapTime             func(childComplexity int) int
+		GapToLeader             func(childComplexity int) int
+		IntervalToPositionAhead func(childComplexity int) int
+		LastLapTime             func(childComplexity int) int
+		NumberOfLaps            func(childComplexity int) int
+		RacingNumber            func(childComplexity int) int
+		SessionKey              func(childComplexity int) int
 	}
 
 	Meeting struct {
@@ -508,6 +510,20 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.LapTime.BestLapTime(childComplexity), true
+
+	case "LapTime.gap_to_leader":
+		if e.complexity.LapTime.GapToLeader == nil {
+			break
+		}
+
+		return e.complexity.LapTime.GapToLeader(childComplexity), true
+
+	case "LapTime.interval_to_position_ahead":
+		if e.complexity.LapTime.IntervalToPositionAhead == nil {
+			break
+		}
+
+		return e.complexity.LapTime.IntervalToPositionAhead(childComplexity), true
 
 	case "LapTime.last_lap_time":
 		if e.complexity.LapTime.LastLapTime == nil {
@@ -3129,9 +3145,9 @@ func (ec *executionContext) _LapTime_racing_number(ctx context.Context, field gr
 		}
 		return graphql.Null
 	}
-	res := resTmp.(int)
+	res := resTmp.(string)
 	fc.Result = res
-	return ec.marshalNInt2int(ctx, field.Selections, res)
+	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_LapTime_racing_number(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -3141,7 +3157,7 @@ func (ec *executionContext) fieldContext_LapTime_racing_number(_ context.Context
 		IsMethod:   false,
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type Int does not have child fields")
+			return nil, errors.New("field of type String does not have child fields")
 		},
 	}
 	return fc, nil
@@ -3261,6 +3277,88 @@ func (ec *executionContext) _LapTime_last_lap_time(ctx context.Context, field gr
 }
 
 func (ec *executionContext) fieldContext_LapTime_last_lap_time(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "LapTime",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Any does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _LapTime_gap_to_leader(ctx context.Context, field graphql.CollectedField, obj *model.LapTime) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_LapTime_gap_to_leader(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.GapToLeader, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_LapTime_gap_to_leader(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "LapTime",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _LapTime_interval_to_position_ahead(ctx context.Context, field graphql.CollectedField, obj *model.LapTime) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_LapTime_interval_to_position_ahead(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.IntervalToPositionAhead, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(any)
+	fc.Result = res
+	return ec.marshalOAny2interface(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_LapTime_interval_to_position_ahead(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "LapTime",
 		Field:      field,
@@ -5217,6 +5315,10 @@ func (ec *executionContext) fieldContext_Subscription_lapTimes(_ context.Context
 				return ec.fieldContext_LapTime_best_lap_time(ctx, field)
 			case "last_lap_time":
 				return ec.fieldContext_LapTime_last_lap_time(ctx, field)
+			case "gap_to_leader":
+				return ec.fieldContext_LapTime_gap_to_leader(ctx, field)
+			case "interval_to_position_ahead":
+				return ec.fieldContext_LapTime_interval_to_position_ahead(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type LapTime", field.Name)
 		},
@@ -7407,6 +7509,10 @@ func (ec *executionContext) _LapTime(ctx context.Context, sel ast.SelectionSet, 
 			out.Values[i] = ec._LapTime_best_lap_time(ctx, field, obj)
 		case "last_lap_time":
 			out.Values[i] = ec._LapTime_last_lap_time(ctx, field, obj)
+		case "gap_to_leader":
+			out.Values[i] = ec._LapTime_gap_to_leader(ctx, field, obj)
+		case "interval_to_position_ahead":
+			out.Values[i] = ec._LapTime_interval_to_position_ahead(ctx, field, obj)
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}

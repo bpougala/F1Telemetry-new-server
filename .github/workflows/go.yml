@@ -1,0 +1,33 @@
+# This workflow will build a golang project
+# For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-go
+
+name: Go
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: '1.23'
+
+      - name: Build
+        run: go build -v ./...
+      - name: Login to DCR
+        run: docker login registry.digitalocean.com -u bpougala@gmail.com -p ${{ secrets.DIGITALOCEAN_ACCESS_TOKEN }}
+      - name: Build Docker image
+        run: docker build . -t f1telemetry-backend:latest
+      - name: Tag Docker image
+        run: docker tag f1telemetry-new-server:latest registry.digitalocean.com/f1telemetry-app/f1telemetry-new-server:latest
+      - name: Push Docker image
+        run: docker push registry.digitalocean.com/f1telemetry-app/f1telemetry-new-server:latest

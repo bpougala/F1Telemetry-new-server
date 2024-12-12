@@ -5,9 +5,10 @@ import (
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
+	"os"
 )
 
-var uri = "mongodb://localhost:27017"
+var uri = os.Getenv("MONGO_CONNECTION_URL")
 
 func GetMongoClient(ctx *context.Context) (*mongo.Client, error) {
 	serverAPI := options.ServerAPI(options.ServerAPIVersion1)

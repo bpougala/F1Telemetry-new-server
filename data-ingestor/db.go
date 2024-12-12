@@ -14,7 +14,9 @@ var uri = os.Getenv("MONGO_CONNECTION_URL")
 func GetMongoClient(ctx *context.Context) (*mongo.Client, error) {
 	fmt.Println(uri)
 	serverAPI := options.ServerAPI(options.ServerAPIVersion1)
-	opts := options.Client().ApplyURI(uri).SetServerAPIOptions(serverAPI)
+	opts := options.Client().ApplyURI(uri).SetAuth(options.Credential{
+		AuthMechanism: "SCRAM-SHA-256",
+	}).SetServerAPIOptions(serverAPI)
 	fmt.Println("Connecting to MongoDB")
 	client, err := mongo.Connect(*ctx, opts)
 	if err != nil {

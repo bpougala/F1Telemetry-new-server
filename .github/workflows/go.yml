@@ -26,7 +26,7 @@ jobs:
       - name: Login to DCR
         run: docker login registry.digitalocean.com -u bpougala@gmail.com -p ${{ secrets.DIGITALOCEAN_ACCESS_TOKEN }}
       - name: Build Docker image
-        run: docker build . -t f1telemetry-new-server:latest
+        run: docker build . -t f1telemetry-new-server:latest --build-arg MONGO_CONNECTION_URL=${{ secrets.MONGO_CONNECTION_URL }}
       - name: Tag Docker image
         run: docker tag f1telemetry-new-server:latest registry.digitalocean.com/f1telemetry-app/f1telemetry-new-server:latest
       - name: Push Docker image

@@ -157,7 +157,7 @@ func CreateTimingSubscribeMessage() SubscribeMessage {
 
 func CreateOriginalSessionMessage() SubscribeMessage {
 	var topics []string
-	topics = append(topics, "SessionInfo", "SessionData", "TimingData", "TimingStats", "TimingAppData", "LapCount")
+	topics = append(topics, "SessionInfo", "SessionData", "TimingData", "TimingStats", "TimingAppData", "LapCount", "DriverList")
 	var topicsList [][]string
 	topicsList = append(topicsList, topics)
 	return SubscribeMessage{

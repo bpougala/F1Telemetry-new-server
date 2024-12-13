@@ -85,22 +85,6 @@ func (r *queryResolver) RaceControls(ctx context.Context, sessionKey int) ([]*mo
 	panic(fmt.Errorf("not implemented: RaceControls - raceControls"))
 }
 
-// CarData is the resolver for the carData field.
-func (r *queryResolver) CarData(ctx context.Context, sessionKey int, racingNumber int) ([]*model.CarData, error) {
-	if err != nil {
-		return nil, err
-	}
-	carData, err := dataingestor.FetchCarData(dbClient, ctx, sessionKey, racingNumber)
-	if err != nil {
-		return nil, err
-	}
-	var carDataInt []*model.CarData
-	for _, carData := range carData {
-		carDataInt = append(carDataInt, &carData)
-	}
-	return carDataInt, nil
-}
-
 // Laps is the resolver for the laps field.
 func (r *queryResolver) Laps(ctx context.Context, sessionKey int) ([]*model.Lap, error) {
 	if err != nil {
@@ -175,6 +159,24 @@ func (r *subscriptionResolver) Positions(ctx context.Context) (<-chan []*model.P
 	return positions, nil
 }
 
+// CarData is the resolver for the carData field.
+func (r *subscriptionResolver) CarData(ctx context.Context) (<-chan *model.CarData, error) {
+	id := dataingestor.GenerateRandomString(8)
+	carData := make(chan *model.CarData, 1)
+
+	go func() {
+		<-ctx.Done()
+		r.mu.Lock()
+		delete(r.CarDataObservers, id)
+		r.mu.Unlock()
+	}()
+	r.mu.Lock()
+	r.CarDataObservers[id] = carData
+	r.mu.Unlock()
+	r.CarDataObservers[id] <- r.CurrentCarData
+	return carData, nil
+}
+
 // Query returns QueryResolver implementation.
 func (r *Resolver) Query() QueryResolver { return &queryResolver{r} }
 
@@ -193,4 +195,18 @@ type subscriptionResolver struct{ *Resolver }
 /*
 	var ctx = context.Background()
 var dbClient, err = dataingestor.GetMongoClient(&ctx)
+func (r *queryResolver) CarData(ctx context.Context, sessionKey int, racingNumber int) ([]*model.CarData, error) {
+	if err != nil {
+		return nil, err
+	}
+	carData, err := dataingestor.FetchCarData(dbClient, ctx, sessionKey, racingNumber)
+	if err != nil {
+		return nil, err
+	}
+	var carDataInt []*model.CarData
+	for _, carData := range carData {
+		carDataInt = append(carDataInt, &carData)
+	}
+	return carDataInt, nil
+}
 */

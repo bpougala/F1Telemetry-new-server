@@ -285,6 +285,7 @@ type InitialData struct {
 			} `json:"Lines"`
 			Kf bool `json:"_kf"`
 		} `json:"TimingAppData"`
+		CarData  string `json:"CarData.Z"`
 		LapCount struct {
 			CurrentLap int  `json:"CurrentLap"`
 			TotalLaps  int  `json:"TotalLaps"`
@@ -356,4 +357,34 @@ type DriverData struct {
 	Reference     string `json:"Reference"`
 	HeadshotUrl   string `json:"HeadshotUrl"`
 	CountryCode   string `json:"CountryCode"`
+}
+type CarData struct {
+	Compressed string `json:"Compressed"`
+}
+
+/* type CarData struct {
+	Date         string `json:"Date"`
+	SessionKey   int    `json:"SessionKey"`
+	RacingNumber int    `json:"RacingNumber"`
+	Rpm          int    `json:"Rpm"`
+	Speed        int    `json:"Speed"`
+	Gear         int    `json:"Gear"`
+	Throttle     int    `json:"Throttle"`
+	Brake        int    `json:"Brake"`
+	DRS          bool   `json:"hasDRS"`
+} */
+
+type Root struct {
+	Entries []Entry `json:"Entries"`
+}
+
+// Entry represents each entry in the Entries array
+type Entry struct {
+	Utc  time.Time      `json:"Utc"`
+	Cars map[string]Car `json:"Cars"`
+}
+
+// Car represents a car in the Cars map
+type Car struct {
+	Channels map[string]int `json:"Channels"`
 }

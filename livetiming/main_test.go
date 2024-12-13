@@ -2,7 +2,6 @@ package livetiming
 
 import (
 	"fmt"
-	"github.com/gorilla/websocket"
 	"net/http"
 	"net/http/httptest"
 	"os"
@@ -10,6 +9,8 @@ import (
 	"strconv"
 	"strings"
 	"testing"
+
+	"github.com/gorilla/websocket"
 )
 
 func echo(w http.ResponseWriter, r *http.Request) {
@@ -139,6 +140,27 @@ func serverSendingPositionUpdate(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		if err := conn.WriteMessage(messageType, sessionData); err != nil {
+			return
+		}
+	}
+}
+
+func serverSendingCarDataInfo(w http.ResponseWriter, r *http.Request) {
+	conn, err := upgrader.Upgrade(w, r, nil)
+	if err != nil {
+		return
+	}
+	defer conn.Close()
+	carData, err := os.ReadFile("test/cardata.json")
+	if err != nil {
+		fmt.Printf("Error reading car data: %v\n", err)
+	}
+	for {
+		messageType, _, err := conn.ReadMessage()
+		if err != nil {
+			return
+		}
+		if err := conn.WriteMessage(messageType, carData); err != nil {
 			return
 		}
 	}
@@ -684,6 +706,61 @@ func TestShouldNotCreateLapTimeWhenDummyMessageIsSent(t *testing.T) {
 	}
 }
 
+func TestShouldCreateCarDataWhenFirstSubscribing(t *testing.T) {
+	carDataElem := CarData{
+		Compressed: "7ZQ9DsIwDIXv4rkgO3Z+mhVxA1hADAghgYQ6QLeqd6cENgJEZkBCXdyo7RfbL87rYN605+P+AnHdwbLdQQSDRiZEE8YF+Wg52nrK4p2wrKCC2fY8/N0B3cLssG2a/Sm9QIhYgUmRUxSIhFKBfTxlWIS+Tx8KWEwk3jm8cYRa8JtqSV2uy4Bch/CevScNyqQmpxE5osJujdEmZi2o1df4XKtoS1tl7Thx2Tg9g1Km0Ytbo9XJ2gwo6D6wKanTnqrPHU4JGHLiDgNsi2QadnhnZD546wOPRva9kQlSPRrZaGS/NjKumf/SyDb9FQ==",
+	}
+	server := httptest.NewServer(http.HandlerFunc(serverSendingCarDataInfo))
+	url := "ws" + strings.TrimPrefix(server.URL, "http")
+	client, _, err := websocket.DefaultDialer.Dial(url, nil)
+	if err != nil {
+		t.Fatalf("Could not open a websocket connection: %v", err)
+	}
+	defer client.Close()
+	err = sendDummyMessage(client)
+	if err != nil {
+		t.Fatalf("Could not write message to websocket: %v", err)
+	}
+	_, response, err := client.ReadMessage()
+	if err != nil {
+		t.Fatalf("Could not read message from websocket: %v", err)
+	}
+	compressedCarData, err := BuildCarData(response)
+	if err != nil {
+		t.Fatalf("Could not build car data: %v", err)
+	}
+	if compressedCarData != carDataElem {
+		t.Fatalf("Expected car data: %v, got: %v", carDataElem, compressedCarData)
+	}
+}
+
+func TestShouldCreateCarDataWhenReceivingUpdate(t *testing.T) {
+	carDataElem := CarData{
+		Compressed: "7ZQ9DsIwDIXv4rkgO3Z+mhVxA1hADAghgYQ6QLeqd6cENgJEZkBCXdyo7RfbL87rYN605+P+AnHdwbLdQQSDRiZEE8YF+Wg52nrK4p2wrKCC2fY8/N0B3cLssG2a/Sm9QIhYgUmRUxSIhFKBfTxlWIS+Tx8KWEwk3jm8cYRa8JtqSV2uy4Bch/CevScNyqQmpxE5osJujdEmZi2o1df4XKtoS1tl7Thx2Tg9g1Km0Ytbo9XJ2gwo6D6wKanTnqrPHU4JGHLiDgNsi2QadnhnZD546wOPRva9kQlSPRrZaGS/NjKumf/SyDb9FQ==",
+	}
+	server := httptest.NewServer(http.HandlerFunc(serverSendingTimingDataUpdate))
+	url := "ws" + strings.TrimPrefix(server.URL, "http")
+	client, _, err := websocket.DefaultDialer.Dial(url, nil)
+	if err != nil {
+		t.Fatalf("Could not open a websocket connection: %v", err)
+	}
+	defer client.Close()
+	err = sendDummyMessage(client)
+	if err != nil {
+		t.Fatalf("Could not write message to websocket: %v", err)
+	}
+	_, response, err := client.ReadMessage()
+	if err != nil {
+		t.Fatalf("Could not read message from websocket: %v", err)
+	}
+	compressedCarData, err := BuildCarData(response)
+	if err != nil {
+		t.Fatalf("Could not build car data: %v", err)
+	}
+	if compressedCarData != carDataElem {
+		t.Fatalf("Expected car data: %v, got: %v", carDataElem, compressedCarData)
+	}
+}
 func TestShouldCreateRaceControlMessageWhenReceivingUpdate(t *testing.T) {
 
 }

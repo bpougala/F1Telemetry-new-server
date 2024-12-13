@@ -6,10 +6,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/gorilla/websocket"
-	"go.mongodb.org/mongo-driver/bson"
-	"go.mongodb.org/mongo-driver/mongo"
-	"go.mongodb.org/mongo-driver/mongo/options"
 	"io"
 	"log"
 	"net/http"
@@ -17,6 +13,11 @@ import (
 	"net/url"
 	"os"
 	"os/signal"
+
+	"github.com/gorilla/websocket"
+	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
 type Connection struct {
@@ -157,7 +158,7 @@ func CreateTimingSubscribeMessage() SubscribeMessage {
 
 func CreateOriginalSessionMessage() SubscribeMessage {
 	var topics []string
-	topics = append(topics, "SessionInfo", "SessionData", "TimingData", "TimingStats", "TimingAppData", "LapCount", "DriverList")
+	topics = append(topics, "SessionInfo", "SessionData", "TimingData", "TimingStats", "TimingAppData", "LapCount", "DriverList", "CarData.z")
 	var topicsList [][]string
 	topicsList = append(topicsList, topics)
 	return SubscribeMessage{
@@ -241,6 +242,12 @@ func ProcessSessionDataAndInfo(connection *websocket.Conn, dbClient *mongo.Clien
 				resolver.NotifyLapTimeSubscribers(laptimes)
 			}
 		}
+		carData, err := BuildCarData(message)
+		if err == nil && !isError {
+			var carDataModel model.CarData
+			carDataModel.Compressed = carData.Compressed
+			resolver.NotifyCarDataSubscribers(&carDataModel)
+		}
 		if !isError {
 			meetingDB := convertMeetingToDB(meetingData)
 			var driverInterface []interface{}
@@ -250,7 +257,7 @@ func ProcessSessionDataAndInfo(connection *websocket.Conn, dbClient *mongo.Clien
 			}
 			dbClient.Database("f1").Collection("meetingdata").FindOneAndReplace(ctx, bson.D{{"_id", meetingDB.Key}}, meetingDB, options.FindOneAndReplace().SetUpsert(true))
 			dbClient.Database("f1").Collection("sessioninfo").FindOneAndReplace(ctx, bson.D{{"_id", sessionInfo.Key}}, sessionInfo, options.FindOneAndReplace().SetUpsert(true))
-			_, err = dbClient.Database("f1").Collection("drivers").InsertMany(ctx, driverInterface)
+			//_, err = dbClient.Database("f1").Collection("drivers").InsertMany(ctx, driverInterface)
 		}
 	}
 }

@@ -3,8 +3,9 @@ package livetiming
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/mitchellh/mapstructure"
 	"strconv"
+
+	"github.com/mitchellh/mapstructure"
 )
 
 func BuildMeetingData(data []byte) (MeetingData, error) {
@@ -249,4 +250,47 @@ func BuildTimingData(data []byte) ([]LapTimeMetric, error) {
 	}
 
 	return lapTimeMetrics, nil
+}
+
+func BuildCarData(data []byte) (CarData, error) {
+	var carData CarData
+	var obj map[string]interface{}
+	if err := json.Unmarshal(data, &obj); err != nil {
+		return carData, err
+	}
+	var initialData InitialData
+	if err := json.Unmarshal(data, &initialData); err != nil {
+		return carData, err
+	}
+	compressedCarData := initialData.R.CarData
+	if compressedCarData == "" {
+		return buildUpdateCarData(data)
+	}
+	carData.Compressed = compressedCarData
+	return carData, nil
+}
+
+func buildUpdateCarData(data []byte) (CarData, error) {
+	var updateData UpdateData
+	if err := json.Unmarshal(data, &updateData); err != nil {
+		return CarData{}, err
+	}
+	var carData CarData
+	for _, message := range updateData.M {
+		elements := message.A
+		if len(elements) != 3 {
+			continue
+		}
+		if elements[0] != "CarData.z" {
+			continue
+		}
+		carData.Compressed = elements[1].(string)
+	}
+	if carData.Compressed == "" {
+		return CarData{}, fmt.Errorf("no car data found")
+	}
+	return carData, nil
+}
+func hasDRS(drsValue int) bool {
+	return drsValue == 8
 }

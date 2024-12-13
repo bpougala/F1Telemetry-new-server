@@ -10,7 +10,6 @@ type Query {
   drivers(session_key: Int!): [Driver]!
   positions(session_key: Int!): [Position]!
   raceControls(session_key: Int!): [RaceControl]!
-  carData(session_key: Int!, racing_number: Int!): [CarData]!
   laps(session_key: Int!): [Lap]!
   intervals(session_key: Int!): [Interval]!
 }
@@ -18,6 +17,7 @@ type Query {
 type Subscription {
   lapTimes: [LapTime]!
   positions: [Position]!
+  carData: CarData!
 }
 
 type Session {
@@ -73,19 +73,6 @@ type RaceControl {
   sector: Int
 }
 
-type CarData {
-  brake: Int!
-  date: String!
-  racing_number: Int!
-  drs: Int!
-  meeting_key: Int!
-  n_gear: Int!
-  rpm: Int!
-  session_key: Int!
-  speed: Int!
-  throttle: Int!
-}
-
 type Lap {
   meeting_key: Int!
   session_key: Int!
@@ -122,4 +109,8 @@ type Interval {
   session_key: Int!
   gap_to_leader:  Any
   interval: Any
+}
+
+type CarData {
+  compressed: String!
 }

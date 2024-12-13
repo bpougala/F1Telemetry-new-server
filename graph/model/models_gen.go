@@ -3,16 +3,7 @@
 package model
 
 type CarData struct {
-	Brake        int    `json:"brake"`
-	Date         string `json:"date"`
-	RacingNumber int    `json:"racing_number"`
-	Drs          int    `json:"drs"`
-	MeetingKey   int    `json:"meeting_key"`
-	NGear        int    `json:"n_gear"`
-	Rpm          int    `json:"rpm"`
-	SessionKey   int    `json:"session_key"`
-	Speed        int    `json:"speed"`
-	Throttle     int    `json:"throttle"`
+	Compressed string `json:"compressed"`
 }
 
 type Driver struct {

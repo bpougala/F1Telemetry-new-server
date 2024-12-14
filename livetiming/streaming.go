@@ -231,11 +231,16 @@ func ProcessSessionDataAndInfo(connection *websocket.Conn, dbClient *mongo.Clien
 			var laptimes []*model.LapTime
 			for _, timing := range timingData {
 				var lapTime model.LapTime
+				time := &model.Time{
+					Value:           timing.LastLapTime.Value,
+					OverallFastest:  timing.LastLapTime.OverallFastest,
+					PersonalFastest: timing.LastLapTime.PersonalFastest,
+				}
 				lapTime.SessionKey = sessionInfo.Key
 				lapTime.BestLapTime = timing.BestLapTime.Value
 				lapTime.NumberOfLaps = timing.NumberOfLaps
 				lapTime.RacingNumber = timing.RacingNumber
-				lapTime.LastLapTime = timing.LastLapTime.Value
+				lapTime.LastLapTime = time
 				lapTime.GapToLeader = &timing.GapToLeader
 				lapTime.IntervalToPositionAhead = &timing.IntervalToPositionAhead
 				laptimes = append(laptimes, &lapTime)

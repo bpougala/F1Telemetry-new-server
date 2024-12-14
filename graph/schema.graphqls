@@ -97,9 +97,15 @@ type LapTime {
   racing_number: String!
   number_of_laps: Int!
   best_lap_time: Any
-  last_lap_time: Any
+  last_lap_time: Time!
   gap_to_leader: String
   interval_to_position_ahead: Any
+}
+
+type Time {
+  value: String!
+  overallFastest: Boolean!
+  personalFastest: Boolean!
 }
 
 type Interval {

@@ -195,18 +195,4 @@ type subscriptionResolver struct{ *Resolver }
 /*
 	var ctx = context.Background()
 var dbClient, err = dataingestor.GetMongoClient(&ctx)
-func (r *queryResolver) CarData(ctx context.Context, sessionKey int, racingNumber int) ([]*model.CarData, error) {
-	if err != nil {
-		return nil, err
-	}
-	carData, err := dataingestor.FetchCarData(dbClient, ctx, sessionKey, racingNumber)
-	if err != nil {
-		return nil, err
-	}
-	var carDataInt []*model.CarData
-	for _, carData := range carData {
-		carDataInt = append(carDataInt, &carData)
-	}
-	return carDataInt, nil
-}
 */

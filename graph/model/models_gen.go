@@ -53,7 +53,7 @@ type LapTime struct {
 	RacingNumber            string  `json:"racing_number"`
 	NumberOfLaps            int     `json:"number_of_laps"`
 	BestLapTime             any     `json:"best_lap_time,omitempty"`
-	LastLapTime             any     `json:"last_lap_time,omitempty"`
+	LastLapTime             *Time   `json:"last_lap_time"`
 	GapToLeader             *string `json:"gap_to_leader,omitempty"`
 	IntervalToPositionAhead any     `json:"interval_to_position_ahead,omitempty"`
 }
@@ -101,4 +101,10 @@ type Session struct {
 }
 
 type Subscription struct {
+}
+
+type Time struct {
+	Value           string `json:"value"`
+	OverallFastest  bool   `json:"overallFastest"`
+	PersonalFastest bool   `json:"personalFastest"`
 }

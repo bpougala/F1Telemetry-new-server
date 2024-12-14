@@ -8,7 +8,6 @@ import (
 	dataingestor "F1Telemetry-new-server/data-ingestor"
 	"F1Telemetry-new-server/graph/model"
 	"context"
-	"fmt"
 )
 
 var ctx = context.Background()
@@ -80,49 +79,6 @@ func (r *queryResolver) Positions(ctx context.Context, sessionKey int) ([]*model
 	return positionsInt, nil
 }
 
-// RaceControls is the resolver for the raceControls field.
-func (r *queryResolver) RaceControls(ctx context.Context, sessionKey int) ([]*model.RaceControl, error) {
-	panic(fmt.Errorf("not implemented: RaceControls - raceControls"))
-}
-
-// Laps is the resolver for the laps field.
-func (r *queryResolver) Laps(ctx context.Context, sessionKey int) ([]*model.Lap, error) {
-	if err != nil {
-		return nil, err
-	}
-	laps, err := dataingestor.FetchLaps(dbClient, ctx, sessionKey)
-	if err != nil {
-		return nil, err
-	}
-	var lapsInt []*model.Lap
-	if len(laps) == 0 {
-		return lapsInt, nil
-	}
-	for _, lap := range laps {
-		lapsInt = append(lapsInt, &lap)
-	}
-	return lapsInt, nil
-}
-
-// Intervals is the resolver for the intervals field.
-func (r *queryResolver) Intervals(ctx context.Context, sessionKey int) ([]*model.Interval, error) {
-	if err != nil {
-		return nil, err
-	}
-	intervals, err := dataingestor.FetchIntervals(dbClient, ctx, sessionKey)
-	if err != nil {
-		return nil, err
-	}
-	var intervalsInt []*model.Interval
-	if len(intervals) == 0 {
-		return intervalsInt, nil
-	}
-	for _, interval := range intervals {
-		intervalsInt = append(intervalsInt, &interval)
-	}
-	return intervalsInt, nil
-}
-
 // LapTimes is the resolver for the lapTimes field.
 func (r *subscriptionResolver) LapTimes(ctx context.Context) (<-chan []*model.LapTime, error) {
 	id := dataingestor.GenerateRandomString(8)
@@ -177,6 +133,23 @@ func (r *subscriptionResolver) CarData(ctx context.Context) (<-chan *model.CarDa
 	return carData, nil
 }
 
+// RaceControl is the resolver for the raceControl field.
+func (r *subscriptionResolver) RaceControl(ctx context.Context) (<-chan []*model.RaceControl, error) {
+	id := dataingestor.GenerateRandomString(8)
+	raceControl := make(chan []*model.RaceControl, 1)
+	go func() {
+		<-ctx.Done()
+		r.mu.Lock()
+		delete(r.RaceControlObservers, id)
+		r.mu.Unlock()
+	}()
+	r.mu.Lock()
+	r.RaceControlObservers[id] = raceControl
+	r.mu.Unlock()
+	r.RaceControlObservers[id] <- r.CurrentRaceControlMessages
+	return raceControl, nil
+}
+
 // Query returns QueryResolver implementation.
 func (r *Resolver) Query() QueryResolver { return &queryResolver{r} }
 
@@ -195,4 +168,41 @@ type subscriptionResolver struct{ *Resolver }
 /*
 	var ctx = context.Background()
 var dbClient, err = dataingestor.GetMongoClient(&ctx)
+func (r *queryResolver) RaceControls(ctx context.Context, sessionKey int) ([]*model.RaceControl, error) {
+	panic(fmt.Errorf("not implemented: RaceControls - raceControls"))
+}
+func (r *queryResolver) Laps(ctx context.Context, sessionKey int) ([]*model.Lap, error) {
+	if err != nil {
+		return nil, err
+	}
+	laps, err := dataingestor.FetchLaps(dbClient, ctx, sessionKey)
+	if err != nil {
+		return nil, err
+	}
+	var lapsInt []*model.Lap
+	if len(laps) == 0 {
+		return lapsInt, nil
+	}
+	for _, lap := range laps {
+		lapsInt = append(lapsInt, &lap)
+	}
+	return lapsInt, nil
+}
+func (r *queryResolver) Intervals(ctx context.Context, sessionKey int) ([]*model.Interval, error) {
+	if err != nil {
+		return nil, err
+	}
+	intervals, err := dataingestor.FetchIntervals(dbClient, ctx, sessionKey)
+	if err != nil {
+		return nil, err
+	}
+	var intervalsInt []*model.Interval
+	if len(intervals) == 0 {
+		return intervalsInt, nil
+	}
+	for _, interval := range intervals {
+		intervalsInt = append(intervalsInt, &interval)
+	}
+	return intervalsInt, nil
+}
 */

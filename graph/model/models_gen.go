@@ -20,15 +20,6 @@ type Driver struct {
 	Abbreviation  *string `json:"abbreviation,omitempty"`
 }
 
-type Interval struct {
-	Date         string `json:"date"`
-	RacingNumber int    `json:"racing_number"`
-	MeetingKey   int    `json:"meeting_key"`
-	SessionKey   int    `json:"session_key"`
-	GapToLeader  any    `json:"gap_to_leader,omitempty"`
-	Interval     any    `json:"interval,omitempty"`
-}
-
 type Lap struct {
 	MeetingKey      int      `json:"meeting_key"`
 	SessionKey      int      `json:"session_key"`
@@ -78,16 +69,12 @@ type Query struct {
 }
 
 type RaceControl struct {
-	SessionKey   int     `json:"session_key"`
-	MeetingKey   int     `json:"meeting_key"`
-	Date         string  `json:"date"`
-	Category     *string `json:"category,omitempty"`
-	Flag         *string `json:"flag,omitempty"`
-	LapNumber    *int    `json:"lap_number,omitempty"`
-	Message      *string `json:"message,omitempty"`
-	RacingNumber *int    `json:"racing_number,omitempty"`
-	Scope        *string `json:"scope,omitempty"`
-	Sector       *int    `json:"sector,omitempty"`
+	Date      string  `json:"date"`
+	Category  *string `json:"category,omitempty"`
+	Flag      *string `json:"flag,omitempty"`
+	LapNumber *int    `json:"lap_number,omitempty"`
+	Message   string  `json:"message"`
+	Scope     *string `json:"scope,omitempty"`
 }
 
 type Session struct {

@@ -166,6 +166,28 @@ func serverSendingCarDataInfo(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+func serverSendingSessionUpdate(w http.ResponseWriter, r *http.Request) {
+	conn, err := upgrader.Upgrade(w, r, nil)
+	if err != nil {
+		return
+	}
+	defer conn.Close()
+	sessionData, err := os.ReadFile("test/session-update.json")
+	if err != nil {
+		fmt.Printf("Error reading session data: %v\n", err)
+		return
+	}
+	for {
+		messageType, _, err := conn.ReadMessage()
+		if err != nil {
+			return
+		}
+		if err := conn.WriteMessage(messageType, sessionData); err != nil {
+			return
+		}
+	}
+}
+
 func serverSendingDummyMessage(w http.ResponseWriter, r *http.Request) {
 	conn, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
@@ -761,6 +783,64 @@ func TestShouldCreateCarDataWhenReceivingUpdate(t *testing.T) {
 		t.Fatalf("Expected car data: %v, got: %v", carDataElem, compressedCarData)
 	}
 }
-func TestShouldCreateRaceControlMessageWhenReceivingUpdate(t *testing.T) {
 
+func TestShouldCreateRaceControlMessageWhenFirstSubscribing(t *testing.T) {
+	raceControlMessage := RaceControl{
+		Utc:      "2024-11-30T17:46:16",
+		Category: "Other",
+		Message:  "PINK HEAD PADDING MATERIAL MUST BE USED",
+	}
+	server := httptest.NewServer(http.HandlerFunc(serverSendingCarDataInfo))
+	url := "ws" + strings.TrimPrefix(server.URL, "http")
+	client, _, err := websocket.DefaultDialer.Dial(url, nil)
+	if err != nil {
+		t.Fatalf("Could not open a websocket connection: %v", err)
+	}
+	defer client.Close()
+	err = sendDummyMessage(client)
+	if err != nil {
+		t.Fatalf("Could not write message to websocket: %v", err)
+	}
+	_, response, err := client.ReadMessage()
+	if err != nil {
+		t.Fatalf("Could not read message from websocket: %v", err)
+	}
+	raceControls, err := BuildRaceControl(response)
+	if err != nil {
+		t.Fatalf("Could not build race control message")
+	}
+	raceControl := raceControls[0]
+	if raceControl != raceControlMessage {
+		t.Fatalf("Expected message: %v but got: %v\n", raceControlMessage, raceControl)
+	}
+}
+
+func TestShouldCreateRaceControlMessageWhenReceivingUpdate(t *testing.T) {
+	raceControlMessage := RaceControl{
+		Utc:      "2024-11-30T17:46:16",
+		Category: "Other",
+		Message:  "PINK HEAD PADDING MATERIAL MUST BE USED",
+	}
+	server := httptest.NewServer(http.HandlerFunc(serverSendingSessionUpdate))
+	url := "ws" + strings.TrimPrefix(server.URL, "http")
+	client, _, err := websocket.DefaultDialer.Dial(url, nil)
+	if err != nil {
+		t.Fatalf("Could not open a websocket connection: %v", err)
+	}
+	defer client.Close()
+	err = sendDummyMessage(client)
+	if err != nil {
+		t.Fatalf("Could not write message to websocket: %v", err)
+	}
+	_, response, err := client.ReadMessage()
+	if err != nil {
+		t.Fatalf("Could not read message from websocket: %v", err)
+	}
+	raceControl, err := BuildRaceControl(response)
+	if err != nil {
+		t.Fatalf("Could not build race control message: %v\n", err)
+	}
+	if raceControl[0] != raceControlMessage {
+		t.Fatalf("Expected message: %v but got: %v\n", raceControlMessage, raceControl)
+	}
 }

@@ -158,7 +158,7 @@ func CreateTimingSubscribeMessage() SubscribeMessage {
 
 func CreateOriginalSessionMessage() SubscribeMessage {
 	var topics []string
-	topics = append(topics, "SessionInfo", "SessionData", "TimingData", "TimingStats", "TimingAppData", "LapCount", "DriverList", "CarData.z")
+	topics = append(topics, "SessionInfo", "SessionData", "TimingData", "TimingStats", "TimingAppData", "LapCount", "DriverList", "CarData.z", "RaceControlMessages")
 	var topicsList [][]string
 	topicsList = append(topicsList, topics)
 	return SubscribeMessage{
@@ -252,6 +252,19 @@ func ProcessSessionDataAndInfo(connection *websocket.Conn, dbClient *mongo.Clien
 			var carDataModel model.CarData
 			carDataModel.Compressed = carData.Compressed
 			resolver.NotifyCarDataSubscribers(&carDataModel)
+		}
+		raceControlMessages, err := BuildRaceControl(message)
+		if err == nil && !isError {
+			var raceControlModel []*model.RaceControl
+			for _, message := range raceControlMessages {
+				var raceControl model.RaceControl
+				raceControl.Message = message.Message
+				raceControl.Category = &message.Category
+				raceControl.Date = message.Utc
+				raceControl.Flag = &message.Flag
+				raceControlModel = append(raceControlModel, &raceControl)
+			}
+			resolver.NotifyRaceControlSubscribers(raceControlModel)
 		}
 		if !isError {
 			meetingDB := convertMeetingToDB(meetingData)

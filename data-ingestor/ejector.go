@@ -4,7 +4,7 @@ import (
 	"F1Telemetry-new-server/data-ingestor/collections"
 	"F1Telemetry-new-server/graph/model"
 	"context"
-	"fmt"
+
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 )
@@ -124,31 +124,4 @@ func FetchCarData(dbClient *mongo.Client, ctx context.Context, sessionKey int, d
 		return nil, err
 	}
 	return carData, nil
-}
-
-func FetchLaps(dbClient *mongo.Client, ctx context.Context, sessionKey int) ([]model.Lap, error) {
-	cursor, err := dbClient.Database("f1").Collection("laps").Find(ctx, bson.D{{"sessionkey", sessionKey}})
-	if err != nil {
-		return nil, err
-	}
-	var laps []model.Lap
-	err = cursor.All(ctx, &laps)
-	if err != nil {
-		return nil, err
-	}
-	return laps, nil
-}
-
-func FetchIntervals(dbClient *mongo.Client, ctx context.Context, sessionKey int) ([]model.Interval, error) {
-	cursor, err := dbClient.Database("f1").Collection("intervals").Find(ctx, bson.D{{"sessionkey", sessionKey}})
-	if err != nil {
-		return nil, err
-	}
-	var intervals []model.Interval
-	err = cursor.All(ctx, &intervals)
-	if err != nil {
-		fmt.Println("error")
-		return nil, err
-	}
-	return intervals, nil
 }

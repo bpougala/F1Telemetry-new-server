@@ -291,7 +291,10 @@ type InitialData struct {
 			TotalLaps  int  `json:"TotalLaps"`
 			Kf         bool `json:"_kf"`
 		} `json:"LapCount"`
-		DriverList map[string]DriverData `json:"DriverList"`
+		DriverList          map[string]DriverData `json:"DriverList"`
+		RaceControlMessages struct {
+			Messages []RaceControl `json:"Messages"`
+		} `json:"RaceControlMessages"`
 	} `json:"R"`
 	I string `json:"I"`
 }
@@ -362,17 +365,13 @@ type CarData struct {
 	Compressed string `json:"Compressed"`
 }
 
-/* type CarData struct {
-	Date         string `json:"Date"`
-	SessionKey   int    `json:"SessionKey"`
-	RacingNumber int    `json:"RacingNumber"`
-	Rpm          int    `json:"Rpm"`
-	Speed        int    `json:"Speed"`
-	Gear         int    `json:"Gear"`
-	Throttle     int    `json:"Throttle"`
-	Brake        int    `json:"Brake"`
-	DRS          bool   `json:"hasDRS"`
-} */
+type RaceControl struct {
+	Utc      string `json:"Utc"`
+	Category string `json:"Category"`
+	Flag     string `json:"Flag"`
+	Scope    string `json:"Scope"`
+	Message  string `json:"Message"`
+}
 
 type Root struct {
 	Entries []Entry `json:"Entries"`

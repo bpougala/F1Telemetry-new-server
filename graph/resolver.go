@@ -10,23 +10,27 @@ import (
 // It serves as dependency injection for your app, add any dependencies you require here.
 
 type Resolver struct {
-	CurrentLapTimes   []*model.LapTime
-	CurrentPositions  []*model.Position
-	CurrentCarData    *model.CarData
-	LapTimeObservers  map[string]chan []*model.LapTime
-	PositionObservers map[string]chan []*model.Position
-	CarDataObservers  map[string]chan *model.CarData
-	mu                sync.Mutex
+	CurrentLapTimes            []*model.LapTime
+	CurrentPositions           []*model.Position
+	CurrentCarData             *model.CarData
+	CurrentRaceControlMessages []*model.RaceControl
+	LapTimeObservers           map[string]chan []*model.LapTime
+	PositionObservers          map[string]chan []*model.Position
+	CarDataObservers           map[string]chan *model.CarData
+	RaceControlObservers       map[string]chan []*model.RaceControl
+	mu                         sync.Mutex
 }
 
 func NewResolver() *Resolver {
 	return &Resolver{
-		CurrentLapTimes:   nil,
-		CurrentPositions:  nil,
-		CurrentCarData:    nil,
-		LapTimeObservers:  make(map[string]chan []*model.LapTime),
-		PositionObservers: make(map[string]chan []*model.Position),
-		CarDataObservers:  make(map[string]chan *model.CarData),
+		CurrentLapTimes:            nil,
+		CurrentPositions:           nil,
+		CurrentCarData:             nil,
+		CurrentRaceControlMessages: nil,
+		LapTimeObservers:           make(map[string]chan []*model.LapTime),
+		PositionObservers:          make(map[string]chan []*model.Position),
+		CarDataObservers:           make(map[string]chan *model.CarData),
+		RaceControlObservers:       make(map[string]chan []*model.RaceControl),
 	}
 }
 
@@ -54,5 +58,14 @@ func (r *Resolver) NotifyCarDataSubscribers(carData *model.CarData) {
 	r.CurrentCarData = carData
 	for _, observer := range r.CarDataObservers {
 		observer <- carData
+	}
+}
+
+func (r *Resolver) NotifyRaceControlSubscribers(raceControlMessages []*model.RaceControl) {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	r.CurrentRaceControlMessages = raceControlMessages
+	for _, observer := range r.RaceControlObservers {
+		observer <- raceControlMessages
 	}
 }

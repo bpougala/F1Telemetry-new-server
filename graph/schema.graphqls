@@ -9,15 +9,13 @@ type Query {
   sessions(meeting_keys: [Int]!): [Session]!
   drivers(session_key: Int!): [Driver]!
   positions(session_key: Int!): [Position]!
-  raceControls(session_key: Int!): [RaceControl]!
-  laps(session_key: Int!): [Lap]!
-  intervals(session_key: Int!): [Interval]!
 }
 
 type Subscription {
   lapTimes: [LapTime]!
   positions: [Position]!
   carData: CarData!
+  raceControl: [RaceControl]!
 }
 
 type Session {
@@ -61,16 +59,12 @@ type Position {
 }
 
 type RaceControl {
-  session_key: Int!
-  meeting_key: Int!
   date: String!
   category: String
   flag: String
   lap_number: Int
-  message: String
-  racing_number: Int
+  message: String!
   scope: String
-  sector: Int
 }
 
 type Lap {
@@ -106,15 +100,6 @@ type Time {
   value: String!
   overallFastest: Boolean!
   personalFastest: Boolean!
-}
-
-type Interval {
-  date:  String!
-  racing_number: Int!
-  meeting_key: Int!
-  session_key: Int!
-  gap_to_leader:  Any
-  interval: Any
 }
 
 type CarData {

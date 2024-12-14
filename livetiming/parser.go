@@ -221,8 +221,7 @@ func BuildTimingData(data []byte) ([]LapTimeMetric, error) {
 		if elements[0] != "TimingData" {
 			continue
 		}
-		var timingDataMap map[string]interface{}
-		timingDataMap = elements[1].(map[string]interface{})
+		timingDataMap := elements[1].(map[string]interface{})
 		timingDataMapBytes, err := json.Marshal(timingDataMap)
 		if err != nil {
 			continue
@@ -291,6 +290,59 @@ func buildUpdateCarData(data []byte) (CarData, error) {
 	}
 	return carData, nil
 }
-func hasDRS(drsValue int) bool {
-	return drsValue == 8
+
+func BuildRaceControl(data []byte) ([]RaceControl, error) {
+	var raceControlMessages []RaceControl
+	var obj map[string]interface{}
+	if err := json.Unmarshal(data, &obj); err != nil {
+		return raceControlMessages, err
+	}
+	var initialData InitialData
+	if err := json.Unmarshal(data, &initialData); err != nil {
+		return raceControlMessages, err
+	}
+	if initialData.R.RaceControlMessages.Messages == nil {
+		return buildUpdateRaceControl(data)
+	}
+	for _, message := range initialData.R.RaceControlMessages.Messages {
+		var raceControl RaceControl
+		err := mapstructure.Decode(message, &raceControl)
+		if err != nil {
+			continue
+		}
+		raceControlMessages = append(raceControlMessages, raceControl)
+	}
+	return raceControlMessages, nil
+}
+
+type RaceControlMessages struct {
+	Messages []RaceControl `json:"Messages"`
+}
+
+func buildUpdateRaceControl(data []byte) ([]RaceControl, error) {
+	var updateData UpdateData
+	if err := json.Unmarshal(data, &updateData); err != nil {
+		return nil, err
+	}
+	var raceControlMessages []RaceControl
+	for _, message := range updateData.M {
+		elements := message.A
+		if len(elements) != 3 {
+			continue
+		}
+		if elements[0] != "RaceControlMessages" {
+			continue
+		}
+		var messages RaceControlMessages
+		err := mapstructure.Decode(elements[1], &messages)
+		if err != nil {
+			fmt.Println(err)
+			continue
+		}
+		raceControlMessages = append(raceControlMessages, messages.Messages...)
+	}
+	if len(raceControlMessages) == 0 {
+		return raceControlMessages, fmt.Errorf("no race control messages")
+	}
+	return raceControlMessages, nil
 }

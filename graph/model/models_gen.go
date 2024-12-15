@@ -87,6 +87,18 @@ type Session struct {
 	MeetingKey  int    `json:"meeting_key"`
 }
 
+type Stint struct {
+	RacingNumber    int    `json:"racing_number"`
+	LapFlags        int    `json:"lap_flags"`
+	Compound        string `json:"compound"`
+	New             bool   `json:"new"`
+	TyresNotChanged int    `json:"tyres_not_changed"`
+	TotalLaps       int    `json:"total_laps"`
+	StartLaps       int    `json:"start_laps"`
+	Timestamp       string `json:"timestamp"`
+	StintNumber     int    `json:"stint_number"`
+}
+
 type Subscription struct {
 }
 

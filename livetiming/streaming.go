@@ -210,6 +210,9 @@ func ProcessSessionDataAndInfo(connection *websocket.Conn, dbClient *mongo.Clien
 			isError = true
 		}
 		drivers, err := BuildDriverList(message)
+		if err != nil {
+			isError = true
+		}
 		positions, err := BuildPositions(message)
 		if err == nil && !isError {
 			var positionsInterface []interface{}
@@ -223,7 +226,7 @@ func ProcessSessionDataAndInfo(connection *websocket.Conn, dbClient *mongo.Clien
 				position.SessionKey = sessionInfo.Key
 				positionsInterface = append(positionsInterface, position)
 			}
-			_, err = dbClient.Database("f1").Collection("positions").InsertMany(ctx, positionsInterface)
+			dbClient.Database("f1").Collection("positions").InsertMany(ctx, positionsInterface)
 			resolver.NotifyPositionSubscribers(modelPositions)
 		}
 		timingData, err := BuildTimingData(message)
@@ -265,6 +268,24 @@ func ProcessSessionDataAndInfo(connection *websocket.Conn, dbClient *mongo.Clien
 				raceControlModel = append(raceControlModel, &raceControl)
 			}
 			resolver.NotifyRaceControlSubscribers(raceControlModel)
+		}
+		stints, err := BuildStints(message)
+		if err == nil && !isError {
+			var stintsModel []*model.Stint
+			for _, stint := range stints {
+				var stintModel model.Stint
+				stintModel.Compound = stint.Compound
+				stintModel.LapFlags = stint.LapFlags
+				stintModel.RacingNumber = stint.RacingNumber
+				stintModel.New = stint.New
+				stintModel.StartLaps = stint.StartLaps
+				stintModel.StintNumber = stint.StintNumber
+				stintModel.Timestamp = stint.Timestamp
+				stintModel.TotalLaps = stint.TotalLaps
+				stintModel.TyresNotChanged = stint.TyresNotChanged
+				stintsModel = append(stintsModel, &stintModel)
+			}
+			resolver.NotifyStintSubscribers(stintsModel)
 		}
 		if !isError {
 			meetingDB := convertMeetingToDB(meetingData)

@@ -1,0 +1,221 @@
+{
+    "C": "d-65729164-J,0|EXX,0|EXY,5|H,3275|N,2B0|O,2A5|I,1",
+    "M": [
+        {
+            "H": "Streaming",
+            "M": "feed",
+            "A": [
+                "TimingAppData",
+                {
+                    "Lines": {
+                        "1": {
+                            "Stints": {
+                                "0": {
+                                    "LapFlags": 0,
+                                    "Compound": "MEDIUM",
+                                    "New": "true",
+                                    "TyresNotChanged": "0",
+                                    "TotalLaps": 0,
+                                    "StartLaps": 0
+                                }
+                            }
+                        },
+                        "4": {
+                            "Stints": {
+                                "0": {
+                                    "LapFlags": 0,
+                                    "Compound": "MEDIUM",
+                                    "New": "true",
+                                    "TyresNotChanged": "0",
+                                    "TotalLaps": 0,
+                                    "StartLaps": 0
+                                }
+                            }
+                        },
+                        "10": {
+                            "Stints": {
+                                "0": {
+                                    "LapFlags": 0,
+                                    "Compound": "MEDIUM",
+                                    "New": "true",
+                                    "TyresNotChanged": "0",
+                                    "TotalLaps": 0,
+                                    "StartLaps": 0
+                                }
+                            }
+                        },
+                        "11": {
+                            "Stints": {
+                                "0": {
+                                    "LapFlags": 0,
+                                    "Compound": "MEDIUM",
+                                    "New": "true",
+                                    "TyresNotChanged": "0",
+                                    "TotalLaps": 0,
+                                    "StartLaps": 0
+                                }
+                            }
+                        },
+                        "16": {
+                            "Stints": {
+                                "0": {
+                                    "LapFlags": 0,
+                                    "Compound": "MEDIUM",
+                                    "New": "false",
+                                    "TyresNotChanged": "0",
+                                    "TotalLaps": 1,
+                                    "StartLaps": 1
+                                }
+                            }
+                        },
+                        "18": {
+                            "Stints": {
+                                "0": {
+                                    "LapFlags": 0,
+                                    "Compound": "MEDIUM",
+                                    "New": "false",
+                                    "TyresNotChanged": "0",
+                                    "TotalLaps": 0,
+                                    "StartLaps": 0
+                                }
+                            }
+                        },
+                        "20": {
+                            "Stints": {
+                                "0": {
+                                    "LapFlags": 0,
+                                    "Compound": "MEDIUM",
+                                    "New": "true",
+                                    "TyresNotChanged": "0",
+                                    "TotalLaps": 0,
+                                    "StartLaps": 0
+                                }
+                            }
+                        },
+                        "23": {
+                            "Stints": {
+                                "0": {
+                                    "LapFlags": 0,
+                                    "Compound": "MEDIUM",
+                                    "New": "true",
+                                    "TyresNotChanged": "0",
+                                    "TotalLaps": 0,
+                                    "StartLaps": 0
+                                }
+                            }
+                        },
+                        "24": {
+                            "Stints": {
+                                "0": {
+                                    "LapFlags": 0,
+                                    "Compound": "MEDIUM",
+                                    "New": "true",
+                                    "TyresNotChanged": "0",
+                                    "TotalLaps": 0,
+                                    "StartLaps": 0
+                                }
+                            }
+                        },
+                        "27": {
+                            "Stints": {
+                                "0": {
+                                    "LapFlags": 0,
+                                    "Compound": "HARD",
+                                    "New": "true",
+                                    "TyresNotChanged": "0",
+                                    "TotalLaps": 0,
+                                    "StartLaps": 0
+                                }
+                            }
+                        },
+                        "31": {
+                            "Stints": {
+                                "0": {
+                                    "LapFlags": 0,
+                                    "Compound": "MEDIUM",
+                                    "New": "true",
+                                    "TyresNotChanged": "0",
+                                    "TotalLaps": 0,
+                                    "StartLaps": 0
+                                }
+                            }
+                        },
+                        "43": {
+                            "Stints": {
+                                "0": {
+                                    "LapFlags": 0,
+                                    "Compound": "MEDIUM",
+                                    "New": "true",
+                                    "TyresNotChanged": "0",
+                                    "TotalLaps": 0,
+                                    "StartLaps": 0
+                                }
+                            }
+                        },
+                        "44": {
+                            "Stints": {
+                                "0": {
+                                    "LapFlags": 0,
+                                    "Compound": "MEDIUM",
+                                    "New": "true",
+                                    "TyresNotChanged": "0",
+                                    "TotalLaps": 0,
+                                    "StartLaps": 0
+                                }
+                            }
+                        },
+                        "55": {
+                            "Stints": {
+                                "0": {
+                                    "LapFlags": 0,
+                                    "Compound": "MEDIUM",
+                                    "New": "false",
+                                    "TyresNotChanged": "0",
+                                    "TotalLaps": 1,
+                                    "StartLaps": 1
+                                }
+                            }
+                        },
+                        "63": {
+                            "Stints": {
+                                "0": {
+                                    "LapFlags": 0,
+                                    "Compound": "MEDIUM",
+                                    "New": "false",
+                                    "TyresNotChanged": "0",
+                                    "TotalLaps": 1,
+                                    "StartLaps": 1
+                                }
+                            }
+                        },
+                        "77": {
+                            "Stints": {
+                                "0": {
+                                    "LapFlags": 0,
+                                    "Compound": "MEDIUM",
+                                    "New": "true",
+                                    "TyresNotChanged": "0",
+                                    "TotalLaps": 0,
+                                    "StartLaps": 0
+                                }
+                            }
+                        },
+                        "81": {
+                            "Stints": {
+                                "0": {
+                                    "LapFlags": 0,
+                                    "Compound": "MEDIUM",
+                                    "New": "true",
+                                    "TyresNotChanged": "0",
+                                    "TotalLaps": 0,
+                                    "StartLaps": 0
+                                }
+                            }
+                        }
+                    }
+                },
+                "2024-12-01T15:57:10.96Z"
+            ]
+        }
+    ]
+}

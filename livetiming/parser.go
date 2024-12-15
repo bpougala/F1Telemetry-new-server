@@ -346,3 +346,81 @@ func buildUpdateRaceControl(data []byte) ([]RaceControl, error) {
 	}
 	return raceControlMessages, nil
 }
+
+func buildRaceStints(data []byte) ([]Stint, error) {
+	var initialData InitialData
+	if err := json.Unmarshal(data, &initialData); err != nil {
+		return nil, err
+	}
+	var stints []Stint
+	if initialData.R.TimingAppData.Lines == nil {
+		return nil, fmt.Errorf("no stints found")
+	}
+	for _, value := range initialData.R.TimingAppData.Lines {
+		var stint Stint
+		stint.RacingNumber, _ = strconv.Atoi(value.RacingNumber)
+		for count, rawStint := range value.Stints {
+			stint.StintNumber = count
+			stint.Compound = rawStint.Compound
+			stint.LapFlags = rawStint.LapFlags
+			stint.New, _ = strconv.ParseBool(rawStint.New)
+			stint.StartLaps = rawStint.StartLaps
+			stint.TotalLaps = rawStint.TotalLaps
+			stint.TyresNotChanged, _ = strconv.Atoi(rawStint.TyresNotChanged)
+			stint.Timestamp = rawStint.Timestamp
+			stints = append(stints, stint)
+		}
+	}
+	if len(stints) == 0 {
+		return nil, fmt.Errorf("no stints found")
+	}
+	return stints, nil
+}
+
+func BuildStints(data []byte) ([]Stint, error) {
+	var updateData UpdateData
+	if err := json.Unmarshal(data, &updateData); err != nil {
+		return nil, err
+	}
+	var stints []Stint
+	if updateData.M == nil {
+		return buildRaceStints(data)
+	}
+	for _, message := range updateData.M {
+		elements := message.A
+		if len(elements) != 3 {
+			continue
+		}
+		if elements[0] != "TimingAppData" {
+			continue
+		}
+		var stintData StintData
+		stintDataMap := elements[1].(map[string]interface{})
+		stintDataMapBytes, err := json.Marshal(stintDataMap)
+		if err != nil {
+			continue
+		}
+		if err := json.Unmarshal(stintDataMapBytes, &stintData); err != nil {
+			continue
+		}
+		for racingNumber, value := range stintData.StintLines {
+			for stintNumber, rawStint := range value.Stints {
+				var stint Stint
+				stint.RacingNumber, _ = strconv.Atoi(racingNumber)
+				stint.StintNumber, _ = strconv.Atoi(stintNumber)
+				stint.Compound = rawStint.Compound
+				stint.LapFlags = rawStint.LapFlags
+				stint.New, _ = strconv.ParseBool(rawStint.New)
+				stint.StartLaps = rawStint.StartLaps
+				stint.TotalLaps = rawStint.TotalLaps
+				stint.TyresNotChanged, _ = strconv.Atoi(rawStint.TyresNotChanged)
+				stint.Timestamp = rawStint.Timestamp
+				stints = append(stints, stint)
+			}
+		}
+	}
+	if len(stints) == 0 {
+		return stints, fmt.Errorf("no stints found")
+	}
+	return stints, nil
+}

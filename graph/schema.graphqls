@@ -16,6 +16,7 @@ type Subscription {
   positions: [Position]!
   carData: CarData!
   raceControl: [RaceControl]!
+  stints: [Stint]!
 }
 
 type Session {
@@ -104,4 +105,16 @@ type Time {
 
 type CarData {
   compressed: String!
+}
+
+type Stint {
+  racing_number:     Int! 
+	lap_flags:         Int!   
+	compound:          String!
+	new:               Boolean!  
+	tyres_not_changed: Int! 
+	total_laps:        Int!    
+	start_laps:        Int!  
+	timestamp:         String!
+	stint_number:      Int! 
 }

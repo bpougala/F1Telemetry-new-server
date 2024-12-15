@@ -1,2 +1,6 @@
 .idea/
 .DS_Store
+.vscode/
+*.txt
+*__debug*
+messages.json

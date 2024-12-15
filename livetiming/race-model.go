@@ -59,6 +59,10 @@ type ArchiveStatus struct {
 	Status string `json:"Status"`
 }
 
+type StintData struct {
+	StintLines map[string]StintLine `json:"Lines"`
+}
+
 type PositionData struct {
 	PositionLines map[string]PositionLine `json:"Lines"`
 }
@@ -79,11 +83,10 @@ type Position struct {
 }
 
 type StintLine struct {
-	Stints map[string]Stint `json:"Stints"`
+	Stints map[string]RawStint `json:"Stints"`
 }
 
-type Stint struct {
-	DriverNumber    int    `json:"DriverNumber"`
+type RawStint struct {
 	LapFlags        int    `json:"LapFlags"`
 	Compound        string `json:"Compound"`
 	New             string `json:"New"`
@@ -91,6 +94,18 @@ type Stint struct {
 	TotalLaps       int    `json:"TotalLaps"`
 	StartLaps       int    `json:"StartLaps"`
 	Timestamp       string `json:"Timestamp"`
+}
+
+type Stint struct {
+	RacingNumber    int    `json:"RacingNumber"`
+	LapFlags        int    `json:"LapFlags"`
+	Compound        string `json:"Compound"`
+	New             bool   `json:"New"`
+	TyresNotChanged int    `json:"TyresNotChanged"`
+	TotalLaps       int    `json:"TotalLaps"`
+	StartLaps       int    `json:"StartLaps"`
+	Timestamp       string `json:"Timestamp"`
+	StintNumber     int    `json:"StintNumber"`
 }
 
 type IntervalLine struct {
@@ -278,10 +293,10 @@ type InitialData struct {
 		} `json:"TimingStats"`
 		TimingAppData struct {
 			Lines map[string]struct {
-				RacingNumber string        `json:"RacingNumber"`
-				Stints       []interface{} `json:"Stints"`
-				Line         int           `json:"Line"`
-				GridPos      string        `json:"GridPos"`
+				RacingNumber string     `json:"RacingNumber"`
+				Stints       []RawStint `json:"Stints"`
+				Line         int        `json:"Line"`
+				GridPos      string     `json:"GridPos"`
 			} `json:"Lines"`
 			Kf bool `json:"_kf"`
 		} `json:"TimingAppData"`

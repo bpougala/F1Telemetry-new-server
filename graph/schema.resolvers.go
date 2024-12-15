@@ -150,6 +150,23 @@ func (r *subscriptionResolver) RaceControl(ctx context.Context) (<-chan []*model
 	return raceControl, nil
 }
 
+// Stints is the resolver for the stints field.
+func (r *subscriptionResolver) Stints(ctx context.Context) (<-chan []*model.Stint, error) {
+	id := dataingestor.GenerateRandomString(8)
+	stints := make(chan []*model.Stint, 1)
+	go func() {
+		<-ctx.Done()
+		r.mu.Lock()
+		delete(r.StintObservers, id)
+		r.mu.Unlock()
+	}()
+	r.mu.Lock()
+	r.StintObservers[id] = stints
+	r.mu.Unlock()
+	r.StintObservers[id] <- r.CurrentStints
+	return stints, nil
+}
+
 // Query returns QueryResolver implementation.
 func (r *Resolver) Query() QueryResolver { return &queryResolver{r} }
 
@@ -158,51 +175,3 @@ func (r *Resolver) Subscription() SubscriptionResolver { return &subscriptionRes
 
 type queryResolver struct{ *Resolver }
 type subscriptionResolver struct{ *Resolver }
-
-// !!! WARNING !!!
-// The code below was going to be deleted when updating resolvers. It has been copied here so you have
-// one last chance to move it out of harms way if you want. There are two reasons this happens:
-//  - When renaming or deleting a resolver the old code will be put in here. You can safely delete
-//    it when you're done.
-//  - You have helper methods in this file. Move them out to keep these resolver files clean.
-/*
-	var ctx = context.Background()
-var dbClient, err = dataingestor.GetMongoClient(&ctx)
-func (r *queryResolver) RaceControls(ctx context.Context, sessionKey int) ([]*model.RaceControl, error) {
-	panic(fmt.Errorf("not implemented: RaceControls - raceControls"))
-}
-func (r *queryResolver) Laps(ctx context.Context, sessionKey int) ([]*model.Lap, error) {
-	if err != nil {
-		return nil, err
-	}
-	laps, err := dataingestor.FetchLaps(dbClient, ctx, sessionKey)
-	if err != nil {
-		return nil, err
-	}
-	var lapsInt []*model.Lap
-	if len(laps) == 0 {
-		return lapsInt, nil
-	}
-	for _, lap := range laps {
-		lapsInt = append(lapsInt, &lap)
-	}
-	return lapsInt, nil
-}
-func (r *queryResolver) Intervals(ctx context.Context, sessionKey int) ([]*model.Interval, error) {
-	if err != nil {
-		return nil, err
-	}
-	intervals, err := dataingestor.FetchIntervals(dbClient, ctx, sessionKey)
-	if err != nil {
-		return nil, err
-	}
-	var intervalsInt []*model.Interval
-	if len(intervals) == 0 {
-		return intervalsInt, nil
-	}
-	for _, interval := range intervals {
-		intervalsInt = append(intervalsInt, &interval)
-	}
-	return intervalsInt, nil
-}
-*/

@@ -101,6 +101,28 @@ func serverSendingTimingAppQualifyingUpdates(w http.ResponseWriter, r *http.Requ
 	}
 }
 
+func serverSendingTimingAppStints(w http.ResponseWriter, r *http.Request) {
+	conn, err := upgrader.Upgrade(w, r, nil)
+	if err != nil {
+		return
+	}
+	defer conn.Close()
+	sessionData, err := os.ReadFile("test/timing-app-data-race.json")
+	if err != nil {
+		fmt.Printf("Error reading timing data: %v\n", err)
+		return
+	}
+	for {
+		messageType, _, err := conn.ReadMessage()
+		if err != nil {
+			return
+		}
+		if err := conn.WriteMessage(messageType, sessionData); err != nil {
+			return
+		}
+	}
+}
+
 func serverSendingTimingDataUpdate(w http.ResponseWriter, r *http.Request) {
 	conn, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
@@ -175,6 +197,28 @@ func serverSendingSessionUpdate(w http.ResponseWriter, r *http.Request) {
 	sessionData, err := os.ReadFile("test/session-update.json")
 	if err != nil {
 		fmt.Printf("Error reading session data: %v\n", err)
+		return
+	}
+	for {
+		messageType, _, err := conn.ReadMessage()
+		if err != nil {
+			return
+		}
+		if err := conn.WriteMessage(messageType, sessionData); err != nil {
+			return
+		}
+	}
+}
+
+func serverSendingTimingAppDataUpdate(w http.ResponseWriter, r *http.Request) {
+	conn, err := upgrader.Upgrade(w, r, nil)
+	if err != nil {
+		return
+	}
+	defer conn.Close()
+	sessionData, err := os.ReadFile("test/timing-app-data-update.json")
+	if err != nil {
+		fmt.Printf("Error reading timing app data: %v\n", err)
 		return
 	}
 	for {
@@ -843,4 +887,99 @@ func TestShouldCreateRaceControlMessageWhenReceivingUpdate(t *testing.T) {
 	if raceControl[0] != raceControlMessage {
 		t.Fatalf("Expected message: %v but got: %v\n", raceControlMessage, raceControl)
 	}
+}
+
+func TestShouldCreateStintWhenFirstSubscribing(t *testing.T) {
+	firstStint := Stint{
+		RacingNumber:    1,
+		LapFlags:        1,
+		Compound:        "HARD",
+		New:             true,
+		TyresNotChanged: 0,
+		TotalLaps:       29,
+		StartLaps:       0,
+		StintNumber:     1,
+	}
+	secondStint := Stint{
+		RacingNumber:    1,
+		LapFlags:        0,
+		Compound:        "MEDIUM",
+		New:             true,
+		TyresNotChanged: 0,
+		TotalLaps:       29,
+		StartLaps:       0,
+		StintNumber:     0,
+	}
+	server := httptest.NewServer(http.HandlerFunc(serverSendingTimingAppStints))
+	url := "ws" + strings.TrimPrefix(server.URL, "http")
+	client, _, err := websocket.DefaultDialer.Dial(url, nil)
+	if err != nil {
+		t.Fatalf("Could not open a websocket connection: %v", err)
+	}
+	defer client.Close()
+	err = sendDummyMessage(client)
+	if err != nil {
+		t.Fatalf("Could not write message to websocket: %v", err)
+	}
+	_, response, err := client.ReadMessage()
+	if err != nil {
+		t.Fatalf("Could not read message from websocket: %v", err)
+	}
+	stints, err := BuildStints(response)
+	if err != nil {
+		t.Fatalf("Could not build stints: %v", err)
+	}
+	if len(stints) != 48 {
+		t.Fatalf("Expected 48 stints, got: %d", len(stints))
+	}
+	sort.Slice(stints, func(i, j int) bool {
+		return stints[i].RacingNumber < stints[j].RacingNumber
+	})
+	if stints[0] != firstStint {
+		t.Fatalf("Expected first stint: %v, got: %v", firstStint, stints[0])
+	}
+	if stints[1] != secondStint {
+		t.Fatalf("Expected second stint: %v, got: %v", secondStint, stints[1])
+	}
+}
+
+func TestShouldCreateStintWhenReceivingUpdate(t *testing.T) {
+	expectedStint := Stint{
+		RacingNumber:    1,
+		LapFlags:        0,
+		Compound:        "MEDIUM",
+		New:             true,
+		TyresNotChanged: 0,
+		TotalLaps:       0,
+		StartLaps:       0,
+	}
+	server := httptest.NewServer(http.HandlerFunc(serverSendingTimingAppDataUpdate))
+	url := "ws" + strings.TrimPrefix(server.URL, "http")
+	client, _, err := websocket.DefaultDialer.Dial(url, nil)
+	if err != nil {
+		t.Fatalf("Could not open a websocket connection: %v", err)
+	}
+	defer client.Close()
+	err = sendDummyMessage(client)
+	if err != nil {
+		t.Fatalf("Could not write message to websocket: %v", err)
+	}
+	_, response, err := client.ReadMessage()
+	if err != nil {
+		t.Fatalf("Could not read message from websocket: %v", err)
+	}
+	stints, err := BuildStints(response)
+	if err != nil {
+		t.Fatalf("Could not build stints: %v", err)
+	}
+	if len(stints) != 17 {
+		t.Fatalf("Expected 17 stints, got: %d", len(stints))
+	}
+	sort.Slice(stints, func(i, j int) bool {
+		return stints[i].RacingNumber < stints[j].RacingNumber
+	})
+	if stints[0] != expectedStint {
+		t.Fatalf("Expected stint: %v, got: %v", expectedStint, stints[0])
+	}
+
 }

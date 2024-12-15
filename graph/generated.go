@@ -137,11 +137,24 @@ type ComplexityRoot struct {
 		SessionType func(childComplexity int) int
 	}
 
+	Stint struct {
+		Compound        func(childComplexity int) int
+		LapFlags        func(childComplexity int) int
+		New             func(childComplexity int) int
+		RacingNumber    func(childComplexity int) int
+		StartLaps       func(childComplexity int) int
+		StintNumber     func(childComplexity int) int
+		Timestamp       func(childComplexity int) int
+		TotalLaps       func(childComplexity int) int
+		TyresNotChanged func(childComplexity int) int
+	}
+
 	Subscription struct {
 		CarData     func(childComplexity int) int
 		LapTimes    func(childComplexity int) int
 		Positions   func(childComplexity int) int
 		RaceControl func(childComplexity int) int
+		Stints      func(childComplexity int) int
 	}
 
 	Time struct {
@@ -162,6 +175,7 @@ type SubscriptionResolver interface {
 	Positions(ctx context.Context) (<-chan []*model.Position, error)
 	CarData(ctx context.Context) (<-chan *model.CarData, error)
 	RaceControl(ctx context.Context) (<-chan []*model.RaceControl, error)
+	Stints(ctx context.Context) (<-chan []*model.Stint, error)
 }
 
 type executableSchema struct {
@@ -632,6 +646,69 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Session.SessionType(childComplexity), true
 
+	case "Stint.compound":
+		if e.complexity.Stint.Compound == nil {
+			break
+		}
+
+		return e.complexity.Stint.Compound(childComplexity), true
+
+	case "Stint.lap_flags":
+		if e.complexity.Stint.LapFlags == nil {
+			break
+		}
+
+		return e.complexity.Stint.LapFlags(childComplexity), true
+
+	case "Stint.new":
+		if e.complexity.Stint.New == nil {
+			break
+		}
+
+		return e.complexity.Stint.New(childComplexity), true
+
+	case "Stint.racing_number":
+		if e.complexity.Stint.RacingNumber == nil {
+			break
+		}
+
+		return e.complexity.Stint.RacingNumber(childComplexity), true
+
+	case "Stint.start_laps":
+		if e.complexity.Stint.StartLaps == nil {
+			break
+		}
+
+		return e.complexity.Stint.StartLaps(childComplexity), true
+
+	case "Stint.stint_number":
+		if e.complexity.Stint.StintNumber == nil {
+			break
+		}
+
+		return e.complexity.Stint.StintNumber(childComplexity), true
+
+	case "Stint.timestamp":
+		if e.complexity.Stint.Timestamp == nil {
+			break
+		}
+
+		return e.complexity.Stint.Timestamp(childComplexity), true
+
+	case "Stint.total_laps":
+		if e.complexity.Stint.TotalLaps == nil {
+			break
+		}
+
+		return e.complexity.Stint.TotalLaps(childComplexity), true
+
+	case "Stint.tyres_not_changed":
+		if e.complexity.Stint.TyresNotChanged == nil {
+			break
+		}
+
+		return e.complexity.Stint.TyresNotChanged(childComplexity), true
+
 	case "Subscription.carData":
 		if e.complexity.Subscription.CarData == nil {
 			break
@@ -659,6 +736,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Subscription.RaceControl(childComplexity), true
+
+	case "Subscription.stints":
+		if e.complexity.Subscription.Stints == nil {
+			break
+		}
+
+		return e.complexity.Subscription.Stints(childComplexity), true
 
 	case "Time.overallFastest":
 		if e.complexity.Time.OverallFastest == nil {
@@ -3854,6 +3938,402 @@ func (ec *executionContext) fieldContext_Session_meeting_key(_ context.Context, 
 	return fc, nil
 }
 
+func (ec *executionContext) _Stint_racing_number(ctx context.Context, field graphql.CollectedField, obj *model.Stint) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Stint_racing_number(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.RacingNumber, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(int)
+	fc.Result = res
+	return ec.marshalNInt2int(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Stint_racing_number(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Stint",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Stint_lap_flags(ctx context.Context, field graphql.CollectedField, obj *model.Stint) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Stint_lap_flags(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.LapFlags, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(int)
+	fc.Result = res
+	return ec.marshalNInt2int(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Stint_lap_flags(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Stint",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Stint_compound(ctx context.Context, field graphql.CollectedField, obj *model.Stint) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Stint_compound(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Compound, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Stint_compound(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Stint",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Stint_new(ctx context.Context, field graphql.CollectedField, obj *model.Stint) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Stint_new(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.New, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(bool)
+	fc.Result = res
+	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Stint_new(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Stint",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Stint_tyres_not_changed(ctx context.Context, field graphql.CollectedField, obj *model.Stint) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Stint_tyres_not_changed(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.TyresNotChanged, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(int)
+	fc.Result = res
+	return ec.marshalNInt2int(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Stint_tyres_not_changed(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Stint",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Stint_total_laps(ctx context.Context, field graphql.CollectedField, obj *model.Stint) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Stint_total_laps(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.TotalLaps, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(int)
+	fc.Result = res
+	return ec.marshalNInt2int(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Stint_total_laps(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Stint",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Stint_start_laps(ctx context.Context, field graphql.CollectedField, obj *model.Stint) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Stint_start_laps(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.StartLaps, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(int)
+	fc.Result = res
+	return ec.marshalNInt2int(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Stint_start_laps(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Stint",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Stint_timestamp(ctx context.Context, field graphql.CollectedField, obj *model.Stint) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Stint_timestamp(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Timestamp, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Stint_timestamp(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Stint",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Stint_stint_number(ctx context.Context, field graphql.CollectedField, obj *model.Stint) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Stint_stint_number(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.StintNumber, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(int)
+	fc.Result = res
+	return ec.marshalNInt2int(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Stint_stint_number(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Stint",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Subscription_lapTimes(ctx context.Context, field graphql.CollectedField) (ret func(ctx context.Context) graphql.Marshaler) {
 	fc, err := ec.fieldContext_Subscription_lapTimes(ctx, field)
 	if err != nil {
@@ -4123,6 +4603,84 @@ func (ec *executionContext) fieldContext_Subscription_raceControl(_ context.Cont
 				return ec.fieldContext_RaceControl_scope(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type RaceControl", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Subscription_stints(ctx context.Context, field graphql.CollectedField) (ret func(ctx context.Context) graphql.Marshaler) {
+	fc, err := ec.fieldContext_Subscription_stints(ctx, field)
+	if err != nil {
+		return nil
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = nil
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Subscription().Stints(rctx)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return nil
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return nil
+	}
+	return func(ctx context.Context) graphql.Marshaler {
+		select {
+		case res, ok := <-resTmp.(<-chan []*model.Stint):
+			if !ok {
+				return nil
+			}
+			return graphql.WriterFunc(func(w io.Writer) {
+				w.Write([]byte{'{'})
+				graphql.MarshalString(field.Alias).MarshalGQL(w)
+				w.Write([]byte{':'})
+				ec.marshalNStint2ᚕᚖF1TelemetryᚑnewᚑserverᚋgraphᚋmodelᚐStint(ctx, field.Selections, res).MarshalGQL(w)
+				w.Write([]byte{'}'})
+			})
+		case <-ctx.Done():
+			return nil
+		}
+	}
+}
+
+func (ec *executionContext) fieldContext_Subscription_stints(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Subscription",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "racing_number":
+				return ec.fieldContext_Stint_racing_number(ctx, field)
+			case "lap_flags":
+				return ec.fieldContext_Stint_lap_flags(ctx, field)
+			case "compound":
+				return ec.fieldContext_Stint_compound(ctx, field)
+			case "new":
+				return ec.fieldContext_Stint_new(ctx, field)
+			case "tyres_not_changed":
+				return ec.fieldContext_Stint_tyres_not_changed(ctx, field)
+			case "total_laps":
+				return ec.fieldContext_Stint_total_laps(ctx, field)
+			case "start_laps":
+				return ec.fieldContext_Stint_start_laps(ctx, field)
+			case "timestamp":
+				return ec.fieldContext_Stint_timestamp(ctx, field)
+			case "stint_number":
+				return ec.fieldContext_Stint_stint_number(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Stint", field.Name)
 		},
 	}
 	return fc, nil
@@ -6681,6 +7239,85 @@ func (ec *executionContext) _Session(ctx context.Context, sel ast.SelectionSet, 
 	return out
 }
 
+var stintImplementors = []string{"Stint"}
+
+func (ec *executionContext) _Stint(ctx context.Context, sel ast.SelectionSet, obj *model.Stint) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, stintImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("Stint")
+		case "racing_number":
+			out.Values[i] = ec._Stint_racing_number(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "lap_flags":
+			out.Values[i] = ec._Stint_lap_flags(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "compound":
+			out.Values[i] = ec._Stint_compound(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "new":
+			out.Values[i] = ec._Stint_new(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "tyres_not_changed":
+			out.Values[i] = ec._Stint_tyres_not_changed(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "total_laps":
+			out.Values[i] = ec._Stint_total_laps(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "start_laps":
+			out.Values[i] = ec._Stint_start_laps(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "timestamp":
+			out.Values[i] = ec._Stint_timestamp(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "stint_number":
+			out.Values[i] = ec._Stint_stint_number(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.processDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
 var subscriptionImplementors = []string{"Subscription"}
 
 func (ec *executionContext) _Subscription(ctx context.Context, sel ast.SelectionSet) func(ctx context.Context) graphql.Marshaler {
@@ -6702,6 +7339,8 @@ func (ec *executionContext) _Subscription(ctx context.Context, sel ast.Selection
 		return ec._Subscription_carData(ctx, fields[0])
 	case "raceControl":
 		return ec._Subscription_raceControl(ctx, fields[0])
+	case "stints":
+		return ec._Subscription_stints(ctx, fields[0])
 	default:
 		panic("unknown field " + strconv.Quote(fields[0].Name))
 	}
@@ -7380,6 +8019,44 @@ func (ec *executionContext) marshalNSession2ᚕᚖF1Telemetryᚑnewᚑserverᚋg
 	return ret
 }
 
+func (ec *executionContext) marshalNStint2ᚕᚖF1TelemetryᚑnewᚑserverᚋgraphᚋmodelᚐStint(ctx context.Context, sel ast.SelectionSet, v []*model.Stint) graphql.Marshaler {
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalOStint2ᚖF1TelemetryᚑnewᚑserverᚋgraphᚋmodelᚐStint(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+
+	return ret
+}
+
 func (ec *executionContext) unmarshalNString2string(ctx context.Context, v interface{}) (string, error) {
 	res, err := graphql.UnmarshalString(v)
 	return res, graphql.ErrorOnPath(ctx, err)
@@ -7804,6 +8481,13 @@ func (ec *executionContext) marshalOSession2ᚖF1Telemetryᚑnewᚑserverᚋgrap
 		return graphql.Null
 	}
 	return ec._Session(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalOStint2ᚖF1TelemetryᚑnewᚑserverᚋgraphᚋmodelᚐStint(ctx context.Context, sel ast.SelectionSet, v *model.Stint) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return ec._Stint(ctx, sel, v)
 }
 
 func (ec *executionContext) unmarshalOString2ᚖstring(ctx context.Context, v interface{}) (*string, error) {

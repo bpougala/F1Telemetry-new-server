@@ -14,10 +14,12 @@ type Resolver struct {
 	CurrentPositions           []*model.Position
 	CurrentCarData             *model.CarData
 	CurrentRaceControlMessages []*model.RaceControl
+	CurrentStints              []*model.Stint
 	LapTimeObservers           map[string]chan []*model.LapTime
 	PositionObservers          map[string]chan []*model.Position
 	CarDataObservers           map[string]chan *model.CarData
 	RaceControlObservers       map[string]chan []*model.RaceControl
+	StintObservers             map[string]chan []*model.Stint
 	mu                         sync.Mutex
 }
 
@@ -27,10 +29,12 @@ func NewResolver() *Resolver {
 		CurrentPositions:           nil,
 		CurrentCarData:             nil,
 		CurrentRaceControlMessages: nil,
+		CurrentStints:              nil,
 		LapTimeObservers:           make(map[string]chan []*model.LapTime),
 		PositionObservers:          make(map[string]chan []*model.Position),
 		CarDataObservers:           make(map[string]chan *model.CarData),
 		RaceControlObservers:       make(map[string]chan []*model.RaceControl),
+		StintObservers:             make(map[string]chan []*model.Stint),
 	}
 }
 
@@ -67,5 +71,14 @@ func (r *Resolver) NotifyRaceControlSubscribers(raceControlMessages []*model.Rac
 	r.CurrentRaceControlMessages = raceControlMessages
 	for _, observer := range r.RaceControlObservers {
 		observer <- raceControlMessages
+	}
+}
+
+func (r *Resolver) NotifyStintSubscribers(stints []*model.Stint) {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	r.CurrentStints = stints
+	for _, observer := range r.StintObservers {
+		observer <- stints
 	}
 }

@@ -356,10 +356,10 @@ type LapTimeMetric struct {
 }
 
 type SectorTime struct {
-	SectorNumber    int     `json:"SectorNumber"`
-	Value           float64 `json:"Value"`
-	PersonalFastest bool    `json:"PersonalFastest"`
-	OverallFastest  bool    `json:"OverallFastest"`
+	SectorNumber    int    `json:"SectorNumber"`
+	Value           string `json:"Value"`
+	PersonalFastest bool   `json:"PersonalFastest"`
+	OverallFastest  bool   `json:"OverallFastest"`
 }
 
 type DriverData struct {
@@ -401,4 +401,21 @@ type Entry struct {
 // Car represents a car in the Cars map
 type Car struct {
 	Channels map[string]int `json:"Channels"`
+}
+
+type UpdateSector struct {
+	Sectors map[string]Sector `json:"Sectors"`
+}
+
+type Sector struct {
+	SectorNumber    int    `json:"SectorNumber"`
+	Value           string `json:"Value"`
+	PersonalFastest bool   `json:"PersonalFastest"`
+	OverallFastest  bool   `json:"OverallFastest"`
+}
+
+type AllSectors struct {
+	RacingNumber int
+	Sectors      []Sector
+	Utc          time.Time
 }

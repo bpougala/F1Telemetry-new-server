@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"strconv"
+	"time"
 
 	"github.com/mitchellh/mapstructure"
 )
@@ -423,4 +424,117 @@ func BuildStints(data []byte) ([]Stint, error) {
 		return stints, fmt.Errorf("no stints found")
 	}
 	return stints, nil
+}
+
+func BuildSectors(data []byte) ([]AllSectors, error) {
+	var sectors []AllSectors
+	var initialData InitialData
+	if err := json.Unmarshal(data, &initialData); err != nil {
+		return sectors, err
+	}
+	if initialData.R.TimingData.Lines == nil {
+		return buildRaceSectors(data)
+	}
+	for key, value := range initialData.R.TimingData.Lines {
+		if value.Sectors == nil {
+			continue
+		}
+		var sector AllSectors
+		sector.RacingNumber, _ = strconv.Atoi(key)
+		var firstSector Sector
+		rawFirstSector := value.Sectors[0]
+		if rawFirstSector.Value == "" {
+			continue
+		}
+		firstSector.Value = rawFirstSector.Value
+		firstSector.OverallFastest = rawFirstSector.OverallFastest
+		firstSector.PersonalFastest = rawFirstSector.PersonalFastest
+		firstSector.SectorNumber = 1
+		sector.Sectors = append(sector.Sectors, firstSector)
+
+		var secondSector Sector
+		rawSecondSector := value.Sectors[1]
+		if rawSecondSector.Value == "" {
+			continue
+		}
+		secondSector.Value = rawSecondSector.Value
+		secondSector.OverallFastest = rawSecondSector.OverallFastest
+		secondSector.PersonalFastest = rawSecondSector.PersonalFastest
+		secondSector.SectorNumber = 2
+		sector.Sectors = append(sector.Sectors, secondSector)
+
+		var thirdSector Sector
+		rawThirdSector := value.Sectors[2]
+		if rawThirdSector.Value == "" {
+			continue
+		}
+		thirdSector.Value = rawThirdSector.Value
+		thirdSector.OverallFastest = rawThirdSector.OverallFastest
+		thirdSector.PersonalFastest = rawThirdSector.PersonalFastest
+		thirdSector.SectorNumber = 3
+		sector.Sectors = append(sector.Sectors, thirdSector)
+		sectors = append(sectors, sector)
+	}
+
+	return sectors, nil
+}
+
+func buildRaceSectors(data []byte) ([]AllSectors, error) {
+	var updateData UpdateData
+	if err := json.Unmarshal(data, &updateData); err != nil {
+		return nil, err
+	}
+	if updateData.M == nil {
+		return nil, fmt.Errorf("no sectors found")
+	}
+	var sectors []AllSectors
+	for _, message := range updateData.M {
+		elements := message.A
+		if len(elements) != 3 {
+			continue
+		}
+		if elements[0] != "TimingData" {
+			continue
+		}
+		timingDataMap := elements[1].(map[string]interface{})
+		timingDataMapBytes, err := json.Marshal(timingDataMap)
+		if err != nil {
+			continue
+		}
+		var timingData TimingData
+		if err := json.Unmarshal(timingDataMapBytes, &timingData); err != nil {
+			continue
+		}
+		for key, value := range timingData.Lines {
+			var sectorTimes UpdateSector
+			err = mapstructure.Decode(value, &sectorTimes)
+			if err != nil {
+				continue
+			}
+			if sectorTimes.Sectors == nil {
+				continue
+			}
+			var driverSectors AllSectors
+			driverSectors.RacingNumber, _ = strconv.Atoi(key)
+			driverSectors.Utc, _ = time.Parse(time.RFC3339, elements[2].(string))
+			for sectorNumber, sectorTime := range sectorTimes.Sectors {
+				if sectorTime.Value == "" {
+					continue
+				}
+				var sector Sector
+				sector.SectorNumber, _ = strconv.Atoi(sectorNumber)
+				sector.Value = sectorTime.Value
+				sector.OverallFastest = sectorTime.OverallFastest
+				sector.PersonalFastest = sectorTime.PersonalFastest
+				driverSectors.Sectors = append(driverSectors.Sectors, sector)
+			}
+			if driverSectors.Sectors != nil {
+				sectors = append(sectors, driverSectors)
+			}
+		}
+	}
+	if len(sectors) == 0 {
+		return nil, fmt.Errorf("no sectors found")
+	}
+	return sectors, nil
 }

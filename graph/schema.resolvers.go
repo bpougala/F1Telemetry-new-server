@@ -167,6 +167,23 @@ func (r *subscriptionResolver) Stints(ctx context.Context) (<-chan []*model.Stin
 	return stints, nil
 }
 
+// Sectors is the resolver for the sectors field.
+func (r *subscriptionResolver) Sectors(ctx context.Context) (<-chan []*model.Sector, error) {
+	id := dataingestor.GenerateRandomString(8)
+	sectors := make(chan []*model.Sector, 1)
+	go func() {
+		<-ctx.Done()
+		r.mu.Lock()
+		delete(r.SectorTimeObservers, id)
+		r.mu.Unlock()
+	}()
+	r.mu.Lock()
+	r.SectorTimeObservers[id] = sectors
+	r.mu.Unlock()
+	r.SectorTimeObservers[id] <- r.CurrentSectorTimes
+	return sectors, nil
+}
+
 // Query returns QueryResolver implementation.
 func (r *Resolver) Query() QueryResolver { return &queryResolver{r} }
 
@@ -175,3 +192,14 @@ func (r *Resolver) Subscription() SubscriptionResolver { return &subscriptionRes
 
 type queryResolver struct{ *Resolver }
 type subscriptionResolver struct{ *Resolver }
+
+// !!! WARNING !!!
+// The code below was going to be deleted when updating resolvers. It has been copied here so you have
+// one last chance to move it out of harms way if you want. There are two reasons this happens:
+//  - When renaming or deleting a resolver the old code will be put in here. You can safely delete
+//    it when you're done.
+//  - You have helper methods in this file. Move them out to keep these resolver files clean.
+/*
+	var ctx = context.Background()
+var dbClient, err = dataingestor.GetMongoClient(&ctx)
+*/

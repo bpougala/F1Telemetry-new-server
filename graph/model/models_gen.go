@@ -77,6 +77,15 @@ type RaceControl struct {
 	Scope     *string `json:"scope,omitempty"`
 }
 
+type Sector struct {
+	RacingNumber    int     `json:"racing_number"`
+	SectorNumber    int     `json:"sector_number"`
+	Value           string  `json:"value"`
+	OverallFastest  bool    `json:"overall_fastest"`
+	PersonalFastest bool    `json:"personal_fastest"`
+	Utc             *string `json:"utc,omitempty"`
+}
+
 type Session struct {
 	SessionKey  int    `json:"session_key"`
 	SessionName string `json:"session_name"`

@@ -17,6 +17,7 @@ type Subscription {
   carData: CarData!
   raceControl: [RaceControl]!
   stints: [Stint]!
+  sectors: [Sector]!
 }
 
 type Session {
@@ -117,4 +118,13 @@ type Stint {
 	start_laps:        Int!  
 	timestamp:         String!
 	stint_number:      Int! 
+}
+
+type Sector {
+  racing_number: Int!
+  sector_number: Int!
+  value: String!
+  overall_fastest: Boolean!
+  personal_fastest: Boolean!
+  utc: String
 }

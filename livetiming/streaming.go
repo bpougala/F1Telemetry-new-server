@@ -287,6 +287,26 @@ func ProcessSessionDataAndInfo(connection *websocket.Conn, dbClient *mongo.Clien
 			}
 			resolver.NotifyStintSubscribers(stintsModel)
 		}
+		sectors, err := BuildSectors(message)
+		if err == nil && !isError {
+			var sectorsModel []*model.Sector
+			for _, sectorTime := range sectors {
+				for _, sector := range sectorTime.Sectors {
+					var sectorModel model.Sector
+					sectorModel.RacingNumber = sectorTime.RacingNumber
+					sectorModel.SectorNumber = sector.SectorNumber
+					sectorModel.Value = sector.Value
+					sectorModel.OverallFastest = sector.OverallFastest
+					sectorModel.PersonalFastest = sector.PersonalFastest
+					if sectorTime.Utc.Year() != 1 {
+						time := sectorTime.Utc.String()
+						sectorModel.Utc = &time
+					}
+					sectorsModel = append(sectorsModel, &sectorModel)
+				}
+			}
+			resolver.NotifySectorTimeSubscribers(sectorsModel)
+		}
 		if !isError {
 			meetingDB := convertMeetingToDB(meetingData)
 			var driverInterface []interface{}

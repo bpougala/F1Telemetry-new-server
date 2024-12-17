@@ -9,6 +9,7 @@ import (
 	"strconv"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/gorilla/websocket"
 )
@@ -281,6 +282,25 @@ func prepareClientReturningDummyMessage() (*websocket.Conn, error) {
 	return client, nil
 }
 
+func prepareClientreturningTimingAppFirstResponse() ([]byte, error) {
+	server := httptest.NewServer(http.HandlerFunc(serverSendingTimingAppRaceUpdates))
+	url := "ws" + strings.TrimPrefix(server.URL, "http")
+	client, _, err := websocket.DefaultDialer.Dial(url, nil)
+	if err != nil {
+		return nil, fmt.Errorf("Could not open a websocket connection: %v", err)
+	}
+	defer client.Close()
+	err = sendDummyMessage(client)
+	if err != nil {
+		return nil, fmt.Errorf("Could not write message to websocket: %v", err)
+	}
+	_, response, err := client.ReadMessage()
+	if err != nil {
+		return nil, fmt.Errorf("Could not read message from websocket: %v", err)
+	}
+	return response, nil
+}
+
 func TestShouldBuildMeetingDataStructWhenOpeningWebSocket(t *testing.T) {
 	expectedMeetingData := MeetingData{
 		Key:          1252,
@@ -515,20 +535,9 @@ func TestShouldCreatePositionsWhenTimingAppSendsUpdatesDuringRace(t *testing.T) 
 		Stopped:      false,
 		Status:       1088,
 	}
-	server := httptest.NewServer(http.HandlerFunc(serverSendingTimingAppRaceUpdates))
-	url := "ws" + strings.TrimPrefix(server.URL, "http")
-	client, _, err := websocket.DefaultDialer.Dial(url, nil)
+	response, err := prepareClientreturningTimingAppFirstResponse()
 	if err != nil {
-		t.Fatalf("Could not open a websocket connection: %v", err)
-	}
-	defer client.Close()
-	err = sendDummyMessage(client)
-	if err != nil {
-		t.Fatalf("Could not write message to websocket: %v", err)
-	}
-	_, response, err := client.ReadMessage()
-	if err != nil {
-		t.Fatalf("Could not read message from websocket: %v", err)
+		t.Fatalf("%v", err)
 	}
 	positionsList, err := BuildPositions(response)
 	if err != nil {
@@ -628,20 +637,9 @@ func TestShouldCreateLapTimeWhenFirstSubscribing(t *testing.T) {
 			Lap   int    `json:"Lap"`
 		}{Value: "1:27.765", Lap: 56},
 	}
-	server := httptest.NewServer(http.HandlerFunc(serverSendingTimingAppRaceUpdates))
-	url := "ws" + strings.TrimPrefix(server.URL, "http")
-	client, _, err := websocket.DefaultDialer.Dial(url, nil)
+	response, err := prepareClientreturningTimingAppFirstResponse()
 	if err != nil {
-		t.Fatalf("Could not open a websocket connection: %v", err)
-	}
-	defer client.Close()
-	err = sendDummyMessage(client)
-	if err != nil {
-		t.Fatalf("Could not write message to websocket: %v", err)
-	}
-	_, response, err := client.ReadMessage()
-	if err != nil {
-		t.Fatalf("Could not read message from websocket: %v", err)
+		t.Fatalf("%v", err)
 	}
 	timingData, err := BuildTimingData(response)
 	if err != nil {
@@ -980,6 +978,105 @@ func TestShouldCreateStintWhenReceivingUpdate(t *testing.T) {
 	})
 	if stints[0] != expectedStint {
 		t.Fatalf("Expected stint: %v, got: %v", expectedStint, stints[0])
+	}
+}
+
+func TestShouldCreateSectorsWhenFirstMessageIsSent(t *testing.T) {
+	driverSectors := AllSectors{
+		RacingNumber: 4,
+		Sectors: []Sector{
+			{
+				SectorNumber:    1,
+				Value:           "17.513",
+				PersonalFastest: true,
+				OverallFastest:  false,
+			},
+			{
+				SectorNumber:    2,
+				Value:           "39.702",
+				PersonalFastest: false,
+				OverallFastest:  false,
+			},
+			{
+				SectorNumber:    3,
+				Value:           "32.643",
+				PersonalFastest: false,
+				OverallFastest:  false,
+			},
+		},
+	}
+	response, err := prepareClientreturningTimingAppFirstResponse()
+	if err != nil {
+		t.Fatalf("%v", err)
+	}
+	sectors, err := BuildSectors(response)
+	if err != nil {
+		t.Fatalf("Could not build sectors: %v", err)
+	}
+	sort.Slice(sectors, func(i, j int) bool {
+		return sectors[i].RacingNumber < sectors[j].RacingNumber
+	})
+	if len(sectors) != 20 {
+		t.Fatalf("Expected 20 sectors, got: %d", len(sectors))
+	}
+	if sectors[1].RacingNumber != driverSectors.RacingNumber || !compareSectors(sectors[1].Sectors, driverSectors.Sectors) {
+		t.Fatalf("Expected sectors: %v, got: %v", driverSectors, sectors[1])
+	}
+}
+
+func compareSectors(a, b []Sector) bool {
+	if len(a) != len(b) {
+		return false
+	}
+	for i := range a {
+		if a[i] != b[i] {
+			return false
+		}
+	}
+	return true
+}
+
+func TestShouldCreateSectorsWhenUpdateIsSent(t *testing.T) {
+	driverSectors := AllSectors{
+		RacingNumber: 63,
+		Sectors: []Sector{
+			{
+				SectorNumber:    2,
+				Value:           "30.403",
+				OverallFastest:  false,
+				PersonalFastest: false,
+			},
+		},
+		Utc: func() time.Time {
+			t, _ := time.Parse(time.RFC3339, "2024-12-07T14:33:13.195Z")
+			return t
+		}(),
+	}
+	server := httptest.NewServer(http.HandlerFunc(serverSendingTimingDataUpdate))
+	url := "ws" + strings.TrimPrefix(server.URL, "http")
+	client, _, err := websocket.DefaultDialer.Dial(url, nil)
+	if err != nil {
+		t.Fatalf("Could not open a websocket connection: %v", err)
+	}
+	defer client.Close()
+	err = sendDummyMessage(client)
+	if err != nil {
+		t.Fatalf("Could not write message to websocket: %v", err)
+	}
+	_, response, err := client.ReadMessage()
+	if err != nil {
+		t.Fatalf("Could not read message from websocket: %v", err)
+	}
+	sectors, err := BuildSectors(response)
+	if err != nil {
+		t.Fatalf("Could not build sectors: %v", err)
+	}
+	fmt.Println(sectors)
+	if len(sectors) != 1 {
+		t.Fatalf("Expected 1 sectors, got: %d", len(sectors))
+	}
+	if sectors[0].RacingNumber != driverSectors.RacingNumber || sectors[0].Utc != driverSectors.Utc || !compareSectors(sectors[0].Sectors, driverSectors.Sectors) {
+		t.Fatalf("Expected sectors: %v, got: %v", driverSectors, sectors[0])
 	}
 
 }

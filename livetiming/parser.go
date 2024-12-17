@@ -443,36 +443,34 @@ func BuildSectors(data []byte) ([]AllSectors, error) {
 		sector.RacingNumber, _ = strconv.Atoi(key)
 		var firstSector Sector
 		rawFirstSector := value.Sectors[0]
-		if rawFirstSector.Value == "" {
-			continue
-		}
+
 		firstSector.Value = rawFirstSector.Value
 		firstSector.OverallFastest = rawFirstSector.OverallFastest
 		firstSector.PersonalFastest = rawFirstSector.PersonalFastest
 		firstSector.SectorNumber = 1
-		sector.Sectors = append(sector.Sectors, firstSector)
+		if firstSector.Value != "" {
+			sector.Sectors = append(sector.Sectors, firstSector)
+		}
 
 		var secondSector Sector
 		rawSecondSector := value.Sectors[1]
-		if rawSecondSector.Value == "" {
-			continue
-		}
 		secondSector.Value = rawSecondSector.Value
 		secondSector.OverallFastest = rawSecondSector.OverallFastest
 		secondSector.PersonalFastest = rawSecondSector.PersonalFastest
 		secondSector.SectorNumber = 2
-		sector.Sectors = append(sector.Sectors, secondSector)
+		if secondSector.Value != "" {
+			sector.Sectors = append(sector.Sectors, secondSector)
+		}
 
 		var thirdSector Sector
 		rawThirdSector := value.Sectors[2]
-		if rawThirdSector.Value == "" {
-			continue
-		}
 		thirdSector.Value = rawThirdSector.Value
 		thirdSector.OverallFastest = rawThirdSector.OverallFastest
 		thirdSector.PersonalFastest = rawThirdSector.PersonalFastest
 		thirdSector.SectorNumber = 3
-		sector.Sectors = append(sector.Sectors, thirdSector)
+		if thirdSector.Value != "" {
+			sector.Sectors = append(sector.Sectors, thirdSector)
+		}
 		sectors = append(sectors, sector)
 	}
 

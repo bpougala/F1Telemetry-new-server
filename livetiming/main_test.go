@@ -1071,7 +1071,6 @@ func TestShouldCreateSectorsWhenUpdateIsSent(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Could not build sectors: %v", err)
 	}
-	fmt.Println(sectors)
 	if len(sectors) != 1 {
 		t.Fatalf("Expected 1 sectors, got: %d", len(sectors))
 	}

@@ -94,6 +94,7 @@ type Session struct {
 	GmtOffset   string `json:"gmt_offset"`
 	SessionType string `json:"session_type"`
 	MeetingKey  int    `json:"meeting_key"`
+	Status      string `json:"status"`
 }
 
 type Stint struct {

@@ -36,7 +36,7 @@ func FetchMeetings(dbClient *mongo.Client, ctx context.Context) ([]model.Meeting
 }
 
 func FetchSessions(dbClient *mongo.Client, ctx context.Context, meetingKey int) ([]model.Session, error) {
-	cursor, err := dbClient.Database("f1").Collection("sessioninfo").Find(ctx, bson.D{{"meetingkey", meetingKey}})
+	cursor, err := dbClient.Database("f1").Collection("sessioninfo").Find(ctx, bson.D{{Key: "meetingkey", Value: meetingKey}})
 	if err != nil {
 		return nil, err
 	}
@@ -55,6 +55,7 @@ func FetchSessions(dbClient *mongo.Client, ctx context.Context, meetingKey int) 
 			DateEnd:     rawSession.EndDate,
 			SessionType: rawSession.Type,
 			GmtOffset:   rawSession.GmtOffset,
+			Status:      rawSession.ArchiveStatus,
 		}
 		sessions = append(sessions, session)
 	}

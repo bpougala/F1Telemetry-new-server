@@ -226,7 +226,7 @@ func ProcessSessionDataAndInfo(connection *websocket.Conn, dbClient *mongo.Clien
 				position.SessionKey = sessionInfo.Key
 				positionsInterface = append(positionsInterface, position)
 			}
-			dbClient.Database("f1").Collection("positions").InsertMany(ctx, positionsInterface)
+			//dbClient.Database("f1").Collection("positions").InsertMany(ctx, positionsInterface)
 			resolver.NotifyPositionSubscribers(modelPositions)
 		}
 		timingData, err := BuildTimingData(message)
@@ -372,8 +372,7 @@ func ProcessDriverData(connection *websocket.Conn, dbClient *mongo.Client, ctx c
 				driver.SessionKey = sessionKey
 				driverInterface = append(driverInterface, driver)
 			}
-			fmt.Println("inserting drivers")
-			_, err = dbClient.Database("f1").Collection("drivers").InsertMany(ctx, driverInterface)
+			//_, err = dbClient.Database("f1").Collection("drivers").InsertMany(ctx, driverInterface)
 			if err != nil {
 				fmt.Println(err)
 			}
@@ -408,7 +407,7 @@ func ProcessTimingData(connection *websocket.Conn, dbClient *mongo.Client, ctx c
 				position.SessionKey = sessionKey
 				positionsInterface = append(positionsInterface, position)
 			}
-			_, err = dbClient.Database("f1").Collection("positions").InsertMany(ctx, positionsInterface)
+			//_, err = dbClient.Database("f1").Collection("positions").InsertMany(ctx, positionsInterface)
 			if err != nil {
 				fmt.Println(err)
 			}

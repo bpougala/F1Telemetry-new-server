@@ -144,6 +144,7 @@ type ComplexityRoot struct {
 		SessionKey  func(childComplexity int) int
 		SessionName func(childComplexity int) int
 		SessionType func(childComplexity int) int
+		Status      func(childComplexity int) int
 	}
 
 	Stint struct {
@@ -698,6 +699,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Session.SessionType(childComplexity), true
+
+	case "Session.status":
+		if e.complexity.Session.Status == nil {
+			break
+		}
+
+		return e.complexity.Session.Status(childComplexity), true
 
 	case "Stint.compound":
 		if e.complexity.Stint.Compound == nil {
@@ -3149,6 +3157,8 @@ func (ec *executionContext) fieldContext_Query_sessions(ctx context.Context, fie
 				return ec.fieldContext_Session_session_type(ctx, field)
 			case "meeting_key":
 				return ec.fieldContext_Session_meeting_key(ctx, field)
+			case "status":
+				return ec.fieldContext_Session_status(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Session", field.Name)
 		},
@@ -4254,6 +4264,50 @@ func (ec *executionContext) fieldContext_Session_meeting_key(_ context.Context, 
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			return nil, errors.New("field of type Int does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Session_status(ctx context.Context, field graphql.CollectedField, obj *model.Session) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Session_status(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Status, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Session_status(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Session",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
 		},
 	}
 	return fc, nil
@@ -7667,6 +7721,11 @@ func (ec *executionContext) _Session(ctx context.Context, sel ast.SelectionSet, 
 			}
 		case "meeting_key":
 			out.Values[i] = ec._Session_meeting_key(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "status":
+			out.Values[i] = ec._Session_status(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}

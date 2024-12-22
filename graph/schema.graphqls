@@ -28,6 +28,7 @@ type Session {
   gmt_offset: String!
   session_type: String!
   meeting_key: Int!
+  status: String!
 }
 
 type Meeting {

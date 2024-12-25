@@ -11,6 +11,7 @@ type Query {
   positions(session_key: Int!): [Position]!
   raceControl(session_key: Int!): [RaceControl]!
   lapTimes(session_key: Int!): [Timing]!
+  stints(session_key: Int!): [Stint]!
 }
 
 type Subscription {

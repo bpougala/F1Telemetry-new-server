@@ -92,6 +92,33 @@ func FetchDrivers(dbClient *mongo.Client, ctx context.Context, sessionKey int) (
 	return drivers, nil
 }
 
+func FetchStints(dbClient *mongo.Client, ctx context.Context, sessionKey int) ([]model.Stint, error) {
+	cursor, err := dbClient.Database("f1").Collection("stints").Find(ctx, bson.D{{"sessionkey", sessionKey}})
+	if err != nil {
+		return nil, err
+	}
+	var rawStints []collections.StintDB
+	var stints []model.Stint
+	err = cursor.All(ctx, &rawStints)
+	if err != nil {
+		return nil, err
+	}
+	for _, rawStint := range rawStints {
+		stint := model.Stint{
+			RacingNumber:    rawStint.RacingNumber,
+			LapFlags:        rawStint.LapFlags,
+			Compound:        rawStint.Compound,
+			New:             rawStint.New,
+			TyresNotChanged: rawStint.TyresNotChanged,
+			TotalLaps:       rawStint.TotalLaps,
+			StartLaps:       rawStint.StartLaps,
+			Timestamp:       rawStint.Timestamp,
+		}
+		stints = append(stints, stint)
+	}
+	return stints, nil
+}
+
 func FetchPositions(dbClient *mongo.Client, ctx context.Context, sessionKey int) ([]model.Position, error) {
 	cursor, err := dbClient.Database("f1").Collection("positions").Find(ctx, bson.D{{"sessionkey", sessionKey}})
 	if err != nil {

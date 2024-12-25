@@ -111,6 +111,22 @@ func (r *queryResolver) LapTimes(ctx context.Context, sessionKey int) ([]*model.
 	return timingsInt, nil
 }
 
+// Stints is the resolver for the stints field.
+func (r *queryResolver) Stints(ctx context.Context, sessionKey int) ([]*model.Stint, error) {
+	if err != nil {
+		return nil, err
+	}
+	stints, err := dataingestor.FetchStints(dbClient, ctx, sessionKey)
+	if err != nil {
+		return nil, err
+	}
+	var stintsInt []*model.Stint
+	for _, stint := range stints {
+		stintsInt = append(stintsInt, &stint)
+	}
+	return stintsInt, nil
+}
+
 // LapTimes is the resolver for the lapTimes field.
 func (r *subscriptionResolver) LapTimes(ctx context.Context) (<-chan []*model.LapTime, error) {
 	id := dataingestor.GenerateRandomString(8)

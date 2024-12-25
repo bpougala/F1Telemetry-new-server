@@ -9,6 +9,8 @@ type Query {
   sessions(meeting_keys: [Int]!): [Session]!
   drivers(session_key: Int!): [Driver]!
   positions(session_key: Int!): [Position]!
+  raceControl(session_key: Int!): [RaceControl]!
+  lapTimes(session_key: Int!): [Timing]!
 }
 
 type Subscription {
@@ -128,4 +130,21 @@ type Sector {
   overall_fastest: Boolean!
   personal_fastest: Boolean!
   utc: String
+}
+
+type Timing {
+  session_key: Int!
+  stopped: Boolean!
+  Status: Int!
+  Sectors: Any
+  Retired: Boolean!
+  RacingNumber: Int!
+  Position: Int!
+  PitOut: Boolean!
+  NumberOfLaps: Int!
+  LastLapTime: Any
+  IntervalToPositionAhead: Any
+  InPit: Boolean!
+  GapToLeader: String!
+  BestLapTime: Any
 }

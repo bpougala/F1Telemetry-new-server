@@ -114,6 +114,39 @@ func FetchPositions(dbClient *mongo.Client, ctx context.Context, sessionKey int)
 	return positions, nil
 }
 
+func FetchTimings(dbClient *mongo.Client, ctx context.Context, sessionKey int) ([]model.Timing, error) {
+	cursor, err := dbClient.Database("f1").Collection("timings").Find(ctx, bson.D{{"sessionkey", sessionKey}})
+	if err != nil {
+		return nil, err
+	}
+	var rawTimings []collections.Timing
+	var timings []model.Timing
+	err = cursor.All(ctx, &rawTimings)
+	if err != nil {
+		return nil, err
+	}
+	for _, rawTiming := range rawTimings {
+		timing := model.Timing{
+			SessionKey:              rawTiming.SessionKey,
+			Stopped:                 rawTiming.Stopped,
+			Status:                  rawTiming.Status,
+			Sectors:                 rawTiming.Sectors,
+			Retired:                 rawTiming.Retired,
+			RacingNumber:            rawTiming.RacingNumber,
+			Position:                rawTiming.Position,
+			PitOut:                  rawTiming.PitOut,
+			NumberOfLaps:            rawTiming.NumberOfLaps,
+			LastLapTime:             rawTiming.LastLapTime,
+			IntervalToPositionAhead: rawTiming.IntervalToPositionAhead,
+			InPit:                   rawTiming.InPit,
+			GapToLeader:             rawTiming.GapToLeader,
+			BestLapTime:             rawTiming.BestLapTime,
+		}
+		timings = append(timings, timing)
+	}
+	return timings, nil
+}
+
 func FetchCarData(dbClient *mongo.Client, ctx context.Context, sessionKey int, driverNumber int) ([]model.CarData, error) {
 	cursor, err := dbClient.Database("f1").Collection("cardata").Find(ctx, bson.D{{"sessionkey", sessionKey}, {"drivernumber", driverNumber}})
 	if err != nil {

@@ -117,3 +117,20 @@ type Time struct {
 	OverallFastest  bool   `json:"overallFastest"`
 	PersonalFastest bool   `json:"personalFastest"`
 }
+
+type Timing struct {
+	SessionKey              int    `json:"session_key"`
+	Stopped                 bool   `json:"stopped"`
+	Status                  int    `json:"Status"`
+	Sectors                 any    `json:"Sectors,omitempty"`
+	Retired                 bool   `json:"Retired"`
+	RacingNumber            int    `json:"RacingNumber"`
+	Position                int    `json:"Position"`
+	PitOut                  bool   `json:"PitOut"`
+	NumberOfLaps            int    `json:"NumberOfLaps"`
+	LastLapTime             any    `json:"LastLapTime,omitempty"`
+	IntervalToPositionAhead any    `json:"IntervalToPositionAhead,omitempty"`
+	InPit                   bool   `json:"InPit"`
+	GapToLeader             string `json:"GapToLeader"`
+	BestLapTime             any    `json:"BestLapTime,omitempty"`
+}

@@ -36,6 +36,34 @@ func IngestMeetings(year int) ([]collections.Meeting, error) {
 	return meetings, nil
 }
 
+func IngestTimings() ([]collections.Interval, error) {
+	uri := "https://livetiming.formula1.com/static/2024/2024-12-01_Qatar_Grand_Prix/2024-12-01_Race/TimingData.json"
+	resp, err := http.Get(uri)
+	if err != nil {
+		return nil, err
+	}
+	if resp.StatusCode != 200 {
+		return nil, fmt.Errorf("error fetching data: %s", resp.Status)
+	}
+	defer func(Body io.ReadCloser) {
+		err := Body.Close()
+		if err != nil {
+			panic(err)
+		}
+	}(resp.Body)
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, err
+	}
+	var rawTimings collections.RawInterval
+	err = json.Unmarshal(body, &rawTimings)
+	if err != nil {
+		return nil, err
+	}
+	fmt.Println(rawTimings)
+	return nil, nil
+}
+
 func IngestSession(meetingKey int) ([]collections.Sessions, error) {
 	uri := fmt.Sprintf("%s/sessions?meeting_key=%d", BASE_URL, meetingKey)
 	resp, err := http.Get(uri)

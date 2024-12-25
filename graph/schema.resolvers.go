@@ -8,7 +8,6 @@ import (
 	dataingestor "F1Telemetry-new-server/data-ingestor"
 	"F1Telemetry-new-server/graph/model"
 	"context"
-	"fmt"
 )
 
 var ctx = context.Background()
@@ -82,7 +81,18 @@ func (r *queryResolver) Positions(ctx context.Context, sessionKey int) ([]*model
 
 // RaceControl is the resolver for the raceControl field.
 func (r *queryResolver) RaceControl(ctx context.Context, sessionKey int) ([]*model.RaceControl, error) {
-	panic(fmt.Errorf("not implemented: RaceControl - raceControl"))
+	if err != nil {
+		return nil, err
+	}
+	raceControl, err := dataingestor.FetchRaceControl(dbClient, ctx, sessionKey)
+	if err != nil {
+		return nil, err
+	}
+	var raceControlInt []*model.RaceControl
+	for _, raceControlMessage := range raceControl {
+		raceControlInt = append(raceControlInt, &raceControlMessage)
+	}
+	return raceControlInt, nil
 }
 
 // LapTimes is the resolver for the lapTimes field.

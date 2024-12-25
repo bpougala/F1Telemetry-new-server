@@ -147,6 +147,29 @@ func FetchTimings(dbClient *mongo.Client, ctx context.Context, sessionKey int) (
 	return timings, nil
 }
 
+func FetchRaceControl(dbClient *mongo.Client, ctx context.Context, sessionKey int) ([]model.RaceControl, error) {
+	cursor, err := dbClient.Database("f1").Collection("racecontrol").Find(ctx, bson.D{{"sessionkey", sessionKey}})
+	if err != nil {
+		return nil, err
+	}
+	var rawRaceControl []collections.RaceControl
+	err = cursor.All(ctx, &rawRaceControl)
+	if err != nil {
+		return nil, err
+	}
+	var raceControlMessages []model.RaceControl
+	for _, rawRaceControl := range rawRaceControl {
+		raceControl := model.RaceControl{
+			Date:     rawRaceControl.Utc,
+			Category: &rawRaceControl.Category,
+			Flag:     &rawRaceControl.Flag,
+			Message:  rawRaceControl.Message,
+			Scope:    &rawRaceControl.Scope,
+		}
+		raceControlMessages = append(raceControlMessages, raceControl)
+	}
+	return raceControlMessages, nil
+}
 func FetchCarData(dbClient *mongo.Client, ctx context.Context, sessionKey int, driverNumber int) ([]model.CarData, error) {
 	cursor, err := dbClient.Database("f1").Collection("cardata").Find(ctx, bson.D{{"sessionkey", sessionKey}, {"drivernumber", driverNumber}})
 	if err != nil {

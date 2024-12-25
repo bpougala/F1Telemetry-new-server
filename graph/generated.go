@@ -878,63 +878,63 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Time.Value(childComplexity), true
 
-	case "Timing.BestLapTime":
+	case "Timing.best_lap_time":
 		if e.complexity.Timing.BestLapTime == nil {
 			break
 		}
 
 		return e.complexity.Timing.BestLapTime(childComplexity), true
 
-	case "Timing.GapToLeader":
+	case "Timing.gap_to_leader":
 		if e.complexity.Timing.GapToLeader == nil {
 			break
 		}
 
 		return e.complexity.Timing.GapToLeader(childComplexity), true
 
-	case "Timing.InPit":
+	case "Timing.in_pit":
 		if e.complexity.Timing.InPit == nil {
 			break
 		}
 
 		return e.complexity.Timing.InPit(childComplexity), true
 
-	case "Timing.IntervalToPositionAhead":
+	case "Timing.interval_to_position_ahead":
 		if e.complexity.Timing.IntervalToPositionAhead == nil {
 			break
 		}
 
 		return e.complexity.Timing.IntervalToPositionAhead(childComplexity), true
 
-	case "Timing.LastLapTime":
+	case "Timing.last_lap_time":
 		if e.complexity.Timing.LastLapTime == nil {
 			break
 		}
 
 		return e.complexity.Timing.LastLapTime(childComplexity), true
 
-	case "Timing.NumberOfLaps":
+	case "Timing.number_of_laps":
 		if e.complexity.Timing.NumberOfLaps == nil {
 			break
 		}
 
 		return e.complexity.Timing.NumberOfLaps(childComplexity), true
 
-	case "Timing.PitOut":
+	case "Timing.pitOut":
 		if e.complexity.Timing.PitOut == nil {
 			break
 		}
 
 		return e.complexity.Timing.PitOut(childComplexity), true
 
-	case "Timing.Position":
+	case "Timing.position":
 		if e.complexity.Timing.Position == nil {
 			break
 		}
 
 		return e.complexity.Timing.Position(childComplexity), true
 
-	case "Timing.RacingNumber":
+	case "Timing.racing_number":
 		if e.complexity.Timing.RacingNumber == nil {
 			break
 		}
@@ -3626,24 +3626,24 @@ func (ec *executionContext) fieldContext_Query_lapTimes(ctx context.Context, fie
 				return ec.fieldContext_Timing_Sectors(ctx, field)
 			case "Retired":
 				return ec.fieldContext_Timing_Retired(ctx, field)
-			case "RacingNumber":
-				return ec.fieldContext_Timing_RacingNumber(ctx, field)
-			case "Position":
-				return ec.fieldContext_Timing_Position(ctx, field)
-			case "PitOut":
-				return ec.fieldContext_Timing_PitOut(ctx, field)
-			case "NumberOfLaps":
-				return ec.fieldContext_Timing_NumberOfLaps(ctx, field)
-			case "LastLapTime":
-				return ec.fieldContext_Timing_LastLapTime(ctx, field)
-			case "IntervalToPositionAhead":
-				return ec.fieldContext_Timing_IntervalToPositionAhead(ctx, field)
-			case "InPit":
-				return ec.fieldContext_Timing_InPit(ctx, field)
-			case "GapToLeader":
-				return ec.fieldContext_Timing_GapToLeader(ctx, field)
-			case "BestLapTime":
-				return ec.fieldContext_Timing_BestLapTime(ctx, field)
+			case "racing_number":
+				return ec.fieldContext_Timing_racing_number(ctx, field)
+			case "position":
+				return ec.fieldContext_Timing_position(ctx, field)
+			case "pitOut":
+				return ec.fieldContext_Timing_pitOut(ctx, field)
+			case "number_of_laps":
+				return ec.fieldContext_Timing_number_of_laps(ctx, field)
+			case "last_lap_time":
+				return ec.fieldContext_Timing_last_lap_time(ctx, field)
+			case "interval_to_position_ahead":
+				return ec.fieldContext_Timing_interval_to_position_ahead(ctx, field)
+			case "in_pit":
+				return ec.fieldContext_Timing_in_pit(ctx, field)
+			case "gap_to_leader":
+				return ec.fieldContext_Timing_gap_to_leader(ctx, field)
+			case "best_lap_time":
+				return ec.fieldContext_Timing_best_lap_time(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Timing", field.Name)
 		},
@@ -5825,8 +5825,8 @@ func (ec *executionContext) fieldContext_Timing_Retired(_ context.Context, field
 	return fc, nil
 }
 
-func (ec *executionContext) _Timing_RacingNumber(ctx context.Context, field graphql.CollectedField, obj *model.Timing) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Timing_RacingNumber(ctx, field)
+func (ec *executionContext) _Timing_racing_number(ctx context.Context, field graphql.CollectedField, obj *model.Timing) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Timing_racing_number(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -5856,7 +5856,7 @@ func (ec *executionContext) _Timing_RacingNumber(ctx context.Context, field grap
 	return ec.marshalNInt2int(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_Timing_RacingNumber(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_Timing_racing_number(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Timing",
 		Field:      field,
@@ -5869,8 +5869,8 @@ func (ec *executionContext) fieldContext_Timing_RacingNumber(_ context.Context, 
 	return fc, nil
 }
 
-func (ec *executionContext) _Timing_Position(ctx context.Context, field graphql.CollectedField, obj *model.Timing) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Timing_Position(ctx, field)
+func (ec *executionContext) _Timing_position(ctx context.Context, field graphql.CollectedField, obj *model.Timing) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Timing_position(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -5900,7 +5900,7 @@ func (ec *executionContext) _Timing_Position(ctx context.Context, field graphql.
 	return ec.marshalNInt2int(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_Timing_Position(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_Timing_position(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Timing",
 		Field:      field,
@@ -5913,8 +5913,8 @@ func (ec *executionContext) fieldContext_Timing_Position(_ context.Context, fiel
 	return fc, nil
 }
 
-func (ec *executionContext) _Timing_PitOut(ctx context.Context, field graphql.CollectedField, obj *model.Timing) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Timing_PitOut(ctx, field)
+func (ec *executionContext) _Timing_pitOut(ctx context.Context, field graphql.CollectedField, obj *model.Timing) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Timing_pitOut(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -5944,7 +5944,7 @@ func (ec *executionContext) _Timing_PitOut(ctx context.Context, field graphql.Co
 	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_Timing_PitOut(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_Timing_pitOut(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Timing",
 		Field:      field,
@@ -5957,8 +5957,8 @@ func (ec *executionContext) fieldContext_Timing_PitOut(_ context.Context, field 
 	return fc, nil
 }
 
-func (ec *executionContext) _Timing_NumberOfLaps(ctx context.Context, field graphql.CollectedField, obj *model.Timing) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Timing_NumberOfLaps(ctx, field)
+func (ec *executionContext) _Timing_number_of_laps(ctx context.Context, field graphql.CollectedField, obj *model.Timing) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Timing_number_of_laps(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -5988,7 +5988,7 @@ func (ec *executionContext) _Timing_NumberOfLaps(ctx context.Context, field grap
 	return ec.marshalNInt2int(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_Timing_NumberOfLaps(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_Timing_number_of_laps(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Timing",
 		Field:      field,
@@ -6001,8 +6001,8 @@ func (ec *executionContext) fieldContext_Timing_NumberOfLaps(_ context.Context, 
 	return fc, nil
 }
 
-func (ec *executionContext) _Timing_LastLapTime(ctx context.Context, field graphql.CollectedField, obj *model.Timing) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Timing_LastLapTime(ctx, field)
+func (ec *executionContext) _Timing_last_lap_time(ctx context.Context, field graphql.CollectedField, obj *model.Timing) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Timing_last_lap_time(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -6029,7 +6029,7 @@ func (ec *executionContext) _Timing_LastLapTime(ctx context.Context, field graph
 	return ec.marshalOAny2interface(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_Timing_LastLapTime(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_Timing_last_lap_time(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Timing",
 		Field:      field,
@@ -6042,8 +6042,8 @@ func (ec *executionContext) fieldContext_Timing_LastLapTime(_ context.Context, f
 	return fc, nil
 }
 
-func (ec *executionContext) _Timing_IntervalToPositionAhead(ctx context.Context, field graphql.CollectedField, obj *model.Timing) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Timing_IntervalToPositionAhead(ctx, field)
+func (ec *executionContext) _Timing_interval_to_position_ahead(ctx context.Context, field graphql.CollectedField, obj *model.Timing) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Timing_interval_to_position_ahead(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -6070,7 +6070,7 @@ func (ec *executionContext) _Timing_IntervalToPositionAhead(ctx context.Context,
 	return ec.marshalOAny2interface(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_Timing_IntervalToPositionAhead(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_Timing_interval_to_position_ahead(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Timing",
 		Field:      field,
@@ -6083,8 +6083,8 @@ func (ec *executionContext) fieldContext_Timing_IntervalToPositionAhead(_ contex
 	return fc, nil
 }
 
-func (ec *executionContext) _Timing_InPit(ctx context.Context, field graphql.CollectedField, obj *model.Timing) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Timing_InPit(ctx, field)
+func (ec *executionContext) _Timing_in_pit(ctx context.Context, field graphql.CollectedField, obj *model.Timing) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Timing_in_pit(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -6114,7 +6114,7 @@ func (ec *executionContext) _Timing_InPit(ctx context.Context, field graphql.Col
 	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_Timing_InPit(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_Timing_in_pit(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Timing",
 		Field:      field,
@@ -6127,8 +6127,8 @@ func (ec *executionContext) fieldContext_Timing_InPit(_ context.Context, field g
 	return fc, nil
 }
 
-func (ec *executionContext) _Timing_GapToLeader(ctx context.Context, field graphql.CollectedField, obj *model.Timing) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Timing_GapToLeader(ctx, field)
+func (ec *executionContext) _Timing_gap_to_leader(ctx context.Context, field graphql.CollectedField, obj *model.Timing) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Timing_gap_to_leader(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -6158,7 +6158,7 @@ func (ec *executionContext) _Timing_GapToLeader(ctx context.Context, field graph
 	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_Timing_GapToLeader(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_Timing_gap_to_leader(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Timing",
 		Field:      field,
@@ -6171,8 +6171,8 @@ func (ec *executionContext) fieldContext_Timing_GapToLeader(_ context.Context, f
 	return fc, nil
 }
 
-func (ec *executionContext) _Timing_BestLapTime(ctx context.Context, field graphql.CollectedField, obj *model.Timing) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Timing_BestLapTime(ctx, field)
+func (ec *executionContext) _Timing_best_lap_time(ctx context.Context, field graphql.CollectedField, obj *model.Timing) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Timing_best_lap_time(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -6199,7 +6199,7 @@ func (ec *executionContext) _Timing_BestLapTime(ctx context.Context, field graph
 	return ec.marshalOAny2interface(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_Timing_BestLapTime(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_Timing_best_lap_time(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Timing",
 		Field:      field,
@@ -8934,42 +8934,42 @@ func (ec *executionContext) _Timing(ctx context.Context, sel ast.SelectionSet, o
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
-		case "RacingNumber":
-			out.Values[i] = ec._Timing_RacingNumber(ctx, field, obj)
+		case "racing_number":
+			out.Values[i] = ec._Timing_racing_number(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
-		case "Position":
-			out.Values[i] = ec._Timing_Position(ctx, field, obj)
+		case "position":
+			out.Values[i] = ec._Timing_position(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
-		case "PitOut":
-			out.Values[i] = ec._Timing_PitOut(ctx, field, obj)
+		case "pitOut":
+			out.Values[i] = ec._Timing_pitOut(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
-		case "NumberOfLaps":
-			out.Values[i] = ec._Timing_NumberOfLaps(ctx, field, obj)
+		case "number_of_laps":
+			out.Values[i] = ec._Timing_number_of_laps(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
-		case "LastLapTime":
-			out.Values[i] = ec._Timing_LastLapTime(ctx, field, obj)
-		case "IntervalToPositionAhead":
-			out.Values[i] = ec._Timing_IntervalToPositionAhead(ctx, field, obj)
-		case "InPit":
-			out.Values[i] = ec._Timing_InPit(ctx, field, obj)
+		case "last_lap_time":
+			out.Values[i] = ec._Timing_last_lap_time(ctx, field, obj)
+		case "interval_to_position_ahead":
+			out.Values[i] = ec._Timing_interval_to_position_ahead(ctx, field, obj)
+		case "in_pit":
+			out.Values[i] = ec._Timing_in_pit(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
-		case "GapToLeader":
-			out.Values[i] = ec._Timing_GapToLeader(ctx, field, obj)
+		case "gap_to_leader":
+			out.Values[i] = ec._Timing_gap_to_leader(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
-		case "BestLapTime":
-			out.Values[i] = ec._Timing_BestLapTime(ctx, field, obj)
+		case "best_lap_time":
+			out.Values[i] = ec._Timing_best_lap_time(ctx, field, obj)
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}

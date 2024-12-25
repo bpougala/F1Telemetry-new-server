@@ -138,13 +138,13 @@ type Timing {
   Status: Int!
   Sectors: Any
   Retired: Boolean!
-  RacingNumber: Int!
-  Position: Int!
-  PitOut: Boolean!
-  NumberOfLaps: Int!
-  LastLapTime: Any
-  IntervalToPositionAhead: Any
-  InPit: Boolean!
-  GapToLeader: String!
-  BestLapTime: Any
+  racing_number: Int!
+  position: Int!
+  pitOut: Boolean!
+  number_of_laps: Int!
+  last_lap_time: Any
+  interval_to_position_ahead: Any
+  in_pit: Boolean!
+  gap_to_leader: String!
+  best_lap_time: Any
 }

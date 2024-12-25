@@ -124,13 +124,13 @@ type Timing struct {
 	Status                  int    `json:"Status"`
 	Sectors                 any    `json:"Sectors,omitempty"`
 	Retired                 bool   `json:"Retired"`
-	RacingNumber            int    `json:"RacingNumber"`
-	Position                int    `json:"Position"`
-	PitOut                  bool   `json:"PitOut"`
-	NumberOfLaps            int    `json:"NumberOfLaps"`
-	LastLapTime             any    `json:"LastLapTime,omitempty"`
-	IntervalToPositionAhead any    `json:"IntervalToPositionAhead,omitempty"`
-	InPit                   bool   `json:"InPit"`
-	GapToLeader             string `json:"GapToLeader"`
-	BestLapTime             any    `json:"BestLapTime,omitempty"`
+	RacingNumber            int    `json:"racing_number"`
+	Position                int    `json:"position"`
+	PitOut                  bool   `json:"pitOut"`
+	NumberOfLaps            int    `json:"number_of_laps"`
+	LastLapTime             any    `json:"last_lap_time,omitempty"`
+	IntervalToPositionAhead any    `json:"interval_to_position_ahead,omitempty"`
+	InPit                   bool   `json:"in_pit"`
+	GapToLeader             string `json:"gap_to_leader"`
+	BestLapTime             any    `json:"best_lap_time,omitempty"`
 }

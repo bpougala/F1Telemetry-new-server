@@ -121,9 +121,9 @@ type Time struct {
 type Timing struct {
 	SessionKey              int    `json:"session_key"`
 	Stopped                 bool   `json:"stopped"`
-	Status                  int    `json:"Status"`
-	Sectors                 any    `json:"Sectors,omitempty"`
-	Retired                 bool   `json:"Retired"`
+	Status                  int    `json:"status"`
+	Sectors                 any    `json:"sectors,omitempty"`
+	Retired                 bool   `json:"retired"`
 	RacingNumber            int    `json:"racing_number"`
 	Position                int    `json:"position"`
 	PitOut                  bool   `json:"pitOut"`

@@ -136,9 +136,9 @@ type Sector {
 type Timing {
   session_key: Int!
   stopped: Boolean!
-  Status: Int!
-  Sectors: Any
-  Retired: Boolean!
+  status: Int!
+  sectors: Any
+  retired: Boolean!
   racing_number: Int!
   position: Int!
   pitOut: Boolean!

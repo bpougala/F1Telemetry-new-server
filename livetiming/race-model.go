@@ -97,6 +97,7 @@ type RawStint struct {
 }
 
 type Stint struct {
+	SessionKey      int    `json:"SessionKey"`
 	RacingNumber    int    `json:"RacingNumber"`
 	LapFlags        int    `json:"LapFlags"`
 	Compound        string `json:"Compound"`
@@ -381,11 +382,16 @@ type CarData struct {
 }
 
 type RaceControl struct {
-	Utc      string `json:"Utc"`
-	Category string `json:"Category"`
-	Flag     string `json:"Flag"`
-	Scope    string `json:"Scope"`
-	Message  string `json:"Message"`
+	SessionKey int    `json:"sessionkey"`
+	Utc        string `json:"utc"`
+	Category   string `json:"category"`
+	Flag       string `json:"flag"`
+	Scope      string `json:"scope"`
+	Message    string `json:"message"`
+}
+
+type RawRaceControl struct {
+	Messages []RaceControl `json:"Messages"`
 }
 
 type Root struct {

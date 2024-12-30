@@ -2,10 +2,12 @@ package data_ingestor
 
 import (
 	"F1Telemetry-new-server/data-ingestor/collections"
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
+	"strconv"
 	"time"
 )
 
@@ -36,8 +38,8 @@ func IngestMeetings(year int) ([]collections.Meeting, error) {
 	return meetings, nil
 }
 
-func IngestTimings() ([]collections.Interval, error) {
-	uri := "https://livetiming.formula1.com/static/2024/2024-12-01_Qatar_Grand_Prix/2024-12-01_Race/TimingData.json"
+func IngestPositionsForDB(sessionKey int) ([]interface{}, error) {
+	uri := "https://livetiming.formula1.com/static/2024/2024-11-23_Las_Vegas_Grand_Prix/2024-11-23_Race/TimingData.json"
 	resp, err := http.Get(uri)
 	if err != nil {
 		return nil, err
@@ -55,13 +57,89 @@ func IngestTimings() ([]collections.Interval, error) {
 	if err != nil {
 		return nil, err
 	}
+	body = bytes.TrimPrefix(body, []byte("\xef\xbb\xbf"))
 	var rawTimings collections.RawInterval
 	err = json.Unmarshal(body, &rawTimings)
 	if err != nil {
+		panic(err)
+	}
+	var positions []interface{}
+	for _, timingLine := range rawTimings.Lines {
+		var position collections.PositionsDB
+		position.SessionKey = sessionKey
+		position.RacingNumber, _ = strconv.Atoi(timingLine.RacingNumber)
+		position.Position, _ = strconv.Atoi(timingLine.Position)
+		positions = append(positions, position)
+	}
+
+	return positions, nil
+}
+
+func IngestTimings(sessionKey int) ([]interface{}, error) {
+	uri := "https://livetiming.formula1.com/static/2024/2024-11-23_Las_Vegas_Grand_Prix/2024-11-23_Race/TimingData.json"
+	resp, err := http.Get(uri)
+	if err != nil {
 		return nil, err
 	}
-	fmt.Println(rawTimings)
-	return nil, nil
+	if resp.StatusCode != 200 {
+		return nil, fmt.Errorf("error fetching data: %s", resp.Status)
+	}
+	defer func(Body io.ReadCloser) {
+		err := Body.Close()
+		if err != nil {
+			panic(err)
+		}
+	}(resp.Body)
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, err
+	}
+	body = bytes.TrimPrefix(body, []byte("\xef\xbb\xbf"))
+	var rawTimings collections.RawInterval
+	err = json.Unmarshal(body, &rawTimings)
+	if err != nil {
+		panic(err)
+	}
+	var timingsInterface []interface{}
+	for _, timingLine := range rawTimings.Lines {
+		var timing collections.Timing
+		timing.SessionKey = sessionKey
+		timing.RacingNumber, _ = strconv.Atoi(timingLine.RacingNumber)
+		timing.Position, _ = strconv.Atoi(timingLine.Position)
+		timing.Stopped = timingLine.Stopped
+		timing.InPit = timingLine.InPit
+		timing.PitOut = timingLine.PitOut
+		timing.Status = timingLine.Status
+		timing.NumberOfLaps = timingLine.NumberOfLaps
+		timing.Sectors = []struct {
+			Stopped         bool   `json:"stopped"`
+			Value           string `json:"value"`
+			Status          int    `json:"status"`
+			OverallFastest  bool   `json:"overall_fastest"`
+			PersonalFastest bool   `json:"personal_fastest"`
+			Segments        []struct {
+				Status int `json:"status"`
+			} `json:"segments"`
+		}(timingLine.Sectors)
+		timing.BestLapTime = struct {
+			Value string `json:"value"`
+			Lap   int    `json:"lap"`
+		}(timingLine.BestLapTime)
+		timing.LastLapTime = struct {
+			Value           string `json:"value"`
+			Status          int    `json:"status"`
+			OverallFastest  bool   `json:"overall_fastest"`
+			PersonalFastest bool   `json:"personal_fastest"`
+		}(timingLine.LastLapTime)
+		timing.GapToLeader = timingLine.GapToLeader
+		timing.IntervalToPositionAhead = struct {
+			Value    string `json:"value"`
+			Catching bool   `json:"catching"`
+		}(timingLine.IntervalToPositionAhead)
+		timing.Retired = timingLine.Retired
+		timingsInterface = append(timingsInterface, timing)
+	}
+	return timingsInterface, nil
 }
 
 func IngestSession(meetingKey int) ([]collections.Sessions, error) {
@@ -141,15 +219,27 @@ func IngestPositions(sessionKey int) ([]collections.Position, error) {
 	return positions, nil
 }
 
-func IngestRaceControl(sessionKey int) ([]collections.RaceControl, error) {
-	uri := fmt.Sprintf("%s/race_control?session_key=%d", BASE_URL, sessionKey)
+type RaceControl struct {
+	SessionKey int    `json:"sessionkey"`
+	Utc        string `json:"utc"`
+	Category   string `json:"category"`
+	Flag       string `json:"flag"`
+	Scope      string `json:"scope"`
+	Message    string `json:"message"`
+}
+
+type RaceControlMessages struct {
+	Messages []RaceControl `json:"Messages"`
+}
+
+func IngestRaceControl(sessionKey int) ([]interface{}, error) {
+	uri := "https://livetiming.formula1.com/static/2024/2024-11-23_Las_Vegas_Grand_Prix/2024-11-23_Race/RaceControlMessages.json"
 	resp, err := http.Get(uri)
-	var raceControls []collections.RaceControl
 	if err != nil {
-		return raceControls, err
+		return nil, err
 	}
 	if resp.StatusCode != 200 {
-		return raceControls, fmt.Errorf("error fetching data: %s", resp.Status)
+		return nil, fmt.Errorf("error fetching data: %s", resp.Status)
 	}
 	defer func(Body io.ReadCloser) {
 		err := Body.Close()
@@ -159,13 +249,26 @@ func IngestRaceControl(sessionKey int) ([]collections.RaceControl, error) {
 	}(resp.Body)
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
-		return raceControls, err
+		return nil, err
 	}
-	err = json.Unmarshal(body, &raceControls)
+	body = bytes.TrimPrefix(body, []byte("\xef\xbb\xbf"))
+	var raceControlInt []interface{}
+	var data RaceControlMessages
+	err = json.Unmarshal(body, &data)
 	if err != nil {
-		return raceControls, err
+		return nil, err
 	}
-	return raceControls, nil
+	for _, raceControlMessage := range data.Messages {
+		var raceControl collections.RaceControl
+		raceControl.SessionKey = sessionKey
+		raceControl.Flag = raceControlMessage.Flag
+		raceControl.Category = raceControlMessage.Category
+		raceControl.Scope = raceControlMessage.Scope
+		raceControl.Utc = raceControlMessage.Utc
+		raceControl.Message = raceControlMessage.Message
+		raceControlInt = append(raceControlInt, raceControl)
+	}
+	return raceControlInt, nil
 }
 
 func IngestLaps(sessionKey int) ([]collections.Laps, error) {

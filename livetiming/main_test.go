@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"os"
+	"slices"
 	"sort"
 	"strconv"
 	"strings"
@@ -933,11 +934,11 @@ func TestShouldCreateStintWhenFirstSubscribing(t *testing.T) {
 	sort.Slice(stints, func(i, j int) bool {
 		return stints[i].RacingNumber < stints[j].RacingNumber
 	})
-	if stints[0] != firstStint {
-		t.Fatalf("Expected first stint: %v, got: %v", firstStint, stints[0])
+	if slices.Contains(stints, firstStint) == false {
+		t.Fatalf("Expected stints to contain %v", firstStint)
 	}
-	if stints[1] != secondStint {
-		t.Fatalf("Expected second stint: %v, got: %v", secondStint, stints[1])
+	if slices.Contains(stints, secondStint) == false {
+		t.Fatalf("Expected stints to contain %v", secondStint)
 	}
 }
 

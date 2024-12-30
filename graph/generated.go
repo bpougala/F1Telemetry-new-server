@@ -180,7 +180,6 @@ type ComplexityRoot struct {
 	Timing struct {
 		BestLapTime             func(childComplexity int) int
 		GapToLeader             func(childComplexity int) int
-		HasRetired              func(childComplexity int) int
 		InPit                   func(childComplexity int) int
 		IntervalToPositionAhead func(childComplexity int) int
 		LastLapTime             func(childComplexity int) int
@@ -907,13 +906,6 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Timing.GapToLeader(childComplexity), true
 
-	case "Timing.has_retired":
-		if e.complexity.Timing.HasRetired == nil {
-			break
-		}
-
-		return e.complexity.Timing.HasRetired(childComplexity), true
-
 	case "Timing.in_pit":
 		if e.complexity.Timing.InPit == nil {
 			break
@@ -962,6 +954,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Timing.RacingNumber(childComplexity), true
+
+	case "Timing.retired":
+		if e.complexity.Timing.Retired == nil {
+			break
+		}
+
+		return e.complexity.Timing.Retired(childComplexity), true
 
 	case "Timing.sectors":
 		if e.complexity.Timing.Sectors == nil {
@@ -3662,8 +3661,8 @@ func (ec *executionContext) fieldContext_Query_lapTimes(ctx context.Context, fie
 				return ec.fieldContext_Timing_status(ctx, field)
 			case "sectors":
 				return ec.fieldContext_Timing_sectors(ctx, field)
-			case "has_retired":
-				return ec.fieldContext_Timing_has_retired(ctx, field)
+			case "retired":
+				return ec.fieldContext_Timing_retired(ctx, field)
 			case "racing_number":
 				return ec.fieldContext_Timing_racing_number(ctx, field)
 			case "position":
@@ -5894,8 +5893,8 @@ func (ec *executionContext) fieldContext_Timing_sectors(_ context.Context, field
 	return fc, nil
 }
 
-func (ec *executionContext) _Timing_has_retired(ctx context.Context, field graphql.CollectedField, obj *model.Timing) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Timing_has_retired(ctx, field)
+func (ec *executionContext) _Timing_retired(ctx context.Context, field graphql.CollectedField, obj *model.Timing) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Timing_retired(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -5908,7 +5907,7 @@ func (ec *executionContext) _Timing_has_retired(ctx context.Context, field graph
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.HasRetired, nil
+		return obj.Retired, nil
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -5925,7 +5924,7 @@ func (ec *executionContext) _Timing_has_retired(ctx context.Context, field graph
 	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_Timing_has_retired(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_Timing_retired(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Timing",
 		Field:      field,
@@ -9064,8 +9063,8 @@ func (ec *executionContext) _Timing(ctx context.Context, sel ast.SelectionSet, o
 			}
 		case "sectors":
 			out.Values[i] = ec._Timing_sectors(ctx, field, obj)
-		case "has_retired":
-			out.Values[i] = ec._Timing_has_retired(ctx, field, obj)
+		case "retired":
+			out.Values[i] = ec._Timing_retired(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}

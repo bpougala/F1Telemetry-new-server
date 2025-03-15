@@ -316,7 +316,7 @@ func ProcessSessionDataAndInfo(connection *websocket.Conn, dbClient *mongo.Clien
 			}
 			dbClient.Database("f1").Collection("meetingdata").FindOneAndReplace(ctx, bson.D{{"_id", meetingDB.Key}}, meetingDB, options.FindOneAndReplace().SetUpsert(true))
 			dbClient.Database("f1").Collection("sessioninfo").FindOneAndReplace(ctx, bson.D{{"_id", sessionInfo.Key}}, sessionInfo, options.FindOneAndReplace().SetUpsert(true))
-			//_, err = dbClient.Database("f1").Collection("drivers").InsertMany(ctx, driverInterface)
+			_, err = dbClient.Database("f1").Collection("drivers").InsertMany(ctx, driverInterface)
 		}
 	}
 }

@@ -226,7 +226,7 @@ func ProcessSessionDataAndInfo(connection *websocket.Conn, dbClient *mongo.Clien
 				position.SessionKey = sessionInfo.Key
 				positionsInterface = append(positionsInterface, position)
 			}
-			//dbClient.Database("f1").Collection("positions").InsertMany(ctx, positionsInterface)
+			dbClient.Database("f1").Collection("positions").InsertMany(ctx, positionsInterface)
 			resolver.NotifyPositionSubscribers(modelPositions)
 		}
 		timingData, err := BuildTimingData(message)

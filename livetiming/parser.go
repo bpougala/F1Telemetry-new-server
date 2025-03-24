@@ -44,7 +44,7 @@ func BuildSessionInfo(data []byte) (SessionInfoDB, error) {
 		return sessionInfo, fmt.Errorf("failed to unmarshal data: %v", err)
 	}
 	if initialSessionData.R.SessionInfo.Key == 0 {
-		return sessionInfo, fmt.Errorf("Incorrect input data")
+		return buildUpdatedSession(data)
 	}
 	session := initialSessionData.R.SessionInfo
 	sessionInfo.ArchiveStatus = session.ArchiveStatus.Status
@@ -171,6 +171,45 @@ func buildRaceTimingData(data []byte) ([]LapTimeMetric, error) {
 		return lapTimeMetrics, fmt.Errorf("No lap time metrics found")
 	}
 	return lapTimeMetrics, nil
+}
+
+func buildUpdatedSession(data []byte) (SessionInfoDB, error) {
+	var updatedData UpdateData
+	var updatedSession SessionInfoDB
+	if err := json.Unmarshal(data, &updatedData); err != nil {
+		return updatedSession, err
+	}
+	if len(updatedData.M) == 0 {
+		return updatedSession, fmt.Errorf("no data available")
+	}
+	for _, message := range updatedData.M {
+		elements := message.A
+		if len(elements) != 3 {
+			continue
+		}
+		if elements[0] != "SessionInfo" {
+			return updatedSession, fmt.Errorf("no sessioninfo data available")
+		}
+		sessionDataMap := elements[1].(map[string]interface{})
+		sessionDataMapBytes, err := json.Marshal(sessionDataMap)
+		if err != nil {
+			return updatedSession, fmt.Errorf("could not parse session data map as bytes")
+		}
+		var sessionInfo SessionInfo
+		if err := json.Unmarshal(sessionDataMapBytes, &sessionInfo); err != nil {
+			return updatedSession, fmt.Errorf("could not unmarshal session data map bytes to json")
+		}
+		updatedSession.ArchiveStatus = sessionInfo.ArchiveStatus.Status
+		updatedSession.Key = sessionInfo.Key
+		updatedSession.StartDate = sessionInfo.StartDate
+		updatedSession.EndDate = sessionInfo.EndDate
+		updatedSession.Type = sessionInfo.Type
+		updatedSession.GmtOffset = sessionInfo.GmtOffset
+		updatedSession.MeetingKey = sessionInfo.Meeting.Key
+		updatedSession.Name = sessionInfo.Name
+		updatedSession.Path = sessionInfo.Path
+	}
+	return updatedSession, nil
 }
 
 func buildUpdatedPositions(data []byte) ([]Position, error) {

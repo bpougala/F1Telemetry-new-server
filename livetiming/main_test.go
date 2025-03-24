@@ -190,7 +190,29 @@ func serverSendingCarDataInfo(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func serverSendingSessionUpdate(w http.ResponseWriter, r *http.Request) {
+func serverSendingSessionInfoUpdate(w http.ResponseWriter, r *http.Request) {
+	conn, err := upgrader.Upgrade(w, r, nil)
+	if err != nil {
+		return
+	}
+	defer conn.Close()
+	sessionData, err := os.ReadFile("test/session-update-australia.json")
+	if err != nil {
+		fmt.Printf("Error reading session data: %v\n", err)
+		return
+	}
+	for {
+		messageType, _, err := conn.ReadMessage()
+		if err != nil {
+			return
+		}
+		if err := conn.WriteMessage(messageType, sessionData); err != nil {
+			return
+		}
+	}
+}
+
+func serverSendingRaceControlUpdate(w http.ResponseWriter, r *http.Request) {
 	conn, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
 		return
@@ -858,13 +880,49 @@ func TestShouldCreateRaceControlMessageWhenFirstSubscribing(t *testing.T) {
 	}
 }
 
+func TestShouldCreateSessionWhenReceivingUpdate(t *testing.T) {
+	expectedSessionInfo := SessionInfoDB{
+		ArchiveStatus: "Complete",
+		StartDate:     "2025-03-14T16:00:00",
+		EndDate:       "2025-03-14T17:00:00",
+		Type:          "Practice",
+		GmtOffset:     "11:00:00",
+		Key:           9687,
+		MeetingKey:    1254,
+		Name:          "Practice 2",
+		Path:          "2025/2025-03-16_Australian_Grand_Prix/2025-03-14_Practice_2/",
+	}
+	server := httptest.NewServer(http.HandlerFunc(serverSendingSessionInfoUpdate))
+	url := "ws" + strings.TrimPrefix(server.URL, "http")
+	client, _, err := websocket.DefaultDialer.Dial(url, nil)
+	if err != nil {
+		t.Fatalf("Could not open a websocket connection: %v", err)
+	}
+	defer client.Close()
+	err = sendDummyMessage(client)
+	if err != nil {
+		t.Fatalf("Could not write message to websocket: %v", err)
+	}
+	_, response, err := client.ReadMessage()
+	if err != nil {
+		t.Fatalf("Could not read message from websocket: %v", err)
+	}
+	sessionInfo, err := BuildSessionInfo(response)
+	if err != nil {
+		t.Fatalf("Could not build session info: %v", err)
+	}
+	if sessionInfo != expectedSessionInfo {
+		t.Fatalf("Expected message: %v, received: %v\n", expectedSessionInfo, sessionInfo)
+	}
+}
+
 func TestShouldCreateRaceControlMessageWhenReceivingUpdate(t *testing.T) {
 	raceControlMessage := RaceControl{
 		Utc:      "2024-11-30T17:46:16",
 		Category: "Other",
 		Message:  "PINK HEAD PADDING MATERIAL MUST BE USED",
 	}
-	server := httptest.NewServer(http.HandlerFunc(serverSendingSessionUpdate))
+	server := httptest.NewServer(http.HandlerFunc(serverSendingRaceControlUpdate))
 	url := "ws" + strings.TrimPrefix(server.URL, "http")
 	client, _, err := websocket.DefaultDialer.Dial(url, nil)
 	if err != nil {

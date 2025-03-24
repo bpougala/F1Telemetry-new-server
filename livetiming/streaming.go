@@ -248,6 +248,10 @@ func ProcessSessionDataAndInfo(connection *websocket.Conn, dbClient *mongo.Clien
 				lapTime.IntervalToPositionAhead = &timing.IntervalToPositionAhead
 				laptimes = append(laptimes, &lapTime)
 				resolver.NotifyLapTimeSubscribers(laptimes)
+				if sessionInfo.ArchiveStatus != "Generating" {
+					timing.SessionKey = sessionInfo.Key
+					_, err = dbClient.Database("f1").Collection("timings").InsertOne(ctx, timing)
+				}
 			}
 		}
 		carData, err := BuildCarData(message)
@@ -306,6 +310,16 @@ func ProcessSessionDataAndInfo(connection *websocket.Conn, dbClient *mongo.Clien
 				}
 			}
 			resolver.NotifySectorTimeSubscribers(sectorsModel)
+			if sessionInfo.ArchiveStatus != "Generating" {
+				var sectorsInterface []interface{}
+				for _, sector := range sectors {
+					sectorsInterface = append(sectorsInterface, sector)
+				}
+				_, err := dbClient.Database("f1").Collection("sectors").InsertMany(ctx, sectorsInterface)
+				if err != nil {
+					fmt.Printf("%v", err)
+				}
+			}
 		}
 		if !isError {
 			meetingDB := convertMeetingToDB(meetingData)
@@ -316,7 +330,7 @@ func ProcessSessionDataAndInfo(connection *websocket.Conn, dbClient *mongo.Clien
 			}
 			dbClient.Database("f1").Collection("meetingdata").FindOneAndReplace(ctx, bson.D{{"_id", meetingDB.Key}}, meetingDB, options.FindOneAndReplace().SetUpsert(true))
 			dbClient.Database("f1").Collection("sessioninfo").FindOneAndReplace(ctx, bson.D{{"_id", sessionInfo.Key}}, sessionInfo, options.FindOneAndReplace().SetUpsert(true))
-			_, err = dbClient.Database("f1").Collection("drivers").InsertMany(ctx, driverInterface)
+			//_, err = dbClient.Database("f1").Collection("drivers").InsertMany(ctx, driverInterface)
 		}
 	}
 }

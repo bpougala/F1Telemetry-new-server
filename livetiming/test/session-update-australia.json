@@ -1,0 +1,43 @@
+{
+  "C": "d-DA5D544B-B,0|Dywn,0|Dywo,A|P,4|BL,1B|BM,69E6|BK,55C|BN,4CE|S,0|N,C5|j,24D1|M,27",
+  "M": [
+    {
+      "H": "Streaming",
+      "M": "feed",
+      "A": [
+        "SessionInfo",
+        {
+          "Meeting": {
+            "Key": 1254,
+            "Name": "Australian Grand Prix",
+            "OfficialName": "FORMULA 1 LOUIS VUITTON AUSTRALIAN GRAND PRIX 2025",
+            "Location": "Melbourne",
+            "Number": 1,
+            "Country": {
+              "Key": 5,
+              "Code": "AUS",
+              "Name": "Australia"
+            },
+            "Circuit": {
+              "Key": 10,
+              "ShortName": "Melbourne"
+            }
+          },
+          "ArchiveStatus": {
+            "Status": "Complete"
+          },
+          "Key": 9687,
+          "Type": "Practice",
+          "Number": 2,
+          "Name": "Practice 2",
+          "StartDate": "2025-03-14T16:00:00",
+          "EndDate": "2025-03-14T17:00:00",
+          "GmtOffset": "11:00:00",
+          "Path": "2025/2025-03-16_Australian_Grand_Prix/2025-03-14_Practice_2/",
+          "_kf": true
+        },
+        "2025-03-14T06:15:07.964Z"
+      ]
+    }
+  ]
+}

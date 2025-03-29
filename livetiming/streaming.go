@@ -323,15 +323,30 @@ func ProcessSessionDataAndInfo(connection *websocket.Conn, dbClient *mongo.Clien
 		}
 		if !isError {
 			meetingDB := convertMeetingToDB(meetingData)
-			var driverInterface []interface{}
-			for _, driver := range drivers {
-				driver.SessionKey = sessionInfo.Key
-				driverInterface = append(driverInterface, driver)
-			}
 			dbClient.Database("f1").Collection("meetingdata").FindOneAndReplace(ctx, bson.D{{"_id", meetingDB.Key}}, meetingDB, options.FindOneAndReplace().SetUpsert(true))
 			dbClient.Database("f1").Collection("sessioninfo").FindOneAndReplace(ctx, bson.D{{"_id", sessionInfo.Key}}, sessionInfo, options.FindOneAndReplace().SetUpsert(true))
-			//_, err = dbClient.Database("f1").Collection("drivers").InsertMany(ctx, driverInterface)
+			saveDrivers(dbClient, ctx, drivers, sessionInfo.Key)
 		}
+	}
+}
+
+func saveDrivers(dbClient *mongo.Client, ctx context.Context, drivers []Driver, sessionKey int) {
+	var driversInterface []interface{}
+	for _, driver := range drivers {
+		driver.SessionKey = sessionKey
+		driverDocToInsert := DriverDocument{
+			ID: DriverID{
+				SessionKey:   sessionKey,
+				RacingNumber: driver.RacingNumber,
+			},
+			Driver: driver,
+		}
+		driversInterface = append(driversInterface, driverDocToInsert)
+	}
+	opts := options.InsertMany().SetOrdered(false)
+	_, err := dbClient.Database("f1").Collection("drivers").InsertMany(ctx, driversInterface, opts)
+	if err != nil {
+		fmt.Printf("error: %v\n", err)
 	}
 }
 

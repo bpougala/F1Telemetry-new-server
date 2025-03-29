@@ -111,6 +111,22 @@ func (r *queryResolver) LapTimes(ctx context.Context, sessionKey int) ([]*model.
 	return timingsInt, nil
 }
 
+// Sectors is the resolver for the sectors field.
+func (r *queryResolver) Sectors(ctx context.Context, sessionKey int) ([]*model.Sector, error) {
+	if err != nil {
+		return nil, err
+	}
+	sectors, err := dataingestor.FetchSectors(dbClient, ctx, sessionKey)
+	if err != nil {
+		return nil, err
+	}
+	var sectorsInt []*model.Sector
+	for _, sector := range sectors {
+		sectorsInt = append(sectorsInt, &sector)
+	}
+	return sectorsInt, nil
+}
+
 // Stints is the resolver for the stints field.
 func (r *queryResolver) Stints(ctx context.Context, sessionKey int) ([]*model.Stint, error) {
 	if err != nil {

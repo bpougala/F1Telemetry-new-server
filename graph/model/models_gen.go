@@ -9,7 +9,6 @@ type CarData struct {
 type Driver struct {
 	SessionKey    int     `json:"session_key"`
 	BroadcastName string  `json:"broadcast_name"`
-	CountryCode   string  `json:"country_code"`
 	FirstName     string  `json:"first_name"`
 	FullName      string  `json:"full_name"`
 	HeadshotURL   string  `json:"headshot_url"`
@@ -122,9 +121,8 @@ type Timing struct {
 	SessionKey              int    `json:"session_key"`
 	Stopped                 bool   `json:"stopped"`
 	Status                  int    `json:"status"`
-	Sectors                 any    `json:"sectors,omitempty"`
 	Retired                 bool   `json:"retired"`
-	RacingNumber            int    `json:"racing_number"`
+	RacingNumber            string `json:"racing_number"`
 	Position                int    `json:"position"`
 	PitOut                  bool   `json:"pitOut"`
 	NumberOfLaps            int    `json:"number_of_laps"`

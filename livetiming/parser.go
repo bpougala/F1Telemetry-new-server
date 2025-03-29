@@ -86,7 +86,6 @@ func BuildDriverList(data []byte) ([]Driver, error) {
 		driver.FirstName = value.FirstName
 		driver.LastName = value.LastName
 		driver.HeadshotUrl = value.HeadshotUrl
-		driver.CountryCode = value.CountryCode
 		drivers = append(drivers, driver)
 	}
 	return drivers, nil

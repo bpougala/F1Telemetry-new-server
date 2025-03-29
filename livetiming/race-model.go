@@ -332,8 +332,17 @@ type Driver struct {
 	FirstName     string `json:"FirstName"`
 	LastName      string `json:"LastName"`
 	HeadshotUrl   string `json:"HeadshotUrl"`
-	CountryCode   string `json:"CountryCode"`
 	SessionKey    int    `json:"SessionKey"`
+}
+
+type DriverID struct {
+	SessionKey   int `bson:"session_key"`
+	RacingNumber int `bson:"racing_number"`
+}
+
+type DriverDocument struct {
+	ID     DriverID `bson:"_id"`
+	Driver `bson:",inline"`
 }
 
 type LapTimeMetric struct {

@@ -39,7 +39,7 @@ func IngestMeetings(year int) ([]collections.Meeting, error) {
 }
 
 func IngestPositionsForDB(sessionKey int) ([]interface{}, error) {
-	uri := "https://livetiming.formula1.com/static/2024/2024-11-23_Las_Vegas_Grand_Prix/2024-11-23_Race/TimingData.json"
+	uri := "https://livetiming.formula1.com/static/2025/2025-02-28_Pre-Season_Testing/2025-02-28_Day_3/TimingData.json"
 	resp, err := http.Get(uri)
 	if err != nil {
 		return nil, err
@@ -76,7 +76,7 @@ func IngestPositionsForDB(sessionKey int) ([]interface{}, error) {
 }
 
 func IngestTimings(sessionKey int) ([]interface{}, error) {
-	uri := "https://livetiming.formula1.com/static/2024/2024-11-23_Las_Vegas_Grand_Prix/2024-11-23_Race/TimingData.json"
+	uri := "https://livetiming.formula1.com/static/2025/2025-02-28_Pre-Season_Testing/2025-02-28_Day_3/TimingData.json"
 	resp, err := http.Get(uri)
 	if err != nil {
 		return nil, err
@@ -104,7 +104,7 @@ func IngestTimings(sessionKey int) ([]interface{}, error) {
 	for _, timingLine := range rawTimings.Lines {
 		var timing collections.Timing
 		timing.SessionKey = sessionKey
-		timing.RacingNumber, _ = strconv.Atoi(timingLine.RacingNumber)
+		timing.RacingNumber = timingLine.RacingNumber
 		timing.Position, _ = strconv.Atoi(timingLine.Position)
 		timing.Stopped = timingLine.Stopped
 		timing.InPit = timingLine.InPit
@@ -131,11 +131,23 @@ func IngestTimings(sessionKey int) ([]interface{}, error) {
 			OverallFastest  bool   `json:"overall_fastest"`
 			PersonalFastest bool   `json:"personal_fastest"`
 		}(timingLine.LastLapTime)
-		timing.GapToLeader = timingLine.GapToLeader
-		timing.IntervalToPositionAhead = struct {
-			Value    string `json:"value"`
-			Catching bool   `json:"catching"`
-		}(timingLine.IntervalToPositionAhead)
+		if timingLine.GapToLeader != nil {
+			timing.GapToLeader = *timingLine.GapToLeader
+		} else {
+			timing.GapToLeader = *timingLine.TimeDiffToFastest
+		}
+		if timingLine.IntervalToPositionAhead != nil {
+			timing.IntervalToPositionAhead = struct {
+				Value    string `json:"value"`
+				Catching bool   `json:"catching"`
+			}(*timingLine.IntervalToPositionAhead)
+		} else {
+			timing.IntervalToPositionAhead = struct {
+				Value    string `json:"value"`
+				Catching bool   `json:"catching"`
+			}{Value: *timingLine.TimeDiffToPositionAhead, Catching: false}
+		}
+
 		timing.Retired = timingLine.Retired
 		timingsInterface = append(timingsInterface, timing)
 	}
@@ -167,15 +179,14 @@ func IngestSession(meetingKey int) ([]collections.Sessions, error) {
 	return sessions, nil
 }
 
-func IngestDrivers(sessionKey int) ([]collections.Driver, error) {
-	uri := fmt.Sprintf("%s/drivers?session_key=%d", BASE_URL, sessionKey)
+func IngestDrivers(sessionKey int) ([]interface{}, error) {
+	uri := "https://livetiming.formula1.com/static/2025/2025-02-28_Pre-Season_Testing/2025-02-28_Day_3/DriverList.json"
 	resp, err := http.Get(uri)
-	var drivers []collections.Driver
 	if err != nil {
-		return drivers, err
+		return nil, err
 	}
 	if resp.StatusCode != 200 {
-		return drivers, fmt.Errorf("error fetching data: %s", resp.Status)
+		return nil, fmt.Errorf("error fetching data: %s", resp.Status)
 	}
 	defer func(Body io.ReadCloser) {
 		err := Body.Close()
@@ -184,16 +195,34 @@ func IngestDrivers(sessionKey int) ([]collections.Driver, error) {
 		}
 	}(resp.Body)
 	body, err := io.ReadAll(resp.Body)
-
-	err = json.Unmarshal(body, &drivers)
+	body = bytes.TrimPrefix(body, []byte("\xef\xbb\xbf"))
+	var initialData map[string]collections.DriverInput
+	err = json.Unmarshal(body, &initialData)
 	if err != nil {
-		return drivers, err
+		return nil, err
 	}
+	var drivers []interface{}
+	for key, value := range initialData {
+		var driver collections.DriverDB
+		driver.RacingNumber, _ = strconv.Atoi(key)
+		driver.BroadcastName = value.BroadcastName
+		driver.FullName = value.FullName
+		driver.Abbreviation = value.Abbreviation
+		driver.CountryCode = value.CountryCode
+		driver.FirstName = value.FirstName
+		driver.LastName = value.LastName
+		driver.HeadshotUrl = value.HeadshotUrl
+		driver.TeamName = value.TeamName
+		driver.TeamColour = value.TeamColour
+		driver.SessionKey = sessionKey
+		drivers = append(drivers, driver)
+	}
+
 	return drivers, nil
 }
 
 func IngestPositions(sessionKey int) ([]collections.Position, error) {
-	uri := fmt.Sprintf("%s/position?session_key=%d", BASE_URL, sessionKey)
+	uri := "https://livetiming.formula1.com/static/2025/2025-02-28_Pre-Season_Testing/2025-02-28_Day_3/DriverList.json"
 	resp, err := http.Get(uri)
 	var positions []collections.Position
 	if err != nil {
@@ -233,7 +262,7 @@ type RaceControlMessages struct {
 }
 
 func IngestRaceControl(sessionKey int) ([]interface{}, error) {
-	uri := "https://livetiming.formula1.com/static/2024/2024-11-23_Las_Vegas_Grand_Prix/2024-11-23_Race/RaceControlMessages.json"
+	uri := "https://livetiming.formula1.com/static/2025/2025-02-28_Pre-Season_Testing/2025-02-28_Day_3/RaceControlMessages.json"
 	resp, err := http.Get(uri)
 	if err != nil {
 		return nil, err

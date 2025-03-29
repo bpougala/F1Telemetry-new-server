@@ -2,6 +2,7 @@ package data_ingestor
 
 import (
 	"context"
+	"fmt"
 	"os"
 
 	"go.mongodb.org/mongo-driver/bson"
@@ -9,7 +10,15 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
-var uri = os.Getenv("MONGO_CONNECTION_URL")
+var uri string
+
+func init() {
+	uri = os.Getenv("MONGO_CONNECTION_URL")
+	if uri == "" {
+		fmt.Println("default database used")
+		uri = "mongodb://localhost:27017/f1"
+	}
+}
 
 func GetMongoClient(ctx *context.Context) (*mongo.Client, error) {
 	serverAPI := options.ServerAPI(options.ServerAPIVersion1)

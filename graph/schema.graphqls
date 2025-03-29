@@ -1,6 +1,3 @@
-# GraphQL schema example
-#
-# https://gqlgen.com/getting-started/
 
 scalar Any
 
@@ -11,6 +8,7 @@ type Query {
   positions(session_key: Int!): [Position]!
   raceControl(session_key: Int!): [RaceControl]!
   lapTimes(session_key: Int!): [Timing]!
+  sectors(session_key: Int!): [Sector]!
   stints(session_key: Int!): [Stint]!
 }
 
@@ -47,7 +45,6 @@ type Meeting {
 type Driver {
   session_key:   Int!
   broadcast_name: String!
-  country_code:   String!
   first_name: String!
   full_name: String!
   headshot_url:   String!
@@ -137,9 +134,8 @@ type Timing {
   session_key: Int!
   stopped: Boolean!
   status: Int!
-  sectors: Any
   retired: Boolean!
-  racing_number: Int!
+  racing_number: String!
   position: Int!
   pitOut: Boolean!
   number_of_laps: Int!

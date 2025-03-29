@@ -85,7 +85,6 @@ func FetchDrivers(dbClient *mongo.Client, ctx context.Context, sessionKey int) (
 			FullName:      rawDriver.FullName,
 			HeadshotURL:   rawDriver.HeadshotUrl,
 			BroadcastName: rawDriver.BroadcastName,
-			CountryCode:   rawDriver.CountryCode,
 		}
 		drivers = append(drivers, driver)
 	}
@@ -117,6 +116,19 @@ func FetchStints(dbClient *mongo.Client, ctx context.Context, sessionKey int) ([
 		stints = append(stints, stint)
 	}
 	return stints, nil
+}
+
+func FetchSectors(dbClient *mongo.Client, ctx context.Context, sessionKey int) ([]model.Sector, error) {
+	cursor, err := dbClient.Database("f1").Collection("sectors").Find(ctx, bson.D{{"sessionkey", sessionKey}})
+	if err != nil {
+		return nil, err
+	}
+	var sectors []model.Sector
+	err = cursor.All(ctx, &sectors)
+	if err != nil {
+		return nil, err
+	}
+	return sectors, nil
 }
 
 func FetchPositions(dbClient *mongo.Client, ctx context.Context, sessionKey int) ([]model.Position, error) {
@@ -157,7 +169,6 @@ func FetchTimings(dbClient *mongo.Client, ctx context.Context, sessionKey int) (
 			SessionKey:              rawTiming.SessionKey,
 			Stopped:                 rawTiming.Stopped,
 			Status:                  rawTiming.Status,
-			Sectors:                 rawTiming.Sectors,
 			Retired:                 rawTiming.Retired,
 			RacingNumber:            rawTiming.RacingNumber,
 			Position:                rawTiming.Position,

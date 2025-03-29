@@ -457,7 +457,6 @@ func TestShouldCreateDriverList(t *testing.T) {
 		FirstName:     "Max",
 		LastName:      "Verstappen",
 		HeadshotUrl:   "https://media.formula1.com/d_driver_fallback_image.png/content/dam/fom-website/drivers/M/MAXVER01_Max_Verstappen/maxver01.png.transform/1col/image.png",
-		CountryCode:   "NED",
 	}
 	server := httptest.NewServer(http.HandlerFunc(serverSendingDriverList))
 	url := "ws" + strings.TrimPrefix(server.URL, "http")

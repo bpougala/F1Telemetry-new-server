@@ -55,7 +55,6 @@ type ComplexityRoot struct {
 	Driver struct {
 		Abbreviation  func(childComplexity int) int
 		BroadcastName func(childComplexity int) int
-		CountryCode   func(childComplexity int) int
 		FirstName     func(childComplexity int) int
 		FullName      func(childComplexity int) int
 		HeadshotURL   func(childComplexity int) int
@@ -117,6 +116,7 @@ type ComplexityRoot struct {
 		Meetings    func(childComplexity int) int
 		Positions   func(childComplexity int, sessionKey int) int
 		RaceControl func(childComplexity int, sessionKey int) int
+		Sectors     func(childComplexity int, sessionKey int) int
 		Sessions    func(childComplexity int, meetingKeys []*int) int
 		Stints      func(childComplexity int, sessionKey int) int
 	}
@@ -188,7 +188,6 @@ type ComplexityRoot struct {
 		Position                func(childComplexity int) int
 		RacingNumber            func(childComplexity int) int
 		Retired                 func(childComplexity int) int
-		Sectors                 func(childComplexity int) int
 		SessionKey              func(childComplexity int) int
 		Status                  func(childComplexity int) int
 		Stopped                 func(childComplexity int) int
@@ -202,6 +201,7 @@ type QueryResolver interface {
 	Positions(ctx context.Context, sessionKey int) ([]*model.Position, error)
 	RaceControl(ctx context.Context, sessionKey int) ([]*model.RaceControl, error)
 	LapTimes(ctx context.Context, sessionKey int) ([]*model.Timing, error)
+	Sectors(ctx context.Context, sessionKey int) ([]*model.Sector, error)
 	Stints(ctx context.Context, sessionKey int) ([]*model.Stint, error)
 }
 type SubscriptionResolver interface {
@@ -252,13 +252,6 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Driver.BroadcastName(childComplexity), true
-
-	case "Driver.country_code":
-		if e.complexity.Driver.CountryCode == nil {
-			break
-		}
-
-		return e.complexity.Driver.CountryCode(childComplexity), true
 
 	case "Driver.first_name":
 		if e.complexity.Driver.FirstName == nil {
@@ -601,6 +594,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Query.RaceControl(childComplexity, args["session_key"].(int)), true
+
+	case "Query.sectors":
+		if e.complexity.Query.Sectors == nil {
+			break
+		}
+
+		args, err := ec.field_Query_sectors_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.Sectors(childComplexity, args["session_key"].(int)), true
 
 	case "Query.sessions":
 		if e.complexity.Query.Sessions == nil {
@@ -962,13 +967,6 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Timing.Retired(childComplexity), true
 
-	case "Timing.sectors":
-		if e.complexity.Timing.Sectors == nil {
-			break
-		}
-
-		return e.complexity.Timing.Sectors(childComplexity), true
-
 	case "Timing.session_key":
 		if e.complexity.Timing.SessionKey == nil {
 			break
@@ -1230,6 +1228,29 @@ func (ec *executionContext) field_Query_raceControl_argsSessionKey(
 	return zeroVal, nil
 }
 
+func (ec *executionContext) field_Query_sectors_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	arg0, err := ec.field_Query_sectors_argsSessionKey(ctx, rawArgs)
+	if err != nil {
+		return nil, err
+	}
+	args["session_key"] = arg0
+	return args, nil
+}
+func (ec *executionContext) field_Query_sectors_argsSessionKey(
+	ctx context.Context,
+	rawArgs map[string]interface{},
+) (int, error) {
+	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("session_key"))
+	if tmp, ok := rawArgs["session_key"]; ok {
+		return ec.unmarshalNInt2int(ctx, tmp)
+	}
+
+	var zeroVal int
+	return zeroVal, nil
+}
+
 func (ec *executionContext) field_Query_sessions_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
@@ -1450,50 +1471,6 @@ func (ec *executionContext) _Driver_broadcast_name(ctx context.Context, field gr
 }
 
 func (ec *executionContext) fieldContext_Driver_broadcast_name(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Driver",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type String does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _Driver_country_code(ctx context.Context, field graphql.CollectedField, obj *model.Driver) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Driver_country_code(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.CountryCode, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(string)
-	fc.Result = res
-	return ec.marshalNString2string(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_Driver_country_code(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Driver",
 		Field:      field,
@@ -3446,8 +3423,6 @@ func (ec *executionContext) fieldContext_Query_drivers(ctx context.Context, fiel
 				return ec.fieldContext_Driver_session_key(ctx, field)
 			case "broadcast_name":
 				return ec.fieldContext_Driver_broadcast_name(ctx, field)
-			case "country_code":
-				return ec.fieldContext_Driver_country_code(ctx, field)
 			case "first_name":
 				return ec.fieldContext_Driver_first_name(ctx, field)
 			case "full_name":
@@ -3659,8 +3634,6 @@ func (ec *executionContext) fieldContext_Query_lapTimes(ctx context.Context, fie
 				return ec.fieldContext_Timing_stopped(ctx, field)
 			case "status":
 				return ec.fieldContext_Timing_status(ctx, field)
-			case "sectors":
-				return ec.fieldContext_Timing_sectors(ctx, field)
 			case "retired":
 				return ec.fieldContext_Timing_retired(ctx, field)
 			case "racing_number":
@@ -3693,6 +3666,75 @@ func (ec *executionContext) fieldContext_Query_lapTimes(ctx context.Context, fie
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
 	if fc.Args, err = ec.field_Query_lapTimes_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Query_sectors(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Query_sectors(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Query().Sectors(rctx, fc.Args["session_key"].(int))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]*model.Sector)
+	fc.Result = res
+	return ec.marshalNSector2ᚕᚖF1TelemetryᚑnewᚑserverᚋgraphᚋmodelᚐSector(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Query_sectors(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "racing_number":
+				return ec.fieldContext_Sector_racing_number(ctx, field)
+			case "sector_number":
+				return ec.fieldContext_Sector_sector_number(ctx, field)
+			case "value":
+				return ec.fieldContext_Sector_value(ctx, field)
+			case "overall_fastest":
+				return ec.fieldContext_Sector_overall_fastest(ctx, field)
+			case "personal_fastest":
+				return ec.fieldContext_Sector_personal_fastest(ctx, field)
+			case "utc":
+				return ec.fieldContext_Sector_utc(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Sector", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Query_sectors_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return fc, err
 	}
@@ -5852,47 +5894,6 @@ func (ec *executionContext) fieldContext_Timing_status(_ context.Context, field 
 	return fc, nil
 }
 
-func (ec *executionContext) _Timing_sectors(ctx context.Context, field graphql.CollectedField, obj *model.Timing) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Timing_sectors(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.Sectors, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		return graphql.Null
-	}
-	res := resTmp.(any)
-	fc.Result = res
-	return ec.marshalOAny2interface(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_Timing_sectors(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Timing",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type Any does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
 func (ec *executionContext) _Timing_retired(ctx context.Context, field graphql.CollectedField, obj *model.Timing) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Timing_retired(ctx, field)
 	if err != nil {
@@ -5963,9 +5964,9 @@ func (ec *executionContext) _Timing_racing_number(ctx context.Context, field gra
 		}
 		return graphql.Null
 	}
-	res := resTmp.(int)
+	res := resTmp.(string)
 	fc.Result = res
-	return ec.marshalNInt2int(ctx, field.Selections, res)
+	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Timing_racing_number(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -5975,7 +5976,7 @@ func (ec *executionContext) fieldContext_Timing_racing_number(_ context.Context,
 		IsMethod:   false,
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type Int does not have child fields")
+			return nil, errors.New("field of type String does not have child fields")
 		},
 	}
 	return fc, nil
@@ -8165,11 +8166,6 @@ func (ec *executionContext) _Driver(ctx context.Context, sel ast.SelectionSet, o
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
-		case "country_code":
-			out.Values[i] = ec._Driver_country_code(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				out.Invalids++
-			}
 		case "first_name":
 			out.Values[i] = ec._Driver_first_name(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
@@ -8637,6 +8633,28 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 			}
 
 			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
+		case "sectors":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_sectors(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx,
+					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
 		case "stints":
 			field := field
 
@@ -9061,8 +9079,6 @@ func (ec *executionContext) _Timing(ctx context.Context, sel ast.SelectionSet, o
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
-		case "sectors":
-			out.Values[i] = ec._Timing_sectors(ctx, field, obj)
 		case "retired":
 			out.Values[i] = ec._Timing_retired(ctx, field, obj)
 			if out.Values[i] == graphql.Null {

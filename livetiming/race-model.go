@@ -73,7 +73,7 @@ type PositionLine struct {
 
 type Position struct {
 	SessionKey   int  `json:"SessionKey"`
-	RacingNumber int  `json:"DriverNumber"`
+	RacingNumber int  `json:"RacingNumber"`
 	Position     int  `json:"Position"`
 	Retired      bool `json:"Retired"`
 	InPit        bool `json:"InPit"`
@@ -397,6 +397,7 @@ type RaceControl struct {
 	Flag       string `json:"flag"`
 	Scope      string `json:"scope"`
 	Message    string `json:"message"`
+	LapNumber  *int   `json:"lapnumber"`
 }
 
 type RawRaceControl struct {

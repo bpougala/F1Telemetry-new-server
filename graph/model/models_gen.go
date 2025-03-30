@@ -2,6 +2,10 @@
 
 package model
 
+import (
+	"time"
+)
+
 type CarData struct {
 	Compressed string `json:"compressed"`
 }
@@ -39,13 +43,13 @@ type Lap struct {
 }
 
 type LapTime struct {
-	SessionKey              int     `json:"session_key"`
-	RacingNumber            string  `json:"racing_number"`
-	NumberOfLaps            int     `json:"number_of_laps"`
-	BestLapTime             any     `json:"best_lap_time,omitempty"`
-	LastLapTime             *Time   `json:"last_lap_time"`
-	GapToLeader             *string `json:"gap_to_leader,omitempty"`
-	IntervalToPositionAhead any     `json:"interval_to_position_ahead,omitempty"`
+	SessionKey              int      `json:"session_key"`
+	RacingNumber            string   `json:"racing_number"`
+	NumberOfLaps            int      `json:"number_of_laps"`
+	BestLapTime             any      `json:"best_lap_time,omitempty"`
+	LastLapTime             *TimeRef `json:"last_lap_time"`
+	GapToLeader             *string  `json:"gap_to_leader,omitempty"`
+	IntervalToPositionAhead any      `json:"interval_to_position_ahead,omitempty"`
 }
 
 type Meeting struct {
@@ -77,12 +81,12 @@ type RaceControl struct {
 }
 
 type Sector struct {
-	RacingNumber    int     `json:"racing_number"`
-	SectorNumber    int     `json:"sector_number"`
-	Value           string  `json:"value"`
-	OverallFastest  bool    `json:"overall_fastest"`
-	PersonalFastest bool    `json:"personal_fastest"`
-	Utc             *string `json:"utc,omitempty"`
+	RacingNumber    int        `json:"racing_number"`
+	SectorNumber    int        `json:"sector_number"`
+	Value           string     `json:"value"`
+	OverallFastest  bool       `json:"overall_fastest"`
+	PersonalFastest bool       `json:"personal_fastest"`
+	Utc             *time.Time `json:"utc,omitempty"`
 }
 
 type Session struct {
@@ -111,7 +115,7 @@ type Stint struct {
 type Subscription struct {
 }
 
-type Time struct {
+type TimeRef struct {
 	Value           string `json:"value"`
 	OverallFastest  bool   `json:"overallFastest"`
 	PersonalFastest bool   `json:"personalFastest"`

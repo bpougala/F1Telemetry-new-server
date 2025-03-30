@@ -13,6 +13,7 @@ import (
 	"strconv"
 	"sync"
 	"sync/atomic"
+	"time"
 
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/99designs/gqlgen/graphql/introspection"
@@ -171,7 +172,7 @@ type ComplexityRoot struct {
 		Stints      func(childComplexity int) int
 	}
 
-	Time struct {
+	TimeRef struct {
 		OverallFastest  func(childComplexity int) int
 		PersonalFastest func(childComplexity int) int
 		Value           func(childComplexity int) int
@@ -876,26 +877,26 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Subscription.Stints(childComplexity), true
 
-	case "Time.overallFastest":
-		if e.complexity.Time.OverallFastest == nil {
+	case "TimeRef.overallFastest":
+		if e.complexity.TimeRef.OverallFastest == nil {
 			break
 		}
 
-		return e.complexity.Time.OverallFastest(childComplexity), true
+		return e.complexity.TimeRef.OverallFastest(childComplexity), true
 
-	case "Time.personalFastest":
-		if e.complexity.Time.PersonalFastest == nil {
+	case "TimeRef.personalFastest":
+		if e.complexity.TimeRef.PersonalFastest == nil {
 			break
 		}
 
-		return e.complexity.Time.PersonalFastest(childComplexity), true
+		return e.complexity.TimeRef.PersonalFastest(childComplexity), true
 
-	case "Time.value":
-		if e.complexity.Time.Value == nil {
+	case "TimeRef.value":
+		if e.complexity.TimeRef.Value == nil {
 			break
 		}
 
-		return e.complexity.Time.Value(childComplexity), true
+		return e.complexity.TimeRef.Value(childComplexity), true
 
 	case "Timing.best_lap_time":
 		if e.complexity.Timing.BestLapTime == nil {
@@ -2699,9 +2700,9 @@ func (ec *executionContext) _LapTime_last_lap_time(ctx context.Context, field gr
 		}
 		return graphql.Null
 	}
-	res := resTmp.(*model.Time)
+	res := resTmp.(*model.TimeRef)
 	fc.Result = res
-	return ec.marshalNTime2ᚖF1TelemetryᚑnewᚑserverᚋgraphᚋmodelᚐTime(ctx, field.Selections, res)
+	return ec.marshalNTimeRef2ᚖF1TelemetryᚑnewᚑserverᚋgraphᚋmodelᚐTimeRef(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_LapTime_last_lap_time(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -2713,13 +2714,13 @@ func (ec *executionContext) fieldContext_LapTime_last_lap_time(_ context.Context
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			switch field.Name {
 			case "value":
-				return ec.fieldContext_Time_value(ctx, field)
+				return ec.fieldContext_TimeRef_value(ctx, field)
 			case "overallFastest":
-				return ec.fieldContext_Time_overallFastest(ctx, field)
+				return ec.fieldContext_TimeRef_overallFastest(ctx, field)
 			case "personalFastest":
-				return ec.fieldContext_Time_personalFastest(ctx, field)
+				return ec.fieldContext_TimeRef_personalFastest(ctx, field)
 			}
-			return nil, fmt.Errorf("no field named %q was found under type Time", field.Name)
+			return nil, fmt.Errorf("no field named %q was found under type TimeRef", field.Name)
 		},
 	}
 	return fc, nil
@@ -4440,9 +4441,9 @@ func (ec *executionContext) _Sector_utc(ctx context.Context, field graphql.Colle
 	if resTmp == nil {
 		return graphql.Null
 	}
-	res := resTmp.(*string)
+	res := resTmp.(*time.Time)
 	fc.Result = res
-	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+	return ec.marshalOTime2ᚖtimeᚐTime(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Sector_utc(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -4452,7 +4453,7 @@ func (ec *executionContext) fieldContext_Sector_utc(_ context.Context, field gra
 		IsMethod:   false,
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type String does not have child fields")
+			return nil, errors.New("field of type Time does not have child fields")
 		},
 	}
 	return fc, nil
@@ -5630,8 +5631,8 @@ func (ec *executionContext) fieldContext_Subscription_sectors(_ context.Context,
 	return fc, nil
 }
 
-func (ec *executionContext) _Time_value(ctx context.Context, field graphql.CollectedField, obj *model.Time) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Time_value(ctx, field)
+func (ec *executionContext) _TimeRef_value(ctx context.Context, field graphql.CollectedField, obj *model.TimeRef) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_TimeRef_value(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -5661,9 +5662,9 @@ func (ec *executionContext) _Time_value(ctx context.Context, field graphql.Colle
 	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_Time_value(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_TimeRef_value(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
-		Object:     "Time",
+		Object:     "TimeRef",
 		Field:      field,
 		IsMethod:   false,
 		IsResolver: false,
@@ -5674,8 +5675,8 @@ func (ec *executionContext) fieldContext_Time_value(_ context.Context, field gra
 	return fc, nil
 }
 
-func (ec *executionContext) _Time_overallFastest(ctx context.Context, field graphql.CollectedField, obj *model.Time) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Time_overallFastest(ctx, field)
+func (ec *executionContext) _TimeRef_overallFastest(ctx context.Context, field graphql.CollectedField, obj *model.TimeRef) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_TimeRef_overallFastest(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -5705,9 +5706,9 @@ func (ec *executionContext) _Time_overallFastest(ctx context.Context, field grap
 	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_Time_overallFastest(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_TimeRef_overallFastest(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
-		Object:     "Time",
+		Object:     "TimeRef",
 		Field:      field,
 		IsMethod:   false,
 		IsResolver: false,
@@ -5718,8 +5719,8 @@ func (ec *executionContext) fieldContext_Time_overallFastest(_ context.Context, 
 	return fc, nil
 }
 
-func (ec *executionContext) _Time_personalFastest(ctx context.Context, field graphql.CollectedField, obj *model.Time) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Time_personalFastest(ctx, field)
+func (ec *executionContext) _TimeRef_personalFastest(ctx context.Context, field graphql.CollectedField, obj *model.TimeRef) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_TimeRef_personalFastest(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -5749,9 +5750,9 @@ func (ec *executionContext) _Time_personalFastest(ctx context.Context, field gra
 	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_Time_personalFastest(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_TimeRef_personalFastest(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
-		Object:     "Time",
+		Object:     "TimeRef",
 		Field:      field,
 		IsMethod:   false,
 		IsResolver: false,
@@ -9004,29 +9005,29 @@ func (ec *executionContext) _Subscription(ctx context.Context, sel ast.Selection
 	}
 }
 
-var timeImplementors = []string{"Time"}
+var timeRefImplementors = []string{"TimeRef"}
 
-func (ec *executionContext) _Time(ctx context.Context, sel ast.SelectionSet, obj *model.Time) graphql.Marshaler {
-	fields := graphql.CollectFields(ec.OperationContext, sel, timeImplementors)
+func (ec *executionContext) _TimeRef(ctx context.Context, sel ast.SelectionSet, obj *model.TimeRef) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, timeRefImplementors)
 
 	out := graphql.NewFieldSet(fields)
 	deferred := make(map[string]*graphql.FieldSet)
 	for i, field := range fields {
 		switch field.Name {
 		case "__typename":
-			out.Values[i] = graphql.MarshalString("Time")
+			out.Values[i] = graphql.MarshalString("TimeRef")
 		case "value":
-			out.Values[i] = ec._Time_value(ctx, field, obj)
+			out.Values[i] = ec._TimeRef_value(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
 		case "overallFastest":
-			out.Values[i] = ec._Time_overallFastest(ctx, field, obj)
+			out.Values[i] = ec._TimeRef_overallFastest(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
 		case "personalFastest":
-			out.Values[i] = ec._Time_personalFastest(ctx, field, obj)
+			out.Values[i] = ec._TimeRef_personalFastest(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
@@ -9858,14 +9859,14 @@ func (ec *executionContext) marshalNString2string(ctx context.Context, sel ast.S
 	return res
 }
 
-func (ec *executionContext) marshalNTime2ᚖF1TelemetryᚑnewᚑserverᚋgraphᚋmodelᚐTime(ctx context.Context, sel ast.SelectionSet, v *model.Time) graphql.Marshaler {
+func (ec *executionContext) marshalNTimeRef2ᚖF1TelemetryᚑnewᚑserverᚋgraphᚋmodelᚐTimeRef(ctx context.Context, sel ast.SelectionSet, v *model.TimeRef) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
 		}
 		return graphql.Null
 	}
-	return ec._Time(ctx, sel, v)
+	return ec._TimeRef(ctx, sel, v)
 }
 
 func (ec *executionContext) marshalNTiming2ᚕᚖF1TelemetryᚑnewᚑserverᚋgraphᚋmodelᚐTiming(ctx context.Context, sel ast.SelectionSet, v []*model.Timing) graphql.Marshaler {
@@ -10334,6 +10335,22 @@ func (ec *executionContext) marshalOString2ᚖstring(ctx context.Context, sel as
 		return graphql.Null
 	}
 	res := graphql.MarshalString(*v)
+	return res
+}
+
+func (ec *executionContext) unmarshalOTime2ᚖtimeᚐTime(ctx context.Context, v interface{}) (*time.Time, error) {
+	if v == nil {
+		return nil, nil
+	}
+	res, err := graphql.UnmarshalTime(v)
+	return &res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalOTime2ᚖtimeᚐTime(ctx context.Context, sel ast.SelectionSet, v *time.Time) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	res := graphql.MarshalTime(*v)
 	return res
 }
 

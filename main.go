@@ -3,10 +3,11 @@ package main
 import (
 	"F1Telemetry-new-server/data-ingestor"
 	"F1Telemetry-new-server/data-ingestor/collections"
+	"F1Telemetry-new-server/livetiming"
 	"context"
 	"fmt"
 	"go.mongodb.org/mongo-driver/bson"
-	"go.mongodb.org/mongo-driver/mongo"
+	"log"
 	"time"
 )
 
@@ -139,22 +140,6 @@ func saveDrivers(drivers []collections.Driver) error {
 	return nil
 }
 
-func createIndex() error {
-	if err != nil {
-		return err
-	}
-	var _, err = dbClient.Database("f1").Collection("drivers").Indexes().CreateOne(ctx, mongo.IndexModel{
-		Keys: bson.D{{"sessionkey", 1}},
-	})
-	if err != nil {
-		return err
-	}
-	_, err = dbClient.Database("f1").Collection("positions").Indexes().CreateOne(ctx, mongo.IndexModel{
-		Keys: bson.D{{"sessionkey", 1}},
-	})
-	return err
-}
-
 func SaveRaceControl(raceControl []collections.RaceControl) error {
 	if err != nil {
 		return err
@@ -272,39 +257,108 @@ func FetchSessions(meetingKey int) ([]collections.Sessions, error) {
 	return sessions, nil
 }
 
-func mainBis() {
+type StintData struct {
+	Lines map[string]struct {
+		RacingNumber string                `json:"RacingNumber"`
+		Stints       []livetiming.RawStint `json:"Stints"`
+		Line         int                   `json:"Line"`
+		GridPos      string                `json:"GridPos"`
+	} `json:"Lines"`
+}
+
+type DriverData struct {
+	Drivers map[string]collections.Driver
+}
+
+func mainBisBis() {
+	if err != nil {
+		log.Fatalf("Failed to connect to MongoDB: %s", err)
+	}
+	drivers, err := data_ingestor.IngestRaceControl(9685)
+	if err != nil {
+		log.Fatalf("Failed to ingest drivers: %s", err)
+	}
+	_, err = dbClient.Database("f1").Collection("racecontrol").InsertMany(ctx, drivers)
+	if err != nil {
+		log.Fatalf("Failed to save drivers: %s", err)
+	}
+	/*file, err := os.Open("test.json")
+	if err != nil {
+		log.Fatalf("Failed to open file: %s", err)
+	}
+	defer file.Close()
+
+	// Read the file content
+	byteValue, err := ioutil.ReadAll(file)
+	if err != nil {
+		log.Fatalf("Failed to read file: %s", err)
+	}
+	var initialData map[string]collections.DriverInput
+	err = json.Unmarshal(byteValue, &initialData)
 	if err != nil {
 		panic(err)
 	}
-	meetings, err := FetchMeetings()
+	var drivers []interface{}
+	for key, value := range initialData {
+		var driver collections.DriverDB
+		driver.RacingNumber, _ = strconv.Atoi(key)
+		driver.BroadcastName = value.BroadcastName
+		driver.FullName = value.FullName
+		driver.Abbreviation = value.Abbreviation
+		driver.CountryCode = value.CountryCode
+		driver.FirstName = value.FirstName
+		driver.LastName = value.LastName
+		driver.HeadshotUrl = value.HeadshotUrl
+		driver.TeamName = value.TeamName
+		driver.TeamColour = value.TeamColour
+		driver.SessionKey = 9644
+		drivers = append(drivers, driver)
+	}
+	_, err = dbClient.Database("f1").Collection("drivers").InsertMany(ctx, drivers)
 	if err != nil {
 		panic(err)
-	}
-	for _, meeting := range meetings {
-		sessions, err := FetchSessions(meeting.MeetingKey)
+	}*/
+	/*var stints []interface{}
+	for _, value := range initialData.Lines {
+		var stint livetiming.Stint
+		stint.RacingNumber, _ = strconv.Atoi(value.RacingNumber)
+		stint.SessionKey = 9644
+		for count, rawStint := range value.Stints {
+			stint.StintNumber = count
+			stint.Compound = rawStint.Compound
+			stint.LapFlags = rawStint.LapFlags
+			stint.New, _ = strconv.ParseBool(rawStint.New)
+			stint.StartLaps = rawStint.StartLaps
+			stint.TotalLaps = rawStint.TotalLaps
+			stint.TyresNotChanged, _ = strconv.Atoi(rawStint.TyresNotChanged)
+			stint.Timestamp = rawStint.Timestamp
+			stints = append(stints, stint)
+		}
+	}*/
+
+	/*	var raceControlInt []interface{}
+			for _, raceControlMessage := range data.Messages {
+				raceControlMessage.SessionKey = 9662
+				raceControlInt = append(raceControlInt, raceControlMessage)
+			}
+			_, err = dbClient.Database("f1").Collection("racecontrol").InsertMany(ctx, raceControlInt)
+		_, err = dbClient.Database("f1").Collection("stints").InsertMany(ctx, stints)
 		if err != nil {
-			fmt.Printf("error fetching sessions: %s, meeting key: %d\n", err.Error(), meeting.MeetingKey)
 			panic(err)
 		}
-		for _, session := range sessions {
-			intervals, err := data_ingestor.IngestIntervals(session.SessionKey)
-			if err != nil {
-				fmt.Printf("error fetching intervals: %s, session key: %d\n", err.Error(), session.SessionKey)
-				panic(err)
-			}
-			err = SaveIntervals(intervals)
-			if err != nil {
-				fmt.Printf("error in SaveIntervals: %s, session key: %d\n", err.Error(), session.SessionKey)
-				panic(err)
-			}
+		_, err = dbClient.Database("f1").Collection("cardata").Indexes().CreateOne(ctx, mongo.IndexModel{
+			Keys: bson.D{{"sessionkey", 1}},
+		})
+		if err != nil {
+			panic(err)
 		}
-	}
-	_, err = dbClient.Database("f1").Collection("intervals").Indexes().CreateOne(ctx, mongo.IndexModel{
-		Keys: bson.D{{"sessionkey", 1}},
-	})
-	if err != nil {
-		panic(err)
-	}
+		/*_, err = dbClient.Database("f1").Collection("cardata").Indexes().CreateOne(ctx, mongo.IndexModel{
+			Keys: bson.D{{"sessionkey", 1}},
+		})
+		if err != nil {
+			panic(err)
+		}*/
+	fmt.Println("done!")
 }
 
 /*sessions, err := FetchSessions(1229)
@@ -318,14 +372,14 @@ func mainBis() {
 		fmt.Printf("error fetching drivers: %s, session key: %d\n", err.Error(), sessionKey)
 	}
 	for _, driver := range drivers {
-		carDataMessages, err := data_ingestor.IngestCarData(sessionKey, driver.DriverNumber)
+		carDataMessages, err := data_ingestor.IngestCarData(sessionKey, driver.RacingNumber)
 		if err != nil {
-			fmt.Printf("error fetching car data: %s, session key: %d, driver number: %d\n", err.Error(), sessionKey, driver.DriverNumber)
+			fmt.Printf("error fetching car data: %s, session key: %d, driver number: %d\n", err.Error(), sessionKey, driver.RacingNumber)
 		}
 		//err = SaveRaceControl(raceControlMessages)
 		err = SaveCarData(carDataMessages)
 		if err != nil {
-			fmt.Printf("error in SaveCarData: %s, session key: %d, driver number: %d\n", err.Error(), sessionKey, driver.DriverNumber)
+			fmt.Printf("error in SaveCarData: %s, session key: %d, driver number: %d\n", err.Error(), sessionKey, driver.RacingNumber)
 		}
 		time.Sleep(8 * time.Second)
 		//raceControlMessages, err := data_ingestor.IngestRaceControl(9466)

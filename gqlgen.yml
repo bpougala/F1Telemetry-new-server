@@ -100,3 +100,5 @@ models:
   GapToLeader:
     model:
       - F1Telemetry-new-server/graph/model.GapToLeader
+  Time:
+    model: github.com/99designs/gqlgen/graphql.Time

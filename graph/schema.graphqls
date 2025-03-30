@@ -1,6 +1,9 @@
 
 scalar Any
 
+scalar Time
+
+
 type Query {
   meetings: [Meeting]!
   sessions(meeting_keys: [Int]!): [Session]!
@@ -94,12 +97,12 @@ type LapTime {
   racing_number: String!
   number_of_laps: Int!
   best_lap_time: Any
-  last_lap_time: Time!
+  last_lap_time: TimeRef!
   gap_to_leader: String
   interval_to_position_ahead: Any
 }
 
-type Time {
+type TimeRef {
   value: String!
   overallFastest: Boolean!
   personalFastest: Boolean!
@@ -127,7 +130,7 @@ type Sector {
   value: String!
   overall_fastest: Boolean!
   personal_fastest: Boolean!
-  utc: String
+  utc: Time
 }
 
 type Timing {

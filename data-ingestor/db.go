@@ -32,5 +32,40 @@ func GetMongoClient(ctx *context.Context) (*mongo.Client, error) {
 	if err != nil {
 		return nil, err
 	}
-	return client, nil
+	err = createIndices(client, *ctx)
+	return client, err
+}
+
+func createIndices(dbClient *mongo.Client, ctx context.Context) error {
+	var _, err = dbClient.Database("f1").Collection("drivers").Indexes().CreateOne(ctx, mongo.IndexModel{
+		Keys: bson.D{{"sessionkey", 1}},
+	})
+	if err != nil {
+		return err
+	}
+	_, err = dbClient.Database("f1").Collection("positions").Indexes().CreateOne(ctx, mongo.IndexModel{
+		Keys: bson.D{{"sessionkey", 1}},
+	})
+	if err != nil {
+		return err
+	}
+	_, err = dbClient.Database("f1").Collection("racecontrol").Indexes().CreateOne(ctx, mongo.IndexModel{
+		Keys: bson.D{{"sessionkey", 1}},
+	})
+	if err != nil {
+		return err
+	}
+	_, err = dbClient.Database("f1").Collection("stints").Indexes().CreateOne(ctx, mongo.IndexModel{
+		Keys: bson.D{{"sessionkey", 1}},
+	})
+	if err != nil {
+		return err
+	}
+	_, err = dbClient.Database("f1").Collection("sectors").Indexes().CreateOne(ctx, mongo.IndexModel{
+		Keys: bson.D{{"sessionkey", 1}},
+	})
+	if err != nil {
+		return err
+	}
+	return err
 }

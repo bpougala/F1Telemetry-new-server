@@ -53,7 +53,7 @@ func reader(socketConnection *websocket.Conn) {
 		// read in a message
 		messageType, p, err := socketConnection.ReadMessage()
 		if err != nil {
-			fmt.Println(err)
+			fmt.Println("err", err)
 			return
 		}
 		fmt.Printf("message type: %d\nMessage: %s\n", messageType, string(p))
@@ -80,7 +80,7 @@ func Negotiate() ([]*http.Cookie, Connection, error) {
 	defer func(body io.ReadCloser) {
 		err := body.Close()
 		if err != nil {
-			fmt.Println(err)
+			fmt.Println("error defer func", err)
 		}
 	}(resp.Body)
 	body, err := io.ReadAll(resp.Body)
@@ -204,14 +204,17 @@ func ProcessSessionDataAndInfo(connection *websocket.Conn, dbClient *mongo.Clien
 		meetingData, err := BuildMeetingData(message)
 		if err != nil {
 			isError = true
+			meetingDB := convertMeetingToDB(meetingData)
+			dbClient.Database("f1").Collection("meetingdata").FindOneAndReplace(ctx, bson.D{{"_id", meetingDB.Key}}, meetingDB, options.FindOneAndReplace().SetUpsert(true))
 		}
 		sessionInfo, err := BuildSessionInfo(message)
 		if err != nil {
 			isError = true
+			dbClient.Database("f1").Collection("sessioninfo").FindOneAndReplace(ctx, bson.D{{"_id", sessionInfo.Key}}, sessionInfo, options.FindOneAndReplace().SetUpsert(true))
 		}
 		drivers, err := BuildDriverList(message)
 		if err != nil {
-			isError = true
+			saveDrivers(dbClient, ctx, drivers, sessionInfo.Key)
 		}
 		positions, err := BuildPositions(message)
 		if err == nil && !isError {
@@ -255,13 +258,15 @@ func ProcessSessionDataAndInfo(connection *websocket.Conn, dbClient *mongo.Clien
 			}
 		}
 		carData, err := BuildCarData(message)
-		if err == nil && !isError {
+		resolver.NotifyCarDataSubscribers(nil)
+		if err == nil {
 			var carDataModel model.CarData
 			carDataModel.Compressed = carData.Compressed
 			resolver.NotifyCarDataSubscribers(&carDataModel)
 		}
 		raceControlMessages, err := BuildRaceControl(message)
-		if err == nil && !isError {
+		if err == nil {
+			fmt.Println("race control message received")
 			var raceControlModel []*model.RaceControl
 			for _, message := range raceControlMessages {
 				var raceControl model.RaceControl
@@ -275,7 +280,7 @@ func ProcessSessionDataAndInfo(connection *websocket.Conn, dbClient *mongo.Clien
 			saveRaceControlMessages(dbClient, ctx, raceControlModel, sessionInfo.Key)
 		}
 		stints, err := BuildStints(message)
-		if err == nil && !isError {
+		if err == nil {
 			var stintsModel []*model.Stint
 			for _, stint := range stints {
 				var stintModel model.Stint
@@ -294,7 +299,7 @@ func ProcessSessionDataAndInfo(connection *websocket.Conn, dbClient *mongo.Clien
 			saveStints(dbClient, ctx, stintsModel, sessionInfo.Key)
 		}
 		sectors, err := BuildSectors(message)
-		if err == nil && !isError {
+		if err == nil {
 			var sectorsModel []*model.Sector
 			for _, sectorTime := range sectors {
 				for _, sector := range sectorTime.Sectors {
@@ -316,12 +321,6 @@ func ProcessSessionDataAndInfo(connection *websocket.Conn, dbClient *mongo.Clien
 				}
 				saveSectors(dbClient, ctx, sectors, sessionInfo.Key)
 			}
-		}
-		if !isError {
-			meetingDB := convertMeetingToDB(meetingData)
-			dbClient.Database("f1").Collection("meetingdata").FindOneAndReplace(ctx, bson.D{{"_id", meetingDB.Key}}, meetingDB, options.FindOneAndReplace().SetUpsert(true))
-			dbClient.Database("f1").Collection("sessioninfo").FindOneAndReplace(ctx, bson.D{{"_id", sessionInfo.Key}}, sessionInfo, options.FindOneAndReplace().SetUpsert(true))
-			saveDrivers(dbClient, ctx, drivers, sessionInfo.Key)
 		}
 	}
 }

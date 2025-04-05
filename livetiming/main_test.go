@@ -218,7 +218,7 @@ func serverSendingRaceControlUpdate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	defer conn.Close()
-	sessionData, err := os.ReadFile("test/session-update.json")
+	sessionData, err := os.ReadFile("test/racecontrol.json")
 	if err != nil {
 		fmt.Printf("Error reading session data: %v\n", err)
 		return
@@ -917,9 +917,9 @@ func TestShouldCreateSessionWhenReceivingUpdate(t *testing.T) {
 
 func TestShouldCreateRaceControlMessageWhenReceivingUpdate(t *testing.T) {
 	raceControlMessage := RaceControl{
-		Utc:      "2024-11-30T17:46:16",
+		Utc:      "2025-04-04T07:12:26",
 		Category: "Other",
-		Message:  "PINK HEAD PADDING MATERIAL MUST BE USED",
+		Message:  "FIA STEWARDS: PIT LANE INCIDENT INVOLVING CAR 44 (HAM) REVIEWED NO FURTHER INVESTIGATION - FAILING TO FOLLOW RACE DIRECTORS INSTRUCTIONS",
 	}
 	server := httptest.NewServer(http.HandlerFunc(serverSendingRaceControlUpdate))
 	url := "ws" + strings.TrimPrefix(server.URL, "http")

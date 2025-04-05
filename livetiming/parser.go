@@ -355,7 +355,7 @@ func BuildRaceControl(data []byte) ([]RaceControl, error) {
 }
 
 type RaceControlMessages struct {
-	Messages []RaceControl `json:"Messages"`
+	Messages map[string]interface{}
 }
 
 func buildUpdateRaceControl(data []byte) ([]RaceControl, error) {
@@ -372,13 +372,18 @@ func buildUpdateRaceControl(data []byte) ([]RaceControl, error) {
 		if elements[0] != "RaceControlMessages" {
 			continue
 		}
-		var messages RaceControlMessages
-		err := mapstructure.Decode(elements[1], &messages)
-		if err != nil {
-			fmt.Println(err)
+		rawMessagesMap, ok := elements[1].(map[string]interface{})
+		if !ok {
 			continue
 		}
-		raceControlMessages = append(raceControlMessages, messages.Messages...)
+		for _, value := range rawMessagesMap["Messages"].(map[string]interface{}) {
+			var raceControl RaceControl
+			err := mapstructure.Decode(value, &raceControl)
+			if err != nil {
+				continue
+			}
+			raceControlMessages = append(raceControlMessages, raceControl)
+		}
 	}
 	if len(raceControlMessages) == 0 {
 		return raceControlMessages, fmt.Errorf("no race control messages")

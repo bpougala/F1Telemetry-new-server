@@ -200,7 +200,6 @@ func ProcessSessionDataAndInfo(connection *websocket.Conn, dbClient *mongo.Clien
 			}
 			return
 		}
-		isError := false
 		meetingData, err := BuildMeetingData(message)
 		if err != nil {
 			meetingDB := convertMeetingToDB(meetingData)

@@ -201,16 +201,16 @@ func ProcessSessionDataAndInfo(connection *websocket.Conn, dbClient *mongo.Clien
 			return
 		}
 		meetingData, err := BuildMeetingData(message)
-		if err != nil {
+		if err == nil {
 			meetingDB := convertMeetingToDB(meetingData)
 			dbClient.Database("f1").Collection("meetingdata").FindOneAndReplace(ctx, bson.D{{"_id", meetingDB.Key}}, meetingDB, options.FindOneAndReplace().SetUpsert(true))
 		}
 		sessionInfo, err := BuildSessionInfo(message)
-		if err != nil {
+		if err == nil {
 			dbClient.Database("f1").Collection("sessioninfo").FindOneAndReplace(ctx, bson.D{{"_id", sessionInfo.Key}}, sessionInfo, options.FindOneAndReplace().SetUpsert(true))
 		}
 		drivers, err := BuildDriverList(message)
-		if err != nil {
+		if err == nil {
 			saveDrivers(dbClient, ctx, drivers, sessionInfo.Key)
 		}
 		positions, err := BuildPositions(message)

@@ -258,7 +258,6 @@ func ProcessSessionDataAndInfo(connection *websocket.Conn, dbClient *mongo.Clien
 			}
 		}
 		carData, err := BuildCarData(message)
-		resolver.NotifyCarDataSubscribers(nil)
 		if err == nil {
 			var carDataModel model.CarData
 			carDataModel.Compressed = carData.Compressed

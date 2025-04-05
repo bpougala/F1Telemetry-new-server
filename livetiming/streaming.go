@@ -203,13 +203,11 @@ func ProcessSessionDataAndInfo(connection *websocket.Conn, dbClient *mongo.Clien
 		isError := false
 		meetingData, err := BuildMeetingData(message)
 		if err != nil {
-			isError = true
 			meetingDB := convertMeetingToDB(meetingData)
 			dbClient.Database("f1").Collection("meetingdata").FindOneAndReplace(ctx, bson.D{{"_id", meetingDB.Key}}, meetingDB, options.FindOneAndReplace().SetUpsert(true))
 		}
 		sessionInfo, err := BuildSessionInfo(message)
 		if err != nil {
-			isError = true
 			dbClient.Database("f1").Collection("sessioninfo").FindOneAndReplace(ctx, bson.D{{"_id", sessionInfo.Key}}, sessionInfo, options.FindOneAndReplace().SetUpsert(true))
 		}
 		drivers, err := BuildDriverList(message)
@@ -217,7 +215,7 @@ func ProcessSessionDataAndInfo(connection *websocket.Conn, dbClient *mongo.Clien
 			saveDrivers(dbClient, ctx, drivers, sessionInfo.Key)
 		}
 		positions, err := BuildPositions(message)
-		if err == nil && !isError {
+		if err == nil {
 			var positionsInterface []interface{}
 			var modelPositions []*model.Position
 			for _, position := range positions {
@@ -233,7 +231,7 @@ func ProcessSessionDataAndInfo(connection *websocket.Conn, dbClient *mongo.Clien
 			resolver.NotifyPositionSubscribers(modelPositions)
 		}
 		timingData, err := BuildTimingData(message)
-		if err == nil && !isError {
+		if err == nil {
 			var laptimes []*model.LapTime
 			for _, timing := range timingData {
 				var lapTime model.LapTime

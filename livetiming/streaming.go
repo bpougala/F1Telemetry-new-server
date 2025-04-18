@@ -6,18 +6,16 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/gorilla/websocket"
+	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
 	"io"
-	"log"
 	"net/http"
 	"net/http/cookiejar"
 	"net/url"
 	"os"
 	"os/signal"
-
-	"github.com/gorilla/websocket"
-	"go.mongodb.org/mongo-driver/bson"
-	"go.mongodb.org/mongo-driver/mongo"
-	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
 type Connection struct {
@@ -38,28 +36,6 @@ var upgrader = websocket.Upgrader{
 	WriteBufferSize: 1024,
 }
 
-func wsEndpoint(w http.ResponseWriter, r *http.Request) {
-	upgrader.CheckOrigin = func(r *http.Request) bool { return true }
-
-	ws, err := upgrader.Upgrade(w, r, nil)
-	if err != nil {
-		log.Fatal(err)
-	}
-	reader(ws)
-}
-
-func reader(socketConnection *websocket.Conn) {
-	for {
-		// read in a message
-		messageType, p, err := socketConnection.ReadMessage()
-		if err != nil {
-			fmt.Println("err", err)
-			return
-		}
-		fmt.Printf("message type: %d\nMessage: %s\n", messageType, string(p))
-	}
-}
-
 func Negotiate() ([]*http.Cookie, Connection, error) {
 	data := struct {
 		Name string `json:"name"`
@@ -72,8 +48,8 @@ func Negotiate() ([]*http.Cookie, Connection, error) {
 	if err != nil {
 		return nil, connection, err
 	}
-	url := fmt.Sprintf("https://livetiming.formula1.com/signalr/negotiate?connectionData=%s&clientProtocol=1.5", string(jsonData))
-	resp, err := http.Get(url)
+	websocketUrl := fmt.Sprintf("https://livetiming.formula1.com/signalr/negotiate?connectionData=%s&clientProtocol=1.5", string(jsonData))
+	resp, err := http.Get(websocketUrl)
 	if err != nil {
 		return nil, connection, err
 	}
@@ -143,19 +119,6 @@ func SetWebSocket(connectionToken string, cookies []*http.Cookie) (*websocket.Co
 	return connection, resp, nil
 }
 
-func CreateTimingSubscribeMessage() SubscribeMessage {
-	var topics []string
-	topics = append(topics, "TimingData", "TimingStats", "TimingAppData", "LapCount")
-	var topicsList [][]string
-	topicsList = append(topicsList, topics)
-	return SubscribeMessage{
-		H: "Streaming",
-		M: "Subscribe",
-		A: topicsList,
-		I: 1,
-	}
-}
-
 func CreateOriginalSessionMessage() SubscribeMessage {
 	var topics []string
 	topics = append(topics, "SessionInfo", "SessionData", "TimingData", "TimingStats", "TimingAppData", "LapCount", "DriverList", "CarData.z", "RaceControlMessages")
@@ -166,19 +129,6 @@ func CreateOriginalSessionMessage() SubscribeMessage {
 		M: "Subscribe",
 		A: topicsList,
 		I: 2,
-	}
-}
-
-func CreateDriverSubscribeMessage() SubscribeMessage {
-	var topics []string
-	topics = append(topics, "DriverList")
-	var topicsList [][]string
-	topicsList = append(topicsList, topics)
-	return SubscribeMessage{
-		H: "Streaming",
-		M: "Subscribe",
-		A: topicsList,
-		I: 1,
 	}
 }
 
@@ -210,8 +160,6 @@ func ProcessSessionDataAndInfo(connection *websocket.Conn, dbClient *mongo.Clien
 			sessionInfo, err := BuildSessionInfo(msg)
 			if err == nil {
 				dbClient.Database("f1").Collection("sessioninfo").FindOneAndReplace(ctx, bson.D{{"_id", sessionInfo.Key}}, sessionInfo, options.FindOneAndReplace().SetUpsert(true))
-			} else {
-				fmt.Println("session info error", err)
 			}
 			drivers, err := BuildDriverList(msg)
 			if err == nil {
@@ -270,7 +218,6 @@ func ProcessSessionDataAndInfo(connection *websocket.Conn, dbClient *mongo.Clien
 			}
 			raceControlMessages, err := BuildRaceControl(msg)
 			if err == nil {
-				fmt.Println("race control message received")
 				var raceControlModel []*model.RaceControl
 				for _, message := range raceControlMessages {
 					var raceControl model.RaceControl

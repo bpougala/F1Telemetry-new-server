@@ -106,9 +106,14 @@ type ComplexityRoot struct {
 	}
 
 	Position struct {
+		InPit        func(childComplexity int) int
+		PitOut       func(childComplexity int) int
 		Position     func(childComplexity int) int
 		RacingNumber func(childComplexity int) int
+		Retired      func(childComplexity int) int
 		SessionKey   func(childComplexity int) int
+		Status       func(childComplexity int) int
+		Stopped      func(childComplexity int) int
 	}
 
 	Query struct {
@@ -520,6 +525,20 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Meeting.MeetingOfficialName(childComplexity), true
 
+	case "Position.in_pit":
+		if e.complexity.Position.InPit == nil {
+			break
+		}
+
+		return e.complexity.Position.InPit(childComplexity), true
+
+	case "Position.pit_out":
+		if e.complexity.Position.PitOut == nil {
+			break
+		}
+
+		return e.complexity.Position.PitOut(childComplexity), true
+
 	case "Position.position":
 		if e.complexity.Position.Position == nil {
 			break
@@ -534,12 +553,33 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Position.RacingNumber(childComplexity), true
 
+	case "Position.retired":
+		if e.complexity.Position.Retired == nil {
+			break
+		}
+
+		return e.complexity.Position.Retired(childComplexity), true
+
 	case "Position.session_key":
 		if e.complexity.Position.SessionKey == nil {
 			break
 		}
 
 		return e.complexity.Position.SessionKey(childComplexity), true
+
+	case "Position.status":
+		if e.complexity.Position.Status == nil {
+			break
+		}
+
+		return e.complexity.Position.Status(childComplexity), true
+
+	case "Position.stopped":
+		if e.complexity.Position.Stopped == nil {
+			break
+		}
+
+		return e.complexity.Position.Stopped(childComplexity), true
 
 	case "Query.drivers":
 		if e.complexity.Query.Drivers == nil {
@@ -3248,6 +3288,226 @@ func (ec *executionContext) fieldContext_Position_position(_ context.Context, fi
 	return fc, nil
 }
 
+func (ec *executionContext) _Position_retired(ctx context.Context, field graphql.CollectedField, obj *model.Position) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Position_retired(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Retired, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(bool)
+	fc.Result = res
+	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Position_retired(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Position",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Position_in_pit(ctx context.Context, field graphql.CollectedField, obj *model.Position) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Position_in_pit(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.InPit, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(bool)
+	fc.Result = res
+	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Position_in_pit(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Position",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Position_pit_out(ctx context.Context, field graphql.CollectedField, obj *model.Position) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Position_pit_out(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.PitOut, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(bool)
+	fc.Result = res
+	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Position_pit_out(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Position",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Position_stopped(ctx context.Context, field graphql.CollectedField, obj *model.Position) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Position_stopped(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Stopped, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(bool)
+	fc.Result = res
+	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Position_stopped(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Position",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Position_status(ctx context.Context, field graphql.CollectedField, obj *model.Position) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Position_status(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Status, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(int)
+	fc.Result = res
+	return ec.marshalNInt2int(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Position_status(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Position",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Query_meetings(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Query_meetings(ctx, field)
 	if err != nil {
@@ -3503,6 +3763,16 @@ func (ec *executionContext) fieldContext_Query_positions(ctx context.Context, fi
 				return ec.fieldContext_Position_racing_number(ctx, field)
 			case "position":
 				return ec.fieldContext_Position_position(ctx, field)
+			case "retired":
+				return ec.fieldContext_Position_retired(ctx, field)
+			case "in_pit":
+				return ec.fieldContext_Position_in_pit(ctx, field)
+			case "pit_out":
+				return ec.fieldContext_Position_pit_out(ctx, field)
+			case "stopped":
+				return ec.fieldContext_Position_stopped(ctx, field)
+			case "status":
+				return ec.fieldContext_Position_status(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Position", field.Name)
 		},
@@ -5340,6 +5610,16 @@ func (ec *executionContext) fieldContext_Subscription_positions(_ context.Contex
 				return ec.fieldContext_Position_racing_number(ctx, field)
 			case "position":
 				return ec.fieldContext_Position_position(ctx, field)
+			case "retired":
+				return ec.fieldContext_Position_retired(ctx, field)
+			case "in_pit":
+				return ec.fieldContext_Position_in_pit(ctx, field)
+			case "pit_out":
+				return ec.fieldContext_Position_pit_out(ctx, field)
+			case "stopped":
+				return ec.fieldContext_Position_stopped(ctx, field)
+			case "status":
+				return ec.fieldContext_Position_status(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Position", field.Name)
 		},
@@ -8457,6 +8737,31 @@ func (ec *executionContext) _Position(ctx context.Context, sel ast.SelectionSet,
 			}
 		case "position":
 			out.Values[i] = ec._Position_position(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "retired":
+			out.Values[i] = ec._Position_retired(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "in_pit":
+			out.Values[i] = ec._Position_in_pit(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "pit_out":
+			out.Values[i] = ec._Position_pit_out(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "stopped":
+			out.Values[i] = ec._Position_stopped(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "status":
+			out.Values[i] = ec._Position_status(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}

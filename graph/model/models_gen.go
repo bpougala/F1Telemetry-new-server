@@ -63,9 +63,14 @@ type Meeting struct {
 }
 
 type Position struct {
-	SessionKey   int `json:"session_key"`
-	RacingNumber int `json:"racing_number"`
-	Position     int `json:"position"`
+	SessionKey   int  `json:"session_key"`
+	RacingNumber int  `json:"racing_number"`
+	Position     int  `json:"position"`
+	Retired      bool `json:"retired"`
+	InPit        bool `json:"in_pit"`
+	PitOut       bool `json:"pit_out"`
+	Stopped      bool `json:"stopped"`
+	Status       int  `json:"status"`
 }
 
 type Query struct {

@@ -226,6 +226,10 @@ func ProcessSessionDataAndInfo(connection *websocket.Conn, dbClient *mongo.Clien
 					modelPosition.Position = position.Position
 					modelPosition.RacingNumber = position.RacingNumber
 					modelPosition.SessionKey = sessionInfo.Key
+					modelPosition.Retired = position.Retired
+					modelPosition.InPit = position.InPit
+					modelPosition.Stopped = position.Stopped
+					modelPosition.Status = position.Status
 					modelPositions = append(modelPositions, &modelPosition)
 					position.SessionKey = sessionInfo.Key
 					positionsInterface = append(positionsInterface, position)

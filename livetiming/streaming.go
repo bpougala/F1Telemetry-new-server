@@ -200,124 +200,129 @@ func ProcessSessionDataAndInfo(connection *websocket.Conn, dbClient *mongo.Clien
 			}
 			return
 		}
-		meetingData, err := BuildMeetingData(message)
-		if err == nil {
-			meetingDB := convertMeetingToDB(meetingData)
-			dbClient.Database("f1").Collection("meetingdata").FindOneAndReplace(ctx, bson.D{{"_id", meetingDB.Key}}, meetingDB, options.FindOneAndReplace().SetUpsert(true))
-		}
-		sessionInfo, err := BuildSessionInfo(message)
-		if err == nil {
-			dbClient.Database("f1").Collection("sessioninfo").FindOneAndReplace(ctx, bson.D{{"_id", sessionInfo.Key}}, sessionInfo, options.FindOneAndReplace().SetUpsert(true))
-		}
-		drivers, err := BuildDriverList(message)
-		if err == nil {
-			saveDrivers(dbClient, ctx, drivers, sessionInfo.Key)
-		}
-		positions, err := BuildPositions(message)
-		if err == nil {
-			var positionsInterface []interface{}
-			var modelPositions []*model.Position
-			for _, position := range positions {
-				var modelPosition model.Position
-				modelPosition.Position = position.Position
-				modelPosition.RacingNumber = position.RacingNumber
-				modelPosition.SessionKey = sessionInfo.Key
-				modelPositions = append(modelPositions, &modelPosition)
-				position.SessionKey = sessionInfo.Key
-				positionsInterface = append(positionsInterface, position)
+
+		go func(msg []byte) {
+			meetingData, err := BuildMeetingData(msg)
+			if err == nil {
+				meetingDB := convertMeetingToDB(meetingData)
+				dbClient.Database("f1").Collection("meetingdata").FindOneAndReplace(ctx, bson.D{{"_id", meetingDB.Key}}, meetingDB, options.FindOneAndReplace().SetUpsert(true))
 			}
-			dbClient.Database("f1").Collection("positions").InsertMany(ctx, positionsInterface)
-			resolver.NotifyPositionSubscribers(modelPositions)
-		}
-		timingData, err := BuildTimingData(message)
-		if err == nil {
-			var laptimes []*model.LapTime
-			for _, timing := range timingData {
-				var lapTime model.LapTime
-				time := &model.TimeRef{
-					Value:           timing.LastLapTime.Value,
-					OverallFastest:  timing.LastLapTime.OverallFastest,
-					PersonalFastest: timing.LastLapTime.PersonalFastest,
+			sessionInfo, err := BuildSessionInfo(msg)
+			if err == nil {
+				dbClient.Database("f1").Collection("sessioninfo").FindOneAndReplace(ctx, bson.D{{"_id", sessionInfo.Key}}, sessionInfo, options.FindOneAndReplace().SetUpsert(true))
+			} else {
+				fmt.Println("session info error", err)
+			}
+			drivers, err := BuildDriverList(msg)
+			if err == nil {
+				saveDrivers(dbClient, ctx, drivers, sessionInfo.Key)
+			}
+			positions, err := BuildPositions(msg)
+			if err == nil {
+				var positionsInterface []interface{}
+				var modelPositions []*model.Position
+				for _, position := range positions {
+					var modelPosition model.Position
+					modelPosition.Position = position.Position
+					modelPosition.RacingNumber = position.RacingNumber
+					modelPosition.SessionKey = sessionInfo.Key
+					modelPositions = append(modelPositions, &modelPosition)
+					position.SessionKey = sessionInfo.Key
+					positionsInterface = append(positionsInterface, position)
 				}
-				lapTime.SessionKey = sessionInfo.Key
-				lapTime.BestLapTime = timing.BestLapTime.Value
-				lapTime.NumberOfLaps = timing.NumberOfLaps
-				lapTime.RacingNumber = timing.RacingNumber
-				lapTime.LastLapTime = time
-				lapTime.GapToLeader = &timing.GapToLeader
-				lapTime.IntervalToPositionAhead = &timing.IntervalToPositionAhead
-				laptimes = append(laptimes, &lapTime)
-				resolver.NotifyLapTimeSubscribers(laptimes)
-				if sessionInfo.ArchiveStatus != "Generating" { // might not work if we stop getting data straight after race is marked as Complete
-					timing.SessionKey = sessionInfo.Key
-					_, err = dbClient.Database("f1").Collection("timings").InsertOne(ctx, timing)
-				}
+				dbClient.Database("f1").Collection("positions").InsertMany(ctx, positionsInterface)
+				resolver.NotifyPositionSubscribers(modelPositions)
 			}
-		}
-		carData, err := BuildCarData(message)
-		if err == nil {
-			var carDataModel model.CarData
-			carDataModel.Compressed = carData.Compressed
-			resolver.NotifyCarDataSubscribers(&carDataModel)
-		}
-		raceControlMessages, err := BuildRaceControl(message)
-		if err == nil {
-			fmt.Println("race control message received")
-			var raceControlModel []*model.RaceControl
-			for _, message := range raceControlMessages {
-				var raceControl model.RaceControl
-				raceControl.Message = message.Message
-				raceControl.Category = &message.Category
-				raceControl.Date = message.Utc
-				raceControl.Flag = &message.Flag
-				raceControlModel = append(raceControlModel, &raceControl)
-			}
-			resolver.NotifyRaceControlSubscribers(raceControlModel)
-			saveRaceControlMessages(dbClient, ctx, raceControlModel, sessionInfo.Key)
-		}
-		stints, err := BuildStints(message)
-		if err == nil {
-			var stintsModel []*model.Stint
-			for _, stint := range stints {
-				var stintModel model.Stint
-				stintModel.Compound = stint.Compound
-				stintModel.LapFlags = stint.LapFlags
-				stintModel.RacingNumber = stint.RacingNumber
-				stintModel.New = stint.New
-				stintModel.StartLaps = stint.StartLaps
-				stintModel.StintNumber = stint.StintNumber
-				stintModel.Timestamp = stint.Timestamp
-				stintModel.TotalLaps = stint.TotalLaps
-				stintModel.TyresNotChanged = stint.TyresNotChanged
-				stintsModel = append(stintsModel, &stintModel)
-			}
-			resolver.NotifyStintSubscribers(stintsModel)
-			saveStints(dbClient, ctx, stintsModel, sessionInfo.Key)
-		}
-		sectors, err := BuildSectors(message)
-		if err == nil {
-			var sectorsModel []*model.Sector
-			for _, sectorTime := range sectors {
-				for _, sector := range sectorTime.Sectors {
-					var sectorModel model.Sector
-					sectorModel.RacingNumber = sectorTime.RacingNumber
-					sectorModel.SectorNumber = sector.SectorNumber
-					sectorModel.Value = sector.Value
-					sectorModel.OverallFastest = sector.OverallFastest
-					sectorModel.PersonalFastest = sector.PersonalFastest
-					sectorModel.Utc = &sectorTime.Utc
-					sectorsModel = append(sectorsModel, &sectorModel)
+			timingData, err := BuildTimingData(msg)
+			if err == nil {
+				var laptimes []*model.LapTime
+				for _, timing := range timingData {
+					var lapTime model.LapTime
+					time := &model.TimeRef{
+						Value:           timing.LastLapTime.Value,
+						OverallFastest:  timing.LastLapTime.OverallFastest,
+						PersonalFastest: timing.LastLapTime.PersonalFastest,
+					}
+					lapTime.SessionKey = sessionInfo.Key
+					lapTime.BestLapTime = timing.BestLapTime.Value
+					lapTime.NumberOfLaps = timing.NumberOfLaps
+					lapTime.RacingNumber = timing.RacingNumber
+					lapTime.LastLapTime = time
+					lapTime.GapToLeader = &timing.GapToLeader
+					lapTime.IntervalToPositionAhead = &timing.IntervalToPositionAhead
+					laptimes = append(laptimes, &lapTime)
+					resolver.NotifyLapTimeSubscribers(laptimes)
+					if sessionInfo.ArchiveStatus != "Generating" { // might not work if we stop getting data straight after race is marked as Complete
+						timing.SessionKey = sessionInfo.Key
+						_, err = dbClient.Database("f1").Collection("timings").InsertOne(ctx, timing)
+					}
 				}
 			}
-			resolver.NotifySectorTimeSubscribers(sectorsModel)
-			if sessionInfo.ArchiveStatus != "Generating" {
-				var sectorsInterface []interface{}
-				for _, sector := range sectors {
-					sectorsInterface = append(sectorsInterface, sector)
-				}
-				saveSectors(dbClient, ctx, sectors, sessionInfo.Key)
+			carData, err := BuildCarData(msg)
+			if err == nil {
+				var carDataModel model.CarData
+				carDataModel.Compressed = carData.Compressed
+				resolver.NotifyCarDataSubscribers(&carDataModel)
 			}
-		}
+			raceControlMessages, err := BuildRaceControl(msg)
+			if err == nil {
+				fmt.Println("race control message received")
+				var raceControlModel []*model.RaceControl
+				for _, message := range raceControlMessages {
+					var raceControl model.RaceControl
+					raceControl.Message = message.Message
+					raceControl.Category = &message.Category
+					raceControl.Date = message.Utc
+					raceControl.Flag = &message.Flag
+					raceControlModel = append(raceControlModel, &raceControl)
+				}
+				resolver.NotifyRaceControlSubscribers(raceControlModel)
+				saveRaceControlMessages(dbClient, ctx, raceControlModel, sessionInfo.Key)
+			}
+			stints, err := BuildStints(msg)
+			if err == nil {
+				var stintsModel []*model.Stint
+				for _, stint := range stints {
+					var stintModel model.Stint
+					stintModel.Compound = stint.Compound
+					stintModel.LapFlags = stint.LapFlags
+					stintModel.RacingNumber = stint.RacingNumber
+					stintModel.New = stint.New
+					stintModel.StartLaps = stint.StartLaps
+					stintModel.StintNumber = stint.StintNumber
+					stintModel.Timestamp = stint.Timestamp
+					stintModel.TotalLaps = stint.TotalLaps
+					stintModel.TyresNotChanged = stint.TyresNotChanged
+					stintsModel = append(stintsModel, &stintModel)
+				}
+				resolver.NotifyStintSubscribers(stintsModel)
+				saveStints(dbClient, ctx, stintsModel, sessionInfo.Key)
+			}
+			sectors, err := BuildSectors(msg)
+			if err == nil {
+				var sectorsModel []*model.Sector
+				for _, sectorTime := range sectors {
+					for _, sector := range sectorTime.Sectors {
+						var sectorModel model.Sector
+						sectorModel.RacingNumber = sectorTime.RacingNumber
+						sectorModel.SectorNumber = sector.SectorNumber
+						sectorModel.Value = sector.Value
+						sectorModel.OverallFastest = sector.OverallFastest
+						sectorModel.PersonalFastest = sector.PersonalFastest
+						sectorModel.Utc = &sectorTime.Utc
+						sectorsModel = append(sectorsModel, &sectorModel)
+					}
+				}
+				resolver.NotifySectorTimeSubscribers(sectorsModel)
+				if sessionInfo.ArchiveStatus != "Generating" {
+					var sectorsInterface []interface{}
+					for _, sector := range sectors {
+						sectorsInterface = append(sectorsInterface, sector)
+					}
+					saveSectors(dbClient, ctx, sectors, sessionInfo.Key)
+				}
+			}
+		}(message)
 	}
 }
 

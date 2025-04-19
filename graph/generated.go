@@ -137,6 +137,7 @@ type ComplexityRoot struct {
 	}
 
 	Sector struct {
+		LapNumber       func(childComplexity int) int
 		OverallFastest  func(childComplexity int) int
 		PersonalFastest func(childComplexity int) int
 		RacingNumber    func(childComplexity int) int
@@ -713,6 +714,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.RaceControl.Scope(childComplexity), true
+
+	case "Sector.lap_number":
+		if e.complexity.Sector.LapNumber == nil {
+			break
+		}
+
+		return e.complexity.Sector.LapNumber(childComplexity), true
 
 	case "Sector.overall_fastest":
 		if e.complexity.Sector.OverallFastest == nil {
@@ -3994,6 +4002,8 @@ func (ec *executionContext) fieldContext_Query_sectors(ctx context.Context, fiel
 				return ec.fieldContext_Sector_personal_fastest(ctx, field)
 			case "utc":
 				return ec.fieldContext_Sector_utc(ctx, field)
+			case "lap_number":
+				return ec.fieldContext_Sector_lap_number(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Sector", field.Name)
 		},
@@ -4724,6 +4734,50 @@ func (ec *executionContext) fieldContext_Sector_utc(_ context.Context, field gra
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			return nil, errors.New("field of type Time does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Sector_lap_number(ctx context.Context, field graphql.CollectedField, obj *model.Sector) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Sector_lap_number(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.LapNumber, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(int)
+	fc.Result = res
+	return ec.marshalNInt2int(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Sector_lap_number(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Sector",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
 		},
 	}
 	return fc, nil
@@ -5904,6 +5958,8 @@ func (ec *executionContext) fieldContext_Subscription_sectors(_ context.Context,
 				return ec.fieldContext_Sector_personal_fastest(ctx, field)
 			case "utc":
 				return ec.fieldContext_Sector_utc(ctx, field)
+			case "lap_number":
+				return ec.fieldContext_Sector_lap_number(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Sector", field.Name)
 		},
@@ -9104,6 +9160,11 @@ func (ec *executionContext) _Sector(ctx context.Context, sel ast.SelectionSet, o
 			}
 		case "utc":
 			out.Values[i] = ec._Sector_utc(ctx, field, obj)
+		case "lap_number":
+			out.Values[i] = ec._Sector_lap_number(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}

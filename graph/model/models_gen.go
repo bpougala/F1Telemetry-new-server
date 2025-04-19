@@ -92,6 +92,7 @@ type Sector struct {
 	OverallFastest  bool       `json:"overall_fastest"`
 	PersonalFastest bool       `json:"personal_fastest"`
 	Utc             *time.Time `json:"utc,omitempty"`
+	LapNumber       int        `json:"lap_number"`
 }
 
 type Session struct {

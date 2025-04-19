@@ -159,7 +159,15 @@ func ProcessSessionDataAndInfo(connection *websocket.Conn, dbClient *mongo.Clien
 			}
 			sessionInfo, err := BuildSessionInfo(msg)
 			if err == nil {
-				dbClient.Database("f1").Collection("sessioninfo").FindOneAndReplace(ctx, bson.D{{"_id", sessionInfo.Key}}, sessionInfo, options.FindOneAndReplace().SetUpsert(true))
+				if sessionInfo.Key == 0 {
+					dbClient.Database("f1").Collection("sessioninfo").FindOneAndUpdate(
+						ctx,
+						bson.D{{"archiveStatus", "Generating"}},
+						bson.D{{"$set", bson.D{{"archiveStatus", "Complete"}}}},
+					)
+				} else {
+					dbClient.Database("f1").Collection("sessioninfo").FindOneAndReplace(ctx, bson.D{{"_id", sessionInfo.Key}}, sessionInfo, options.FindOneAndReplace().SetUpsert(true))
+				}
 			}
 			drivers, err := BuildDriverList(msg)
 			if err == nil {

@@ -172,6 +172,24 @@ func buildRaceTimingData(data []byte) ([]LapTimeMetric, error) {
 	return lapTimeMetrics, nil
 }
 
+func buildFinalSession(elements []interface{}) (SessionInfoDB, error) {
+	statusSeries := elements[1].(map[string]interface{})
+	value := statusSeries["StatusSeries"].(map[string]interface{})
+	var sessionInfo SessionInfoDB
+	for _, v := range value {
+		var statusInfoStruct SessionStatusStruct
+		err := mapstructure.Decode(v, &statusInfoStruct)
+		if err != nil {
+			return sessionInfo, err
+		}
+		if statusInfoStruct.Utc == "" || statusInfoStruct.SessionStatus == "" {
+			return sessionInfo, fmt.Errorf("no session info data available")
+		}
+		sessionInfo.ArchiveStatus = statusInfoStruct.SessionStatus
+	}
+	return sessionInfo, nil
+}
+
 func buildUpdatedSession(data []byte) (SessionInfoDB, error) {
 	var updatedData UpdateData
 	var updatedSession SessionInfoDB
@@ -187,7 +205,7 @@ func buildUpdatedSession(data []byte) (SessionInfoDB, error) {
 			continue
 		}
 		if elements[0] != "SessionInfo" {
-			return updatedSession, fmt.Errorf("no sessioninfo data available")
+			return buildFinalSession(elements)
 		}
 		sessionDataMap := elements[1].(map[string]interface{})
 		sessionDataMapBytes, err := json.Marshal(sessionDataMap)

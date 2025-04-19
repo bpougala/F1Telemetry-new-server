@@ -1,0 +1,21 @@
+{
+  "C": "d-F0ECA6E7-B,0|I992,0|I993,A|G,11|H,C9|K,37F1C|F,1A08|L,16F7|J,6E|I,3FB|B6,C959|Y,FF",
+  "M": [
+    {
+      "H": "Streaming",
+      "M": "feed",
+      "A": [
+        "SessionData",
+        {
+          "StatusSeries": {
+            "6": {
+              "Utc": "2025-04-19T14:37:52.202Z",
+              "SessionStatus": "Finalised"
+            }
+          }
+        },
+        "2025-04-19T14:37:52.202Z"
+      ]
+    }
+  ]
+}

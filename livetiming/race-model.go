@@ -194,6 +194,11 @@ func (d *DriverData) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
+type SessionStatusStruct struct {
+	Utc           string `json:"Utc"`
+	SessionStatus string `json:"SessionStatus"`
+}
+
 type InitialData struct {
 	R struct {
 		TimingData struct {
@@ -428,6 +433,7 @@ type Sector struct {
 	Value           string `json:"Value"`
 	PersonalFastest bool   `json:"PersonalFastest"`
 	OverallFastest  bool   `json:"OverallFastest"`
+	LapNumber       int    `json:"LapNumber"`
 }
 
 type AllSectors struct {

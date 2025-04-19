@@ -136,6 +136,7 @@ type Sector {
   overall_fastest: Boolean!
   personal_fastest: Boolean!
   utc: Time
+  lap_number: Int!
 }
 
 type Timing {

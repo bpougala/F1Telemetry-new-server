@@ -15,13 +15,13 @@ import (
 	"github.com/gorilla/websocket"
 )
 
-func echo(w http.ResponseWriter, r *http.Request) {
+func sessionFinalisedMessage(w http.ResponseWriter, r *http.Request) {
 	conn, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
 		return
 	}
 	defer conn.Close()
-	sessionData, err := os.ReadFile("test/session-data.json")
+	sessionData, err := os.ReadFile("test/session-end.json")
 	if err != nil {
 		fmt.Printf("Error reading session data: %v\n", err)
 		return
@@ -305,6 +305,16 @@ func prepareClientReturningDummyMessage() (*websocket.Conn, error) {
 	return client, nil
 }
 
+func prepareClientReturningSessionFinalisedMessage() (*websocket.Conn, error) {
+	server := httptest.NewServer(http.HandlerFunc(sessionFinalisedMessage))
+	url := "ws" + strings.TrimPrefix(server.URL, "http")
+	client, _, err := websocket.DefaultDialer.Dial(url, nil)
+	if err != nil {
+		return nil, err
+	}
+	return client, nil
+}
+
 func prepareClientreturningTimingAppFirstResponse() ([]byte, error) {
 	server := httptest.NewServer(http.HandlerFunc(serverSendingTimingAppRaceUpdates))
 	url := "ws" + strings.TrimPrefix(server.URL, "http")
@@ -420,6 +430,29 @@ func TestShouldBuildSessionInfoStructWhenOpeningWebSocket(t *testing.T) {
 	}
 	if realSessionInfo != expectedSessionInfo {
 		t.Fatalf("Expected session info: %v, got: %v", expectedSessionInfo, realSessionInfo)
+	}
+}
+
+func TestShouldUpdateLatestSessionInfoWhenSessionFinalised(t *testing.T) {
+	client, err := prepareClientReturningSessionFinalisedMessage()
+	if err != nil {
+		t.Fatalf("Could not open a websocket connection: %v", err)
+	}
+	defer client.Close()
+	err = sendDummyMessage(client)
+	if err != nil {
+		t.Fatalf("Could not write message to websocket: %v", err)
+	}
+	_, response, err := client.ReadMessage()
+	if err != nil {
+		t.Fatalf("Could not read message from websocket: %v", err)
+	}
+	sessionInfo, err := BuildSessionInfo(response)
+	if err != nil {
+		t.Fatalf("Could not build session data and session info structs: %v", err)
+	}
+	if sessionInfo.ArchiveStatus != "Finalised" {
+		t.Fatalf("Expected archive status: Finalised, got: %s", sessionInfo.ArchiveStatus)
 	}
 }
 
@@ -1048,18 +1081,21 @@ func TestShouldCreateSectorsWhenFirstMessageIsSent(t *testing.T) {
 				Value:           "17.513",
 				PersonalFastest: true,
 				OverallFastest:  false,
+				LapNumber:       0,
 			},
 			{
 				SectorNumber:    2,
 				Value:           "39.702",
 				PersonalFastest: false,
 				OverallFastest:  false,
+				LapNumber:       0,
 			},
 			{
 				SectorNumber:    3,
 				Value:           "32.643",
 				PersonalFastest: false,
 				OverallFastest:  false,
+				LapNumber:       0,
 			},
 		},
 	}

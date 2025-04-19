@@ -172,7 +172,11 @@ func buildRaceTimingData(data []byte) ([]LapTimeMetric, error) {
 	return lapTimeMetrics, nil
 }
 
-func buildFinalSession(elements []interface{}) (SessionInfoDB, error) {
+func buildFinalSession(elms []interface{}) (SessionInfoDB, error) {
+	elements, ok := elms[1].([]interface{})
+	if !ok {
+		return SessionInfoDB{}, fmt.Errorf("incorrect input data")
+	}
 	statusSeries := elements[1].(map[string]interface{})
 	value := statusSeries["StatusSeries"].(map[string]interface{})
 	var sessionInfo SessionInfoDB

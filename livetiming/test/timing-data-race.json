@@ -479,7 +479,7 @@
           "RacingNumber": "1",
           "Retired": false,
           "InPit": false,
-          "PitOut": false,
+          "PitOut": true,
           "Stopped": false,
           "Status": 1088,
           "NumberOfLaps": 58,

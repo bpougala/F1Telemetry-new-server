@@ -172,11 +172,7 @@ func buildRaceTimingData(data []byte) ([]LapTimeMetric, error) {
 	return lapTimeMetrics, nil
 }
 
-func buildFinalSession(elms []interface{}) (SessionInfoDB, error) {
-	elements, ok := elms[1].([]interface{})
-	if !ok {
-		return SessionInfoDB{}, fmt.Errorf("incorrect input data")
-	}
+func buildFinalSession(elements []interface{}) (SessionInfoDB, error) {
 	statusSeries := elements[1].(map[string]interface{})
 	value := statusSeries["StatusSeries"].(map[string]interface{})
 	var sessionInfo SessionInfoDB
@@ -233,6 +229,50 @@ func buildUpdatedSession(data []byte) (SessionInfoDB, error) {
 	return updatedSession, nil
 }
 
+func buildTimingDataPositionsUpdate(message Message) ([]Position, error) {
+	var positions []Position
+	elements := message.A
+	if elements[0] != "TimingData" {
+		return positions, fmt.Errorf("incorrect input data")
+	}
+	var timingData TimingData
+	timingDataMap, err := json.Marshal(elements[1])
+	if err != nil {
+		return positions, fmt.Errorf("could not parse timing data map as bytes")
+	}
+	err = json.Unmarshal(timingDataMap, &timingData)
+	if err != nil {
+		return positions, err
+	}
+	for key, value := range timingData.Lines {
+		var rawPosition RawPosition
+		err = mapstructure.Decode(value, &rawPosition)
+		if err != nil {
+			continue
+		}
+		positionNumber, err := strconv.Atoi(rawPosition.Position)
+		if err != nil {
+			continue
+		}
+		racingNumber, err := strconv.Atoi(key)
+		if err != nil {
+			continue
+		}
+		position := Position{
+			RacingNumber: racingNumber,
+			Position:     positionNumber,
+			InPit:        rawPosition.InPit,
+			PitOut:       rawPosition.PitOut,
+			Stopped:      rawPosition.Stopped,
+			Status:       rawPosition.Status,
+		}
+		positions = append(positions, position)
+	}
+	if len(positions) == 0 {
+		return nil, fmt.Errorf("no positions found")
+	}
+	return positions, nil
+}
 func buildUpdatedPositions(data []byte) ([]Position, error) {
 	var updateTimingData UpdateData
 	if err := json.Unmarshal(data, &updateTimingData); err != nil {
@@ -245,7 +285,7 @@ func buildUpdatedPositions(data []byte) ([]Position, error) {
 			continue
 		}
 		if elements[0] != "DriverList" {
-			continue
+			return buildTimingDataPositionsUpdate(message)
 		}
 		var positionData map[string]PositionLine
 		err := mapstructure.Decode(elements[1], &positionData)

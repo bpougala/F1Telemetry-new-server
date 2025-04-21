@@ -82,6 +82,17 @@ type Position struct {
 	Status       int  `json:"Status"`
 }
 
+type RawPosition struct {
+	InPit        bool   `json:"InPit"`
+	PitOut       bool   `json:"PitOut"`
+	Stopped      bool   `json:"Stopped"`
+	Retired      bool   `json:"Retired"`
+	Status       int    `json:"Status"`
+	Position     string `json:"Position"`
+	Line         int    `json:"Line"`
+	NumberOfLaps int    `json:"NumberOfLaps"`
+}
+
 type StintLine struct {
 	Stints map[string]RawStint `json:"Stints"`
 }

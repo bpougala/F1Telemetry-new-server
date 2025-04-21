@@ -59,6 +59,28 @@ func serverSendingDriverList(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+func serverSendingPositionsRaceUpdate(w http.ResponseWriter, r *http.Request) {
+	conn, err := upgrader.Upgrade(w, r, nil)
+	if err != nil {
+		return
+	}
+	defer conn.Close()
+	sessionData, err := os.ReadFile("test/position-update-race.json")
+	if err != nil {
+		fmt.Printf("Error reading session data: %v\n", err)
+		return
+	}
+	for {
+		messageType, _, err := conn.ReadMessage()
+		if err != nil {
+			return
+		}
+		if err := conn.WriteMessage(messageType, sessionData); err != nil {
+			return
+		}
+	}
+}
+
 func serverSendingTimingAppRaceUpdates(w http.ResponseWriter, r *http.Request) {
 	conn, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
@@ -334,6 +356,25 @@ func prepareClientreturningTimingAppFirstResponse() ([]byte, error) {
 	return response, nil
 }
 
+func prepareClientReturningPositionsUpdate() ([]byte, error) {
+	server := httptest.NewServer(http.HandlerFunc(serverSendingPositionsRaceUpdate))
+	url := "ws" + strings.TrimPrefix(server.URL, "http")
+	client, _, err := websocket.DefaultDialer.Dial(url, nil)
+	if err != nil {
+		return nil, fmt.Errorf("Could not open a websocket connection: %v", err)
+	}
+	defer client.Close()
+	err = sendDummyMessage(client)
+	if err != nil {
+		return nil, fmt.Errorf("Could not write message to websocket: %v", err)
+	}
+	_, response, err := client.ReadMessage()
+	if err != nil {
+		return nil, fmt.Errorf("Could not read message from websocket: %v", err)
+	}
+	return response, nil
+}
+
 func TestShouldBuildMeetingDataStructWhenOpeningWebSocket(t *testing.T) {
 	expectedMeetingData := MeetingData{
 		Key:          1252,
@@ -581,16 +622,16 @@ func TestShouldCreatePositionsWhenDriverListFirstSubscribes(t *testing.T) {
 }
 
 func TestShouldCreatePositionsWhenTimingAppSendsUpdatesDuringRace(t *testing.T) {
-	maxVerstappenPosition := Position{
+	lanceStrollPosition := Position{
 		SessionKey:   0,
-		RacingNumber: 1,
-		Position:     6,
+		RacingNumber: 18,
+		Position:     4,
 		InPit:        false,
-		PitOut:       false,
+		PitOut:       true,
 		Stopped:      false,
-		Status:       1088,
+		Status:       96,
 	}
-	response, err := prepareClientreturningTimingAppFirstResponse()
+	response, err := prepareClientReturningPositionsUpdate()
 	if err != nil {
 		t.Fatalf("%v", err)
 	}
@@ -601,11 +642,11 @@ func TestShouldCreatePositionsWhenTimingAppSendsUpdatesDuringRace(t *testing.T) 
 	sort.Slice(positionsList, func(i, j int) bool {
 		return positionsList[i].RacingNumber < positionsList[j].RacingNumber
 	})
-	if len(positionsList) != 20 {
+	if len(positionsList) != 7 {
 		t.Fatalf("Expected 20 positions, got: %d", len(positionsList))
 	}
-	if positionsList[0] != maxVerstappenPosition {
-		t.Fatalf("Expected position: %v, got: %v", maxVerstappenPosition, positionsList[0])
+	if positionsList[len(positionsList)-1] != lanceStrollPosition {
+		t.Fatalf("Expected position: %v, got: %v", lanceStrollPosition, positionsList[0])
 	}
 }
 

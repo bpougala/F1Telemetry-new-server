@@ -1,0 +1,82 @@
+{
+  "C": "d-F0ECA6E7-B,0|I992,0|I993,A|G,11|H,C5|K,35157|F,17BA|L,14C3|J,6E|I,3AD|B6,B9DE|Y,F5",
+  "M": [
+    {
+      "H": "Streaming",
+      "M": "feed",
+      "A": [
+        "TimingData",
+        {
+          "Lines": {
+            "1": {
+              "Line": 5,
+              "Position": "5"
+            },
+            "4": {
+              "Line": 6,
+              "Position": "6"
+            },
+            "6": {
+              "Line": 7,
+              "Position": "7"
+            },
+            "10": {
+              "Line": 8,
+              "Position": "8"
+            },
+            "12": {
+              "Line": 9,
+              "Position": "9"
+            },
+            "16": {
+              "Line": 10,
+              "Position": "10"
+            },
+            "18": {
+              "Line": 4,
+              "Position": "4",
+              "InPit": false,
+              "PitOut": true,
+              "Status": 96,
+              "NumberOfLaps": 1
+            }
+          }
+        },
+        "2025-04-19T13:31:30.093Z"
+      ]
+    },
+    {
+      "H": "Streaming",
+      "M": "feed",
+      "A": [
+        "TimingAppData",
+        {
+          "Lines": {
+            "1": {
+              "Line": 5
+            },
+            "4": {
+              "Line": 6
+            },
+            "6": {
+              "Line": 7
+            },
+            "10": {
+              "Line": 8
+            },
+            "12": {
+              "Line": 9
+            },
+            "16": {
+              "Line": 10
+            },
+            "18": {
+              "Line": 4
+            }
+          }
+        },
+        "2025-04-19T13:31:30.093Z"
+      ]
+    }
+  ]
+}

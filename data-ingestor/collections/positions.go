@@ -13,4 +13,8 @@ type PositionsDB struct {
 	RacingNumber int    `json:"racingnumber"`
 	Position     int    `json:"position"`
 	Timestamp    string `json:"timestamp"`
+	InPit        bool   `json:"in_pit"`
+	PitOut       bool   `json:"pit_out"`
+	Retired      bool   `json:"retired"`
+	Stopped      bool   `json:"stopped"`
 }

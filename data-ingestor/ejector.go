@@ -147,6 +147,10 @@ func FetchPositions(dbClient *mongo.Client, ctx context.Context, sessionKey int)
 			SessionKey:   rawPosition.SessionKey,
 			Position:     rawPosition.Position,
 			RacingNumber: rawPosition.RacingNumber,
+			InPit:        rawPosition.InPit,
+			PitOut:       rawPosition.PitOut,
+			Retired:      rawPosition.Retired,
+			Stopped:      rawPosition.Stopped,
 		}
 		positions = append(positions, position)
 	}

@@ -137,6 +137,7 @@ func buildRacePositions(data []byte) ([]Position, error) {
 		position.PitOut = value.PitOut
 		position.Stopped = value.Stopped
 		position.Status = value.Status
+		position.Retired = value.Retired
 		positions = append(positions, position)
 	}
 	return positions, nil
@@ -265,6 +266,7 @@ func buildTimingDataPositionsUpdate(message Message) ([]Position, error) {
 			PitOut:       rawPosition.PitOut,
 			Stopped:      rawPosition.Stopped,
 			Status:       rawPosition.Status,
+			Retired:      rawPosition.Retired,
 		}
 		positions = append(positions, position)
 	}

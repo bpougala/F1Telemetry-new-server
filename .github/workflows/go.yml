@@ -24,21 +24,11 @@ jobs:
         run : go test -v ./...
       - name: Build
         run: go build -v ./...
-      - name: Test AWS credentials
-        env:
-          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          AWS_DEFAULT_REGION: eu-west-2
-        run: aws sts get-caller-identity
       - name: Login to DCR
-        env:
-          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          AWS_DEFAULT_REGION: eu-west-2
-        run: aws ecr get-login-password --region eu-west-2 | docker login --username AWS --password-stdin 796092239933.dkr.ecr.eu-west-2.amazonaws.com
+        run: docker login registry.digitalocean.com -u bpougala@gmail.com -p ${{ secrets.DIGITALOCEAN_ACCESS_TOKEN }}
       - name: Build Docker image
-        run: docker build -t f1telemetry .
+        run: docker build . -t f1telemetry-new-server:latest --build-arg MONGO_CONNECTION_URL=${{ secrets.MONGO_CONNECTION_URL }}
       - name: Tag Docker image
-        run: docker tag f1telemetry:latest 796092239933.dkr.ecr.eu-west-2.amazonaws.com/f1telemetry:latest
+        run: docker tag f1telemetry-new-server:latest registry.digitalocean.com/f1telemetry-app/f1telemetry-new-server:latest
       - name: Push Docker image
-        run: docker push 796092239933.dkr.ecr.eu-west-2.amazonaws.com/f1telemetry:latest
+        run: docker push registry.digitalocean.com/f1telemetry-app/f1telemetry-new-server:latest

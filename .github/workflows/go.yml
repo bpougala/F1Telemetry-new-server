@@ -25,8 +25,16 @@ jobs:
       - name: Build
         run: go build -v ./...
       - name: Test AWS credentials
-        run: echo $AWS_ACCESS_KEY_ID
+        env:
+          AWS_ACCESS_KEY_ID: ${{ env.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ env.AWS_SECRET_ACCESS_KEY }}
+          AWS_DEFAULT_REGION: ${{ env.AWS_DEFAULT_REGION }}
+        run: aws sts get-caller-identity
       - name: Login to DCR
+        env:
+          AWS_ACCESS_KEY_ID: ${{ env.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ env.AWS_SECRET_ACCESS_KEY }}
+          AWS_DEFAULT_REGION: ${{ env.AWS_DEFAULT_REGION }}
         run: aws ecr get-login-password --region eu-west-2 | docker login --username AWS --password-stdin 796092239933.dkr.ecr.eu-west-2.amazonaws.com
       - name: Build Docker image
         run: docker build -t f1telemetry .

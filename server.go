@@ -35,7 +35,7 @@ func main() {
 	http.Handle("/", playground.Handler("GraphQL playground", "/query"))
 	http.Handle("/query", server)
 
-	log.Printf("connect to http://localhost:%s/ for GraphQL playground", port)
+	log.Printf("connect to http://localhost:%s/ for lost of fun!\n", port)
 	go func() {
 		err := http.ListenAndServe(":"+port, nil)
 		if err != nil {
@@ -61,9 +61,8 @@ func main() {
 	defer connection.Close()
 
 	fmt.Println("connected to websocket")
-	sessionKeyChan := make(chan int)
 
-	go livetiming.ProcessSessionDataAndInfo(connection, dbClient, ctx, sessionKeyChan, resolver)
+	go livetiming.ProcessSessionDataAndInfo(connection, dbClient, ctx, resolver)
 	c := make(chan os.Signal, 1)
 	signal.Notify(c, os.Interrupt, syscall.SIGTERM)
 	<-c

@@ -132,12 +132,11 @@ func CreateOriginalSessionMessage() SubscribeMessage {
 	}
 }
 
-func ProcessSessionDataAndInfo(connection *websocket.Conn, dbClient *dynamodb.Client, ctx context.Context, sessionKeyChan chan int, resolver *graph.Resolver) {
-	defer close(sessionKeyChan)
+func ProcessSessionDataAndInfo(connection *websocket.Conn, dbClient *dynamodb.Client, ctx context.Context, resolver *graph.Resolver) {
 	subscribeMessage := CreateOriginalSessionMessage()
 	err := connection.WriteJSON(subscribeMessage)
 	if err != nil {
-		fmt.Println("write:", err)
+		fmt.Println("write ERROR:", err)
 		return
 	}
 	for {
@@ -150,12 +149,16 @@ func ProcessSessionDataAndInfo(connection *websocket.Conn, dbClient *dynamodb.Cl
 			}
 			return
 		}
+		var sessionKey int
 
 		go func(msg []byte) {
 			meetingData, err := BuildMeetingData(msg)
 			if err == nil {
 				meetingDB := convertMeetingToDB(meetingData)
 				err = SaveMeeting(dbClient, &ctx, meetingDB)
+				if err != nil {
+					fmt.Println("error saving meeting data:", err)
+				}
 			}
 			sessionInfo, err := BuildSessionInfo(msg)
 			if err == nil {
@@ -174,17 +177,16 @@ func ProcessSessionDataAndInfo(connection *websocket.Conn, dbClient *dynamodb.Cl
 						fmt.Println("error updating DynamoDB:", err)
 					}
 				} else {
+					sessionKey = sessionInfo.Key
 					err = SaveSession(dbClient, &ctx, sessionInfo)
 					if err != nil {
 						fmt.Println("error saving session info:", err)
-					} else {
-						sessionKeyChan <- sessionInfo.Key
 					}
 				}
 			}
 			drivers, err := BuildDriverList(msg)
 			if err == nil {
-				err = SaveDrivers(dbClient, &ctx, drivers, sessionInfo.Key)
+				err = SaveDrivers(dbClient, &ctx, drivers, sessionKey)
 				if err != nil {
 					fmt.Println("error saving drivers:", err)
 				}
@@ -197,13 +199,13 @@ func ProcessSessionDataAndInfo(connection *websocket.Conn, dbClient *dynamodb.Cl
 					var modelPosition model.Position
 					modelPosition.Position = position.Position
 					modelPosition.RacingNumber = position.RacingNumber
-					modelPosition.SessionKey = sessionInfo.Key
+					modelPosition.SessionKey = sessionKey
 					modelPosition.Retired = position.Retired
 					modelPosition.InPit = position.InPit
 					modelPosition.Stopped = position.Stopped
 					modelPosition.Status = position.Status
 					modelPositions = append(modelPositions, &modelPosition)
-					position.SessionKey = sessionInfo.Key
+					position.SessionKey = sessionKey
 					positionsInterface = append(positionsInterface, position)
 				}
 				err = SavePositions(dbClient, &ctx, positions)
@@ -219,21 +221,21 @@ func ProcessSessionDataAndInfo(connection *websocket.Conn, dbClient *dynamodb.Cl
 						OverallFastest:  timing.LastLapTime.OverallFastest,
 						PersonalFastest: timing.LastLapTime.PersonalFastest,
 					}
-					lapTime.SessionKey = sessionInfo.Key
+					lapTime.SessionKey = sessionKey
 					lapTime.BestLapTime = timing.BestLapTime.Value
 					lapTime.NumberOfLaps = timing.NumberOfLaps
 					lapTime.RacingNumber = timing.RacingNumber
 					lapTime.LastLapTime = time
 					lapTime.GapToLeader = &timing.GapToLeader
 					lapTime.IntervalToPositionAhead = &timing.IntervalToPositionAhead
-					laptimes = append(laptimes, &lapTime)
-					resolver.NotifyLapTimeSubscribers(laptimes)
-					timing.SessionKey = sessionInfo.Key
+					timing.SessionKey = sessionKey
 					err = SaveLapTime(dbClient, &ctx, timing)
 					if err != nil {
 						fmt.Println("error saving lap time:", err)
 					}
+					laptimes = append(laptimes, &lapTime)
 				}
+				resolver.NotifyLapTimeSubscribers(laptimes)
 			}
 			carData, err := BuildCarData(msg)
 			if err == nil {
@@ -253,7 +255,7 @@ func ProcessSessionDataAndInfo(connection *websocket.Conn, dbClient *dynamodb.Cl
 					raceControlModel = append(raceControlModel, &raceControl)
 				}
 				resolver.NotifyRaceControlSubscribers(raceControlModel)
-				err = SaveRaceControlMessages(dbClient, &ctx, sessionInfo.Key, raceControlModel)
+				err = SaveRaceControlMessages(dbClient, &ctx, sessionKey, raceControlModel)
 				if err != nil {
 					fmt.Printf("error: could not save race control messages: %v\n", err)
 				}
@@ -275,7 +277,7 @@ func ProcessSessionDataAndInfo(connection *websocket.Conn, dbClient *dynamodb.Cl
 					stintsModel = append(stintsModel, &stintModel)
 				}
 				resolver.NotifyStintSubscribers(stintsModel)
-				err = SaveStints(dbClient, &ctx, stints, sessionInfo.Key)
+				err = SaveStints(dbClient, &ctx, stints, sessionKey)
 				if err != nil {
 					fmt.Println("error saving stints:", err)
 				}
@@ -296,7 +298,7 @@ func ProcessSessionDataAndInfo(connection *websocket.Conn, dbClient *dynamodb.Cl
 					}
 				}
 				resolver.NotifySectorTimeSubscribers(sectorsModel)
-				err = SaveSectors(dbClient, &ctx, sessionInfo.Key, sectorsModel)
+				err = SaveSectors(dbClient, &ctx, sessionKey, sectorsModel)
 				if err != nil {
 					fmt.Println("error saving sectors:", err)
 				}

@@ -183,10 +183,10 @@ func SaveRaceControlMessages(dbClient *dynamodb.Client, ctx *context.Context, se
 		item := map[string]types.AttributeValue{
 			"SessionKey": &types.AttributeValueMemberN{Value: fmt.Sprintf("%d", sessionKey)},
 			"Message":    &types.AttributeValueMemberS{Value: raceControlMessage.Message},
-			"Category":   &types.AttributeValueMemberS{Value: *category},
+			"Category":   &types.AttributeValueMemberS{Value: dereferenceString(category)},
 			"Utc":        &types.AttributeValueMemberN{Value: fmt.Sprintf("%d", timeStamp)},
-			"Flag":       &types.AttributeValueMemberS{Value: *flag},
-			"Scope":      &types.AttributeValueMemberS{Value: *scope},
+			"Flag":       &types.AttributeValueMemberS{Value: dereferenceString(flag)},
+			"Scope":      &types.AttributeValueMemberS{Value: dereferenceString(scope)},
 		}
 		_, err = dbClient.PutItem(*ctx, &dynamodb.PutItemInput{
 			TableName: aws.String("racecontrol"),
@@ -197,6 +197,13 @@ func SaveRaceControlMessages(dbClient *dynamodb.Client, ctx *context.Context, se
 		}
 	}
 	return nil
+}
+
+func dereferenceString(value *string) string {
+	if value == nil {
+		return ""
+	}
+	return *value
 }
 
 func parseTimestamp(timestamp string) (int64, error) {

@@ -125,3 +125,19 @@ type Timing struct {
 		PersonalFastest bool   `json:"personal_fastest"`
 	} `json:"last_lap_time"`
 }
+
+type IntervalToPositionAhead struct {
+	Value    string `json:"value"`
+	Catching bool   `json:"catching"`
+}
+
+type BestLapTime struct {
+	Value string `json:"value"`
+	Lap   int    `json:"lap"`
+}
+
+type LastLapTime struct {
+	Value           string `json:"value"`
+	OverallFastest  bool   `json:"overall_fastest"`
+	PersonalFastest bool   `json:"personal_fastest"`
+}

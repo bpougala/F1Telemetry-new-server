@@ -6301,9 +6301,9 @@ func (ec *executionContext) _Timing_racing_number(ctx context.Context, field gra
 		}
 		return graphql.Null
 	}
-	res := resTmp.(string)
+	res := resTmp.(int)
 	fc.Result = res
-	return ec.marshalNString2string(ctx, field.Selections, res)
+	return ec.marshalNInt2int(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Timing_racing_number(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -6313,7 +6313,7 @@ func (ec *executionContext) fieldContext_Timing_racing_number(_ context.Context,
 		IsMethod:   false,
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type String does not have child fields")
+			return nil, errors.New("field of type Int does not have child fields")
 		},
 	}
 	return fc, nil

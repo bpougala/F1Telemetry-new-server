@@ -6,10 +6,10 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
+	"github.com/aws/aws-sdk-go-v2/service/dynamodb/types"
 	"github.com/gorilla/websocket"
-	"go.mongodb.org/mongo-driver/bson"
-	"go.mongodb.org/mongo-driver/mongo"
-	"go.mongodb.org/mongo-driver/mongo/options"
 	"io"
 	"net/http"
 	"net/http/cookiejar"
@@ -121,7 +121,7 @@ func SetWebSocket(connectionToken string, cookies []*http.Cookie) (*websocket.Co
 
 func CreateOriginalSessionMessage() SubscribeMessage {
 	var topics []string
-	topics = append(topics, "SessionInfo", "SessionData", "TimingData", "TimingStats", "TimingAppData", "LapCount", "DriverList", "CarData.z", "RaceControlMessages")
+	topics = append(topics, "SessionInfo", "SessionData", "TimingData", "TimingStats", "TimingAppData", "LapCount", "CarData.z", "RaceControlMessages")
 	var topicsList [][]string
 	topicsList = append(topicsList, topics)
 	return SubscribeMessage{
@@ -132,7 +132,7 @@ func CreateOriginalSessionMessage() SubscribeMessage {
 	}
 }
 
-func ProcessSessionDataAndInfo(connection *websocket.Conn, dbClient *mongo.Client, ctx context.Context, sessionKeyChan chan int, resolver *graph.Resolver) {
+func ProcessSessionDataAndInfo(connection *websocket.Conn, dbClient *dynamodb.Client, ctx context.Context, sessionKeyChan chan int, resolver *graph.Resolver) {
 	defer close(sessionKeyChan)
 	subscribeMessage := CreateOriginalSessionMessage()
 	err := connection.WriteJSON(subscribeMessage)
@@ -155,23 +155,39 @@ func ProcessSessionDataAndInfo(connection *websocket.Conn, dbClient *mongo.Clien
 			meetingData, err := BuildMeetingData(msg)
 			if err == nil {
 				meetingDB := convertMeetingToDB(meetingData)
-				dbClient.Database("f1").Collection("meetingdata").FindOneAndReplace(ctx, bson.D{{"_id", meetingDB.Key}}, meetingDB, options.FindOneAndReplace().SetUpsert(true))
+				err = SaveMeeting(dbClient, &ctx, meetingDB)
 			}
 			sessionInfo, err := BuildSessionInfo(msg)
 			if err == nil {
 				if sessionInfo.Key == 0 {
-					dbClient.Database("f1").Collection("sessioninfo").FindOneAndUpdate(
-						ctx,
-						bson.D{{"archiveStatus", "Generating"}},
-						bson.D{{"$set", bson.D{{"archiveStatus", "Complete"}}}},
-					)
+					_, err := dbClient.UpdateItem(ctx, &dynamodb.UpdateItemInput{
+						TableName: aws.String("sessions"),
+						Key: map[string]types.AttributeValue{
+							"archiveStatus": &types.AttributeValueMemberS{Value: "Generating"},
+						},
+						UpdateExpression: aws.String("SET archiveStatus = :newStatus"),
+						ExpressionAttributeValues: map[string]types.AttributeValue{
+							":newStatus": &types.AttributeValueMemberS{Value: "Complete"},
+						},
+					})
+					if err != nil {
+						fmt.Println("error updating DynamoDB:", err)
+					}
 				} else {
-					dbClient.Database("f1").Collection("sessioninfo").FindOneAndReplace(ctx, bson.D{{"_id", sessionInfo.Key}}, sessionInfo, options.FindOneAndReplace().SetUpsert(true))
+					err = SaveSession(dbClient, &ctx, sessionInfo)
+					if err != nil {
+						fmt.Println("error saving session info:", err)
+					} else {
+						sessionKeyChan <- sessionInfo.Key
+					}
 				}
 			}
 			drivers, err := BuildDriverList(msg)
 			if err == nil {
-				saveDrivers(dbClient, ctx, drivers, sessionInfo.Key)
+				err = SaveDrivers(dbClient, &ctx, drivers, sessionInfo.Key)
+				if err != nil {
+					fmt.Println("error saving drivers:", err)
+				}
 			}
 			positions, err := BuildPositions(msg)
 			if err == nil {
@@ -190,7 +206,7 @@ func ProcessSessionDataAndInfo(connection *websocket.Conn, dbClient *mongo.Clien
 					position.SessionKey = sessionInfo.Key
 					positionsInterface = append(positionsInterface, position)
 				}
-				dbClient.Database("f1").Collection("positions").InsertMany(ctx, positionsInterface)
+				err = SavePositions(dbClient, &ctx, positions)
 				resolver.NotifyPositionSubscribers(modelPositions)
 			}
 			timingData, err := BuildTimingData(msg)
@@ -212,9 +228,10 @@ func ProcessSessionDataAndInfo(connection *websocket.Conn, dbClient *mongo.Clien
 					lapTime.IntervalToPositionAhead = &timing.IntervalToPositionAhead
 					laptimes = append(laptimes, &lapTime)
 					resolver.NotifyLapTimeSubscribers(laptimes)
-					if sessionInfo.ArchiveStatus != "Generating" { // might not work if we stop getting data straight after race is marked as Complete
-						timing.SessionKey = sessionInfo.Key
-						_, err = dbClient.Database("f1").Collection("timings").InsertOne(ctx, timing)
+					timing.SessionKey = sessionInfo.Key
+					err = SaveLapTime(dbClient, &ctx, timing)
+					if err != nil {
+						fmt.Println("error saving lap time:", err)
 					}
 				}
 			}
@@ -236,7 +253,10 @@ func ProcessSessionDataAndInfo(connection *websocket.Conn, dbClient *mongo.Clien
 					raceControlModel = append(raceControlModel, &raceControl)
 				}
 				resolver.NotifyRaceControlSubscribers(raceControlModel)
-				saveRaceControlMessages(dbClient, ctx, raceControlModel, sessionInfo.Key)
+				err = SaveRaceControlMessages(dbClient, &ctx, sessionInfo.Key, raceControlModel)
+				if err != nil {
+					fmt.Printf("error: could not save race control messages: %v\n", err)
+				}
 			}
 			stints, err := BuildStints(msg)
 			if err == nil {
@@ -255,7 +275,10 @@ func ProcessSessionDataAndInfo(connection *websocket.Conn, dbClient *mongo.Clien
 					stintsModel = append(stintsModel, &stintModel)
 				}
 				resolver.NotifyStintSubscribers(stintsModel)
-				saveStints(dbClient, ctx, stintsModel, sessionInfo.Key)
+				err = SaveStints(dbClient, &ctx, stints, sessionInfo.Key)
+				if err != nil {
+					fmt.Println("error saving stints:", err)
+				}
 			}
 			sectors, err := BuildSectors(msg)
 			if err == nil {
@@ -273,94 +296,12 @@ func ProcessSessionDataAndInfo(connection *websocket.Conn, dbClient *mongo.Clien
 					}
 				}
 				resolver.NotifySectorTimeSubscribers(sectorsModel)
-				if sessionInfo.ArchiveStatus != "Generating" {
-					var sectorsInterface []interface{}
-					for _, sector := range sectors {
-						sectorsInterface = append(sectorsInterface, sector)
-					}
-					saveSectors(dbClient, ctx, sectors, sessionInfo.Key)
+				err = SaveSectors(dbClient, &ctx, sessionInfo.Key, sectorsModel)
+				if err != nil {
+					fmt.Println("error saving sectors:", err)
 				}
 			}
 		}(message)
-	}
-}
-
-func saveDrivers(dbClient *mongo.Client, ctx context.Context, drivers []Driver, sessionKey int) {
-	var driversInterface []interface{}
-	for _, driver := range drivers {
-		driver.SessionKey = sessionKey
-		driverDocToInsert := DriverDocument{
-			ID: DriverID{
-				SessionKey:   sessionKey,
-				RacingNumber: driver.RacingNumber,
-			},
-			Driver: driver,
-		}
-		driversInterface = append(driversInterface, driverDocToInsert)
-	}
-	opts := options.InsertMany().SetOrdered(false)
-	_, err := dbClient.Database("f1").Collection("drivers").InsertMany(ctx, driversInterface, opts)
-	if err != nil {
-		fmt.Printf("error: %v\n", err)
-	}
-}
-
-func saveSectors(dbClient *mongo.Client, ctx context.Context, sectors []AllSectors, sessionKey int) {
-	var sectorsInterface []interface{}
-	for _, sector := range sectors {
-		for _, sectorTime := range sector.Sectors {
-			var sectorDoc SectorDB
-			sectorDoc.SessionKey = sessionKey
-			sectorDoc.RacingNumber = sector.RacingNumber
-			sectorDoc.Utc = sector.Utc
-			sectorDoc.SectorNumber = sectorTime.SectorNumber
-			sectorDoc.Value = sectorTime.Value
-			sectorDoc.OverallFastest = sectorTime.OverallFastest
-			sectorDoc.PersonalFastest = sectorTime.PersonalFastest
-			sectorsInterface = append(sectorsInterface, sectorDoc)
-		}
-	}
-	_, err := dbClient.Database("f1").Collection("sectors").InsertMany(ctx, sectorsInterface)
-	if err != nil {
-		fmt.Printf("error: %v\n", err)
-	}
-}
-
-func saveStints(dbClient *mongo.Client, ctx context.Context, stints []*model.Stint, sessionKey int) {
-	var stintsInterface []interface{}
-	for _, stint := range stints {
-		var stintDoc StintDB
-		stintDoc.SessionKey = sessionKey
-		stintDoc.RacingNumber = stint.RacingNumber
-		stintDoc.Compound = stint.Compound
-		stintDoc.Is_new = stint.New
-		stintDoc.Are_tyres_not_changed = stint.TyresNotChanged == 1
-		stintDoc.TotalLaps = stint.TotalLaps
-		stintDoc.StartLaps = stint.StartLaps
-		stintDoc.Timestamp = stint.Timestamp
-		stintsInterface = append(stintsInterface, stintDoc)
-	}
-	_, err := dbClient.Database("f1").Collection("stints").InsertMany(ctx, stintsInterface)
-	if err != nil {
-		fmt.Printf("error: %v\n", err)
-	}
-}
-
-func saveRaceControlMessages(dbClient *mongo.Client, ctx context.Context, raceControlMessages []*model.RaceControl, sessionKey int) {
-	var raceControlMessagesInterface []interface{}
-	for _, raceControlMessage := range raceControlMessages {
-		var raceControlMessageDoc RaceControl
-		raceControlMessageDoc.SessionKey = sessionKey
-		raceControlMessageDoc.Message = raceControlMessage.Message
-		raceControlMessageDoc.Category = *raceControlMessage.Category
-		raceControlMessageDoc.Utc = raceControlMessage.Date
-		raceControlMessageDoc.Flag = *raceControlMessage.Flag
-		raceControlMessageDoc.LapNumber = raceControlMessage.LapNumber
-		raceControlMessagesInterface = append(raceControlMessagesInterface, raceControlMessageDoc)
-	}
-	_, err := dbClient.Database("f1").Collection("racecontrol").InsertMany(ctx, raceControlMessagesInterface)
-	if err != nil {
-		fmt.Printf("error: %v\n", err)
 	}
 }
 

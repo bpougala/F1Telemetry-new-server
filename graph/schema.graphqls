@@ -119,14 +119,14 @@ type CarData {
 
 type Stint {
   racing_number:     Int! 
-	lap_flags:         Int!   
-	compound:          String!
-	new:               Boolean!  
-	tyres_not_changed: Int! 
-	total_laps:        Int!    
-	start_laps:        Int!  
-	timestamp:         String!
-	stint_number:      Int! 
+  lap_flags:         Int!
+  compound:          String!
+  new:               Boolean!
+  tyres_not_changed: Int!
+  total_laps:        Int!
+  start_laps:        Int!
+  timestamp:         String!
+  stint_number:      Int!
 }
 
 type Sector {
@@ -144,7 +144,7 @@ type Timing {
   stopped: Boolean!
   status: Int!
   retired: Boolean!
-  racing_number: String!
+  racing_number: Int!
   position: Int!
   pitOut: Boolean!
   number_of_laps: Int!

@@ -4,223 +4,347 @@ import (
 	"F1Telemetry-new-server/data-ingestor/collections"
 	"F1Telemetry-new-server/graph/model"
 	"context"
-
-	"go.mongodb.org/mongo-driver/bson"
-	"go.mongodb.org/mongo-driver/mongo"
+	"encoding/json"
+	"fmt"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
+	"github.com/aws/aws-sdk-go-v2/service/dynamodb/types"
+	"strconv"
+	"time"
 )
 
-func FetchMeetings(dbClient *mongo.Client, ctx context.Context) ([]model.Meeting, error) {
-	cursor, err := dbClient.Database("f1").Collection("meetingdata").Find(ctx, bson.D{{"_id", bson.D{{"$gte", 1253}}}})
+func FetchMeetings(ddbClient *dynamodb.Client, ctx context.Context) ([]model.Meeting, error) {
+	input := &dynamodb.ScanInput{
+		TableName: aws.String("meetings"),
+	}
+
+	result, err := ddbClient.Scan(ctx, input)
 	if err != nil {
 		return nil, err
 	}
-	var rawMeetings []collections.MeetingDataDB
+
 	var meetings []model.Meeting
-	err = cursor.All(ctx, &rawMeetings)
-	if err != nil {
-		return nil, err
-	}
-	for _, rawMeeting := range rawMeetings {
+	for _, item := range result.Items {
+		meetingKeyAttr, ok := item["MeetingKey"].(*types.AttributeValueMemberN)
+		if !ok {
+			continue
+		}
+		var meetingKey int
+		if _, err := fmt.Sscanf(meetingKeyAttr.Value, "%d", &meetingKey); err != nil {
+			continue
+		}
 		meeting := model.Meeting{
-			MeetingKey:          rawMeeting.Key,
-			MeetingName:         rawMeeting.Name,
-			MeetingOfficialName: rawMeeting.OfficialName,
-			Location:            rawMeeting.Location,
-			CountryName:         rawMeeting.CountryName,
-			CountryCode:         rawMeeting.CountryCode,
-			CircuitShortName:    rawMeeting.Circuit,
+			MeetingKey:          meetingKey,
+			MeetingName:         getStringAttr(item, "MeetingName"),
+			MeetingOfficialName: getStringAttr(item, "MeetingOfficialName"),
+			Location:            getStringAttr(item, "Location"),
+			CountryName:         getStringAttr(item, "CountryName"),
+			CountryCode:         getStringAttr(item, "CountryCode"),
+			CircuitShortName:    getStringAttr(item, "CircuitShortName"),
 		}
 		meetings = append(meetings, meeting)
 	}
 	return meetings, nil
 }
 
-func FetchSessions(dbClient *mongo.Client, ctx context.Context, meetingKey int) ([]model.Session, error) {
-	cursor, err := dbClient.Database("f1").Collection("sessioninfo").Find(ctx, bson.D{{Key: "meetingkey", Value: meetingKey}})
+func FetchSessions(dbClient *dynamodb.Client, ctx context.Context, meetingKey int) ([]model.Session, error) {
+	input := &dynamodb.QueryInput{
+		TableName: aws.String("sessions"),
+		KeyConditions: map[string]types.Condition{
+			"MeetingKey": {
+				ComparisonOperator: types.ComparisonOperatorEq,
+				AttributeValueList: []types.AttributeValue{
+					&types.AttributeValueMemberN{Value: fmt.Sprintf("%d", meetingKey)},
+				},
+			},
+		},
+	}
+
+	result, err := dbClient.Query(ctx, input)
 	if err != nil {
 		return nil, err
 	}
-	var rawSessions []collections.SessionInfoDB
+
 	var sessions []model.Session
-	err = cursor.All(ctx, &rawSessions)
-	if err != nil {
-		return nil, err
-	}
-	for _, rawSession := range rawSessions {
+	for _, item := range result.Items {
 		session := model.Session{
-			SessionKey:  rawSession.Key,
-			MeetingKey:  rawSession.MeetingKey,
-			SessionName: rawSession.Name,
-			DateStart:   rawSession.StartDate,
-			DateEnd:     rawSession.EndDate,
-			SessionType: rawSession.Type,
-			GmtOffset:   rawSession.GmtOffset,
-			Status:      rawSession.ArchiveStatus,
+			SessionKey:  getIntAttr(item, "SessionKey"),
+			MeetingKey:  getIntAttr(item, "MeetingKey"),
+			SessionName: getStringAttr(item, "Name"),
+			DateStart:   getStringAttr(item, "StartDate"),
+			DateEnd:     getStringAttr(item, "EndDate"),
+			SessionType: getStringAttr(item, "Type"),
+			GmtOffset:   getStringAttr(item, "GmtOffset"),
+			Status:      getStringAttr(item, "ArchiveStatus"),
 		}
 		sessions = append(sessions, session)
 	}
 	return sessions, nil
 }
 
-func FetchDrivers(dbClient *mongo.Client, ctx context.Context, sessionKey int) ([]model.Driver, error) {
-	cursor, err := dbClient.Database("f1").Collection("drivers").Find(ctx, bson.D{{"sessionkey", sessionKey}})
+func FetchDrivers(dbClient *dynamodb.Client, ctx context.Context, sessionKey int) ([]model.Driver, error) {
+	input := &dynamodb.QueryInput{
+		TableName: aws.String("drivers"),
+		KeyConditions: map[string]types.Condition{
+			"SessionKey": {
+				ComparisonOperator: types.ComparisonOperatorEq,
+				AttributeValueList: []types.AttributeValue{
+					&types.AttributeValueMemberN{Value: fmt.Sprintf("%d", sessionKey)},
+				},
+			},
+		},
+	}
+
+	result, err := dbClient.Query(ctx, input)
 	if err != nil {
 		return nil, err
 	}
-	var rawDrivers []collections.DriverDB
+
 	var drivers []model.Driver
-	err = cursor.All(ctx, &rawDrivers)
-	if err != nil {
-		return nil, err
-	}
-	for _, rawDriver := range rawDrivers {
+	for _, item := range result.Items {
+		teamColour := getStringAttr(item, "TeamColour")
+		teamName := getStringAttr(item, "TeamName")
+		abbreviation := getStringAttr(item, "Abbreviation")
 		driver := model.Driver{
-			SessionKey:    rawDriver.SessionKey,
-			RacingNumber:  rawDriver.RacingNumber,
-			FirstName:     rawDriver.FirstName,
-			LastName:      rawDriver.LastName,
-			TeamColour:    &rawDriver.TeamColour,
-			TeamName:      &rawDriver.TeamName,
-			Abbreviation:  &rawDriver.Abbreviation,
-			FullName:      rawDriver.FullName,
-			HeadshotURL:   rawDriver.HeadshotUrl,
-			BroadcastName: rawDriver.BroadcastName,
+			SessionKey:    getIntAttr(item, "SessionKey"),
+			RacingNumber:  getIntAttr(item, "RacingNumber"),
+			FirstName:     getStringAttr(item, "FirstName"),
+			LastName:      getStringAttr(item, "LastName"),
+			TeamColour:    &teamColour,
+			TeamName:      &teamName,
+			Abbreviation:  &abbreviation,
+			FullName:      getStringAttr(item, "FullName"),
+			BroadcastName: getStringAttr(item, "BroadcastName"),
+			HeadshotURL:   getStringAttr(item, "HeadshotUrl"),
 		}
 		drivers = append(drivers, driver)
 	}
 	return drivers, nil
 }
 
-func FetchStints(dbClient *mongo.Client, ctx context.Context, sessionKey int) ([]model.Stint, error) {
-	cursor, err := dbClient.Database("f1").Collection("stints").Find(ctx, bson.D{{"sessionkey", sessionKey}})
+func FetchStints(dbClient *dynamodb.Client, ctx context.Context, sessionKey int) ([]model.Stint, error) {
+	input := &dynamodb.QueryInput{
+		TableName: aws.String("stints"),
+		KeyConditions: map[string]types.Condition{
+			"SessionKey": {
+				ComparisonOperator: types.ComparisonOperatorEq,
+				AttributeValueList: []types.AttributeValue{
+					&types.AttributeValueMemberN{Value: fmt.Sprintf("%d", sessionKey)},
+				},
+			},
+		},
+	}
+
+	result, err := dbClient.Query(ctx, input)
 	if err != nil {
 		return nil, err
 	}
-	var rawStints []collections.StintDB
+
 	var stints []model.Stint
-	err = cursor.All(ctx, &rawStints)
-	if err != nil {
-		return nil, err
-	}
-	for _, rawStint := range rawStints {
+	for _, item := range result.Items {
 		stint := model.Stint{
-			RacingNumber:    rawStint.RacingNumber,
-			LapFlags:        rawStint.LapFlags,
-			Compound:        rawStint.Compound,
-			New:             rawStint.New,
-			TyresNotChanged: rawStint.TyresNotChanged,
-			TotalLaps:       rawStint.TotalLaps,
-			StartLaps:       rawStint.StartLaps,
-			Timestamp:       rawStint.Timestamp,
+			RacingNumber:    getIntAttr(item, "RacingNumber"),
+			LapFlags:        getIntAttr(item, "LapFlags"),
+			Compound:        getStringAttr(item, "Compound"),
+			New:             getBoolAttr(item, "New"),
+			TyresNotChanged: getIntAttr(item, "TyresNotChanged"),
+			TotalLaps:       getIntAttr(item, "TotalLaps"),
+			StartLaps:       getIntAttr(item, "StartLaps"),
+			Timestamp:       getStringAttr(item, "Timestamp"),
 		}
 		stints = append(stints, stint)
 	}
 	return stints, nil
 }
 
-func FetchSectors(dbClient *mongo.Client, ctx context.Context, sessionKey int) ([]model.Sector, error) {
-	cursor, err := dbClient.Database("f1").Collection("sectors").Find(ctx, bson.D{{"sessionkey", sessionKey}})
+func FetchSectors(dbClient *dynamodb.Client, ctx context.Context, sessionKey int) ([]model.Sector, error) {
+	input := &dynamodb.QueryInput{
+		TableName: aws.String("sectors"),
+		KeyConditions: map[string]types.Condition{
+			"SessionKey": {
+				ComparisonOperator: types.ComparisonOperatorEq,
+				AttributeValueList: []types.AttributeValue{
+					&types.AttributeValueMemberN{Value: fmt.Sprintf("%d", sessionKey)},
+				},
+			},
+		},
+	}
+
+	result, err := dbClient.Query(ctx, input)
 	if err != nil {
 		return nil, err
 	}
+
 	var sectors []model.Sector
-	err = cursor.All(ctx, &sectors)
-	if err != nil {
-		return nil, err
+	for _, item := range result.Items {
+		time, _ := time.Parse(time.RFC3339, getStringAttr(item, "Utc"))
+		sector := model.Sector{
+			RacingNumber:    getIntAttr(item, "RacingNumber"),
+			SectorNumber:    getIntAttr(item, "SectorNumber"),
+			Value:           getStringAttr(item, "Value"),
+			LapNumber:       getIntAttr(item, "LapNumber"),
+			Utc:             &time,
+			OverallFastest:  getBoolAttr(item, "OverallFastest"),
+			PersonalFastest: getBoolAttr(item, "PersonalFastest"),
+		}
+		sectors = append(sectors, sector)
 	}
 	return sectors, nil
 }
 
-func FetchPositions(dbClient *mongo.Client, ctx context.Context, sessionKey int) ([]model.Position, error) {
-	cursor, err := dbClient.Database("f1").Collection("positions").Find(ctx, bson.D{{"sessionkey", sessionKey}})
+func FetchPositions(dbClient *dynamodb.Client, ctx context.Context, sessionKey int) ([]model.Position, error) {
+	input := &dynamodb.QueryInput{
+		TableName: aws.String("positions"),
+		KeyConditions: map[string]types.Condition{
+			"SessionKey": {
+				ComparisonOperator: types.ComparisonOperatorEq,
+				AttributeValueList: []types.AttributeValue{
+					&types.AttributeValueMemberN{Value: fmt.Sprintf("%d", sessionKey)},
+				},
+			},
+		},
+	}
+
+	result, err := dbClient.Query(ctx, input)
 	if err != nil {
 		return nil, err
 	}
-	var rawPositions []collections.PositionsDB
+
 	var positions []model.Position
-	err = cursor.All(ctx, &rawPositions)
-	if err != nil {
-		return nil, err
-	}
-	for _, rawPosition := range rawPositions {
+	for _, item := range result.Items {
 		position := model.Position{
-			SessionKey:   rawPosition.SessionKey,
-			Position:     rawPosition.Position,
-			RacingNumber: rawPosition.RacingNumber,
-			InPit:        rawPosition.InPit,
-			PitOut:       rawPosition.PitOut,
-			Retired:      rawPosition.Retired,
-			Stopped:      rawPosition.Stopped,
+			SessionKey:   getIntAttr(item, "SessionKey"),
+			RacingNumber: getIntAttr(item, "RacingNumber"),
+			InPit:        getBoolAttr(item, "InPit"),
+			PitOut:       getBoolAttr(item, "PitOut"),
+			Retired:      getBoolAttr(item, "Retired"),
+			Stopped:      getBoolAttr(item, "Stopped"),
+			Position:     getIntAttr(item, "Position"),
 		}
 		positions = append(positions, position)
 	}
 	return positions, nil
 }
 
-func FetchTimings(dbClient *mongo.Client, ctx context.Context, sessionKey int) ([]model.Timing, error) {
-	cursor, err := dbClient.Database("f1").Collection("timings").Find(ctx, bson.D{{"sessionkey", sessionKey}})
+func FetchTimings(dbClient *dynamodb.Client, ctx context.Context, sessionKey int) ([]model.Timing, error) {
+	input := &dynamodb.QueryInput{
+		TableName: aws.String("timings"),
+		KeyConditions: map[string]types.Condition{
+			"SessionKey": {
+				ComparisonOperator: types.ComparisonOperatorEq,
+				AttributeValueList: []types.AttributeValue{
+					&types.AttributeValueMemberN{Value: fmt.Sprintf("%d", sessionKey)},
+				},
+			},
+		},
+	}
+
+	result, err := dbClient.Query(ctx, input)
 	if err != nil {
 		return nil, err
 	}
-	var rawTimings []collections.Timing
+
 	var timings []model.Timing
-	err = cursor.All(ctx, &rawTimings)
-	if err != nil {
-		return nil, err
-	}
-	for _, rawTiming := range rawTimings {
+	for _, item := range result.Items {
+		interval := getStringAttr(item, "IntervalToPositionAhead")
+		var intervalToPositionAhead collections.IntervalToPositionAhead
+		if err := json.Unmarshal([]byte(interval), &intervalToPositionAhead); err != nil {
+			return nil, err
+		}
+		bestLapTime := getStringAttr(item, "BestLapTime")
+		var bestLapTimeStruct collections.BestLapTime
+		if err := json.Unmarshal([]byte(bestLapTime), &bestLapTimeStruct); err != nil {
+			return nil, err
+		}
+		lastLapTime := getStringAttr(item, "LastLapTime")
+		var lastLapTimeStruct collections.LastLapTime
+		if err := json.Unmarshal([]byte(lastLapTime), &lastLapTimeStruct); err != nil {
+			return nil, err
+		}
 		timing := model.Timing{
-			SessionKey:              rawTiming.SessionKey,
-			Stopped:                 rawTiming.Stopped,
-			Status:                  rawTiming.Status,
-			Retired:                 rawTiming.Retired,
-			RacingNumber:            rawTiming.RacingNumber,
-			Position:                rawTiming.Position,
-			PitOut:                  rawTiming.PitOut,
-			NumberOfLaps:            rawTiming.NumberOfLaps,
-			LastLapTime:             rawTiming.LastLapTime,
-			IntervalToPositionAhead: rawTiming.IntervalToPositionAhead,
-			InPit:                   rawTiming.InPit,
-			GapToLeader:             rawTiming.GapToLeader,
-			BestLapTime:             rawTiming.BestLapTime,
+			SessionKey:              getIntAttr(item, "SessionKey"),
+			RacingNumber:            getIntAttr(item, "RacingNumber"),
+			Status:                  getIntAttr(item, "Status"),
+			InPit:                   getBoolAttr(item, "InPit"),
+			PitOut:                  getBoolAttr(item, "PitOut"),
+			Stopped:                 getBoolAttr(item, "Stopped"),
+			Retired:                 getBoolAttr(item, "Retired"),
+			LastLapTime:             lastLapTimeStruct,
+			IntervalToPositionAhead: intervalToPositionAhead,
+			GapToLeader:             getStringAttr(item, "GapToLeader"),
+			BestLapTime:             bestLapTimeStruct,
 		}
 		timings = append(timings, timing)
 	}
 	return timings, nil
 }
 
-func FetchRaceControl(dbClient *mongo.Client, ctx context.Context, sessionKey int) ([]model.RaceControl, error) {
-	cursor, err := dbClient.Database("f1").Collection("racecontrol").Find(ctx, bson.D{{"sessionkey", sessionKey}})
-	if err != nil {
-		return nil, err
+func FetchRaceControl(dbClient *dynamodb.Client, ctx context.Context, sessionKey int) ([]model.RaceControl, error) {
+	input := &dynamodb.QueryInput{
+		TableName: aws.String("racecontrol"),
+		KeyConditions: map[string]types.Condition{
+			"SessionKey": {
+				ComparisonOperator: types.ComparisonOperatorEq,
+				AttributeValueList: []types.AttributeValue{
+					&types.AttributeValueMemberN{Value: fmt.Sprintf("%d", sessionKey)},
+				},
+			},
+		},
 	}
-	var rawRaceControl []collections.RaceControl
-	err = cursor.All(ctx, &rawRaceControl)
+	result, err := dbClient.Query(ctx, input)
 	if err != nil {
 		return nil, err
 	}
 	var raceControlMessages []model.RaceControl
-	for _, rawRaceControl := range rawRaceControl {
+	for _, item := range result.Items {
+		date, err := getTimeStringFromTimestamp(getIntAttr(item, "Utc"))
+		if err != nil {
+			return nil, err
+		}
+		category := getStringAttr(item, "Category")
+		flag := getStringAttr(item, "Flag")
+		lapNumber := getIntAttr(item, "LapNumber")
+		scope := getStringAttr(item, "Scope")
 		raceControl := model.RaceControl{
-			Date:     rawRaceControl.Utc,
-			Category: &rawRaceControl.Category,
-			Flag:     &rawRaceControl.Flag,
-			Message:  rawRaceControl.Message,
-			Scope:    &rawRaceControl.Scope,
+			Date:      date,
+			Category:  &category,
+			Flag:      &flag,
+			LapNumber: &lapNumber,
+			Message:   getStringAttr(item, "Message"),
+			Scope:     &scope,
 		}
 		raceControlMessages = append(raceControlMessages, raceControl)
 	}
 	return raceControlMessages, nil
 }
-func FetchCarData(dbClient *mongo.Client, ctx context.Context, sessionKey int, driverNumber int) ([]model.CarData, error) {
-	cursor, err := dbClient.Database("f1").Collection("cardata").Find(ctx, bson.D{{"sessionkey", sessionKey}, {"drivernumber", driverNumber}})
-	if err != nil {
-		return nil, err
+
+func getStringAttr(item map[string]types.AttributeValue, key string) string {
+	if val, ok := item[key].(*types.AttributeValueMemberS); ok {
+		return val.Value
 	}
-	var carData []model.CarData
-	err = cursor.All(ctx, &carData)
-	if err != nil {
-		return nil, err
+	return ""
+}
+
+func getIntAttr(item map[string]types.AttributeValue, key string) int {
+	if val, ok := item[key].(*types.AttributeValueMemberN); ok {
+		intVal, err := strconv.Atoi(val.Value)
+		if err != nil {
+			return 0
+		}
+		return intVal
 	}
-	return carData, nil
+	return 0
+}
+
+func getBoolAttr(item map[string]types.AttributeValue, key string) bool {
+	if val, ok := item[key].(*types.AttributeValueMemberBOOL); ok {
+		return val.Value
+	}
+	return false
+}
+
+func getTimeStringFromTimestamp(timestamp int) (string, error) {
+	intTimeStamp := int64(timestamp)
+	t := time.Unix(intTimeStamp, 0).UTC()
+	return t.Format(time.RFC3339), nil
 }

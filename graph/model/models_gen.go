@@ -132,7 +132,7 @@ type Timing struct {
 	Stopped                 bool   `json:"stopped"`
 	Status                  int    `json:"status"`
 	Retired                 bool   `json:"retired"`
-	RacingNumber            string `json:"racing_number"`
+	RacingNumber            int    `json:"racing_number"`
 	Position                int    `json:"position"`
 	PitOut                  bool   `json:"pitOut"`
 	NumberOfLaps            int    `json:"number_of_laps"`

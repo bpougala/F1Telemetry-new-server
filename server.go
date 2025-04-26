@@ -20,7 +20,7 @@ const defaultPort = "8080"
 
 func main() {
 	ctx := context.Background()
-	dbClient, err := dataingestor.GetMongoClient(&ctx)
+	dbClient, err := dataingestor.GetDynamoClient(&ctx)
 	if err != nil {
 		log.Fatalf("Failed to connect to MongoDB: %v", err)
 	}

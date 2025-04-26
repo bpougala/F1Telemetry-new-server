@@ -25,10 +25,10 @@ jobs:
       - name: Build
         run: go build -v ./...
       - name: Login to DCR
-        run: docker login registry.digitalocean.com -u bpougala@gmail.com -p ${{ secrets.DIGITALOCEAN_ACCESS_TOKEN }}
+        run: aws ecr get-login-password --region eu-west-2 | docker login --username AWS --password-stdin 796092239933.dkr.ecr.eu-west-2.amazonaws.com
       - name: Build Docker image
-        run: docker build . -t f1telemetry-new-server:latest --build-arg MONGO_CONNECTION_URL=${{ secrets.MONGO_CONNECTION_URL }}
+        run: docker build -t f1telemetry .
       - name: Tag Docker image
-        run: docker tag f1telemetry-new-server:latest registry.digitalocean.com/f1telemetry-app/f1telemetry-new-server:latest
+        run: docker tag f1telemetry:latest 796092239933.dkr.ecr.eu-west-2.amazonaws.com/f1telemetry:latest
       - name: Push Docker image
-        run: docker push registry.digitalocean.com/f1telemetry-app/f1telemetry-new-server:latest
+        run: docker push 796092239933.dkr.ecr.eu-west-2.amazonaws.com/f1telemetry:latest

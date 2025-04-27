@@ -16,6 +16,7 @@ import (
 	"net/url"
 	"os"
 	"os/signal"
+	"time"
 )
 
 type Connection struct {
@@ -139,6 +140,24 @@ func ProcessSessionDataAndInfo(connection *websocket.Conn, dbClient *dynamodb.Cl
 		fmt.Println("write ERROR:", err)
 		return
 	}
+	connection.SetPongHandler(func(appData string) error {
+		return nil
+	})
+
+	go func() {
+		ticker := time.NewTicker(30 * time.Second)
+		defer ticker.Stop()
+		for {
+			select {
+			case <-ticker.C:
+				err := connection.WriteControl(websocket.PingMessage, []byte{}, time.Now().Add(10*time.Second))
+				if err != nil {
+					fmt.Println("error sending ping:", err)
+					return
+				}
+			}
+		}
+	}()
 	for {
 		_, message, err := connection.ReadMessage()
 		if err != nil {

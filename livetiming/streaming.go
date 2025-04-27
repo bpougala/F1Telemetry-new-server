@@ -288,6 +288,7 @@ func ProcessSessionDataAndInfo(connection *websocket.Conn, dbClient *dynamodb.Cl
 				for _, sectorTime := range sectors {
 					for _, sector := range sectorTime.Sectors {
 						var sectorModel model.Sector
+						sectorModel.LapNumber = sector.LapNumber
 						sectorModel.RacingNumber = sectorTime.RacingNumber
 						sectorModel.SectorNumber = sector.SectorNumber
 						sectorModel.Value = sector.Value

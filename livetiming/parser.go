@@ -555,6 +555,7 @@ func BuildSectors(data []byte) ([]AllSectors, error) {
 		firstSector.OverallFastest = rawFirstSector.OverallFastest
 		firstSector.PersonalFastest = rawFirstSector.PersonalFastest
 		firstSector.SectorNumber = 1
+		firstSector.LapNumber = value.NumberOfLaps
 		if firstSector.Value != "" {
 			sector.Sectors = append(sector.Sectors, firstSector)
 		}
@@ -565,6 +566,7 @@ func BuildSectors(data []byte) ([]AllSectors, error) {
 		secondSector.OverallFastest = rawSecondSector.OverallFastest
 		secondSector.PersonalFastest = rawSecondSector.PersonalFastest
 		secondSector.SectorNumber = 2
+		secondSector.LapNumber = value.NumberOfLaps
 		if secondSector.Value != "" {
 			sector.Sectors = append(sector.Sectors, secondSector)
 		}
@@ -575,6 +577,7 @@ func BuildSectors(data []byte) ([]AllSectors, error) {
 		thirdSector.OverallFastest = rawThirdSector.OverallFastest
 		thirdSector.PersonalFastest = rawThirdSector.PersonalFastest
 		thirdSector.SectorNumber = 3
+		thirdSector.LapNumber = value.NumberOfLaps
 		if thirdSector.Value != "" {
 			sector.Sectors = append(sector.Sectors, thirdSector)
 		}
@@ -631,6 +634,7 @@ func buildRaceSectors(data []byte) ([]AllSectors, error) {
 				sector.Value = sectorTime.Value
 				sector.OverallFastest = sectorTime.OverallFastest
 				sector.PersonalFastest = sectorTime.PersonalFastest
+				sector.LapNumber = sectorTime.LapNumber
 				driverSectors.Sectors = append(driverSectors.Sectors, sector)
 			}
 			if driverSectors.Sectors != nil {

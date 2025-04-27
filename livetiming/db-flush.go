@@ -8,6 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb/types"
+	"github.com/google/uuid"
 	"time"
 )
 
@@ -150,9 +151,16 @@ func SaveLapTime(dbClient *dynamodb.Client, ctx *context.Context, lapTime LapTim
 
 func SaveSectors(dbClient *dynamodb.Client, ctx *context.Context, sessionKey int, sectors []*model.Sector) error {
 	for _, sector := range sectors {
+		var reference string
+		if sector.LapNumber == 0 {
+			reference = uuid.New().String()
+		} else {
+			reference = fmt.Sprintf("%d#%d#%d", sector.RacingNumber, sector.LapNumber, sector.SectorNumber)
+		}
 		item := map[string]types.AttributeValue{
 			"SessionKey":      &types.AttributeValueMemberN{Value: fmt.Sprintf("%d", sessionKey)},
 			"RacingNumber":    &types.AttributeValueMemberN{Value: fmt.Sprintf("%d", sector.RacingNumber)},
+			"Reference":       &types.AttributeValueMemberS{Value: reference},
 			"SectorNumber":    &types.AttributeValueMemberN{Value: fmt.Sprintf("%d", sector.SectorNumber)},
 			"Value":           &types.AttributeValueMemberS{Value: sector.Value},
 			"OverallFastest":  &types.AttributeValueMemberBOOL{Value: sector.OverallFastest},

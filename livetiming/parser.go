@@ -174,7 +174,10 @@ func buildRaceTimingData(data []byte) ([]LapTimeMetric, error) {
 }
 
 func buildFinalSession(elements []interface{}) (SessionInfoDB, error) {
-	statusSeries := elements[1].(map[string]interface{})
+	statusSeries, ok := elements[1].(map[string]interface{}) // check if elements[1] is a string
+	if !ok {
+		return SessionInfoDB{}, fmt.Errorf("incorrect input data")
+	}
 	value := statusSeries["StatusSeries"].(map[string]interface{})
 	var sessionInfo SessionInfoDB
 	for _, v := range value {

@@ -133,12 +133,11 @@ func CreateOriginalSessionMessage() SubscribeMessage {
 	}
 }
 
-func ProcessSessionDataAndInfo(connection *websocket.Conn, dbClient *dynamodb.Client, ctx context.Context, resolver *graph.Resolver) {
+func ProcessSessionDataAndInfo(connection *websocket.Conn, dbClient *dynamodb.Client, ctx context.Context, resolver *graph.Resolver) error {
 	subscribeMessage := CreateOriginalSessionMessage()
 	err := connection.WriteJSON(subscribeMessage)
 	if err != nil {
-		fmt.Println("write ERROR:", err)
-		return
+		return err
 	}
 	connection.SetPongHandler(func(appData string) error {
 		return nil
@@ -161,12 +160,7 @@ func ProcessSessionDataAndInfo(connection *websocket.Conn, dbClient *dynamodb.Cl
 	for {
 		_, message, err := connection.ReadMessage()
 		if err != nil {
-			if websocket.IsUnexpectedCloseError(err, websocket.CloseGoingAway, websocket.CloseAbnormalClosure) {
-				fmt.Printf("unexpected close error: %v", err)
-			} else {
-				fmt.Println("read:", err)
-			}
-			return
+			return err
 		}
 		var sessionKey int
 

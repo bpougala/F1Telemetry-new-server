@@ -14,6 +14,7 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
+	"time"
 )
 
 const defaultPort = "8080"
@@ -62,7 +63,17 @@ func main() {
 
 	fmt.Println("connected to websocket")
 
-	go livetiming.ProcessSessionDataAndInfo(connection, dbClient, ctx, resolver)
+	go func() {
+		for {
+			err := livetiming.ProcessSessionDataAndInfo(connection, dbClient, ctx, resolver)
+			if err != nil {
+				fmt.Println("error occurred, retrying:", err)
+				time.Sleep(2 * time.Second)
+				continue
+			}
+			break
+		}
+	}()
 	c := make(chan os.Signal, 1)
 	signal.Notify(c, os.Interrupt, syscall.SIGTERM)
 	<-c

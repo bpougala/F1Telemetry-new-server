@@ -122,7 +122,7 @@ func SetWebSocket(connectionToken string, cookies []*http.Cookie) (*websocket.Co
 
 func CreateOriginalSessionMessage() SubscribeMessage {
 	var topics []string
-	topics = append(topics, "SessionInfo", "SessionData", "TimingData", "TimingStats", "TimingAppData", "LapCount", "CarData.z", "RaceControlMessages")
+	topics = append(topics, "SessionInfo", "SessionData", "TimingData", "DriverList", "TimingStats", "TimingAppData", "LapCount", "CarData.z", "RaceControlMessages")
 	var topicsList [][]string
 	topicsList = append(topicsList, topics)
 	return SubscribeMessage{

@@ -174,11 +174,17 @@ func buildRaceTimingData(data []byte) ([]LapTimeMetric, error) {
 }
 
 func buildFinalSession(elements []interface{}) (SessionInfoDB, error) {
-	statusSeries, ok := elements[1].(map[string]interface{}) // check if elements[1] is a string
+	raw, ok := elements[1].(map[string]interface{})
 	if !ok {
-		return SessionInfoDB{}, fmt.Errorf("incorrect input data")
+		var sessionInfo SessionInfoDB
+		return sessionInfo, fmt.Errorf("unexpected type for elements[1], expected map[string]interface{}")
 	}
-	value := statusSeries["StatusSeries"].(map[string]interface{})
+	statusSeries := raw
+	value, ok := statusSeries["StatusSeries"].(map[string]interface{})
+	if !ok {
+		var sessionInfo SessionInfoDB
+		return sessionInfo, fmt.Errorf("unexpected type for StatusSeries, expected map[string]interface{}")
+	}
 	var sessionInfo SessionInfoDB
 	for _, v := range value {
 		var statusInfoStruct SessionStatusStruct

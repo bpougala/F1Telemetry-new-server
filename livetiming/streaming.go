@@ -209,6 +209,7 @@ func ProcessSessionDataAndInfo(connection *websocket.Conn, dbClient *dynamodb.Cl
 				var positionsInterface []interface{}
 				var modelPositions []*model.Position
 				for _, position := range positions {
+					position.SessionKey = sessionKey
 					var modelPosition model.Position
 					modelPosition.Position = position.Position
 					modelPosition.RacingNumber = position.RacingNumber
@@ -222,6 +223,9 @@ func ProcessSessionDataAndInfo(connection *websocket.Conn, dbClient *dynamodb.Cl
 					positionsInterface = append(positionsInterface, position)
 				}
 				err = SavePositions(dbClient, &ctx, positions)
+				if err != nil {
+					fmt.Println("error saving positions:", err)
+				}
 				resolver.NotifyPositionSubscribers(modelPositions)
 			}
 			timingData, err := BuildTimingData(msg)

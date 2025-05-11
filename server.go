@@ -43,29 +43,29 @@ func main() {
 			log.Fatalf("Failed to start server: %v", err)
 		}
 	}()
-	cookies, connObject, err := livetiming.Negotiate()
-	if err != nil {
-		panic(err)
-	}
-	retries := 10
-	connection, resp, err := livetiming.SetWebSocket(connObject.ConnectionToken, cookies)
-	for retries > 0 && err != nil {
-		connection, resp, err = livetiming.SetWebSocket(connObject.ConnectionToken, cookies)
-		retries--
-	}
-	if err != nil {
-		if resp != nil {
-			fmt.Printf("handshake failed with status %d", resp.StatusCode)
-		}
-		panic(err)
-	}
-	defer connection.Close()
 
 	fmt.Println("connected to websocket")
 
 	go func() {
 		for {
-			err := livetiming.ProcessSessionDataAndInfo(connection, dbClient, ctx, resolver)
+			cookies, connObject, err := livetiming.Negotiate()
+			if err != nil {
+				panic(err)
+			}
+			retries := 10
+			connection, resp, err := livetiming.SetWebSocket(connObject.ConnectionToken, cookies)
+			for retries > 0 && err != nil {
+				connection, resp, err = livetiming.SetWebSocket(connObject.ConnectionToken, cookies)
+				retries--
+			}
+			if err != nil {
+				if resp != nil {
+					fmt.Printf("handshake failed with status %d", resp.StatusCode)
+				}
+				panic(err)
+			}
+			defer connection.Close()
+			err = livetiming.ProcessSessionDataAndInfo(connection, dbClient, ctx, resolver)
 			if err != nil {
 				fmt.Println("error occurred, retrying:", err)
 				time.Sleep(2 * time.Second)

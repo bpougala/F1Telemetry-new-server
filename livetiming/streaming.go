@@ -198,6 +198,9 @@ func ProcessSessionDataAndInfo(connection *websocket.Conn, dbClient *dynamodb.Cl
 				}
 			}
 			drivers, err := BuildDriverList(msg)
+			for _, driver := range drivers {
+				driver.SessionKey = sessionKey
+			}
 			if err == nil {
 				err = SaveDrivers(dbClient, &ctx, drivers, sessionKey)
 				if err != nil {
@@ -219,7 +222,6 @@ func ProcessSessionDataAndInfo(connection *websocket.Conn, dbClient *dynamodb.Cl
 					modelPosition.Status = position.Status
 					modelPositions = append(modelPositions, &modelPosition)
 					position.SessionKey = sessionKey
-					fmt.Println("session key:", sessionKey)
 					positionsWithSessionKey = append(positionsWithSessionKey, position)
 				}
 				err = SavePositions(dbClient, &ctx, positionsWithSessionKey)

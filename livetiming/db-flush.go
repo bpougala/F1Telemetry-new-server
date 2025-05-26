@@ -79,7 +79,7 @@ func SavePositions(dbClient *dynamodb.Client, ctx *context.Context, positions []
 		item := map[string]types.AttributeValue{
 			"SessionKey":   &types.AttributeValueMemberN{Value: fmt.Sprintf("%d", position.SessionKey)},
 			"RacingNumber": &types.AttributeValueMemberN{Value: fmt.Sprintf("%d", position.RacingNumber)},
-			"Position":     &types.AttributeValueMemberN{Value: fmt.Sprintf("%d", position.Position)},
+			"Position":     &types.AttributeValueMemberN{Value: fmt.Sprintf("%d", *position.Position)},
 			"InPit":        &types.AttributeValueMemberBOOL{Value: position.InPit},
 			"PitOut":       &types.AttributeValueMemberBOOL{Value: position.PitOut},
 			"Retired":      &types.AttributeValueMemberBOOL{Value: position.Retired},
@@ -120,6 +120,25 @@ func SaveStints(dbClient *dynamodb.Client, ctx *context.Context, stints []Stint,
 	return nil
 }
 
+func SaveTrackStatus(dbClient *dynamodb.Client, ctx *context.Context, trackStatus []*model.TrackStatus) error {
+	for _, status := range trackStatus {
+		timestamp, _ := parseTimestampBis(status.Timestamp)
+		item := map[string]types.AttributeValue{
+			"SessionKey": &types.AttributeValueMemberN{Value: fmt.Sprintf("%d", status.SessionKey)},
+			"Status":     &types.AttributeValueMemberS{Value: status.Status},
+			"Utc":        &types.AttributeValueMemberN{Value: fmt.Sprintf("%d", timestamp)},
+		}
+		_, err := dbClient.PutItem(*ctx, &dynamodb.PutItemInput{
+			TableName: aws.String("trackstatus"),
+			Item:      item,
+		})
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
 func SaveLapTime(dbClient *dynamodb.Client, ctx *context.Context, lapTime LapTimeMetric) error {
 	lastLapTime, err := json.Marshal(lapTime.LastLapTime)
 	if err != nil {
@@ -141,6 +160,9 @@ func SaveLapTime(dbClient *dynamodb.Client, ctx *context.Context, lapTime LapTim
 		"IntervalToPositionAhead": &types.AttributeValueMemberS{Value: string(intervalToPositionAhead)},
 		"BestLapTime":             &types.AttributeValueMemberS{Value: string(bestLapTime)},
 		"LastLapTime":             &types.AttributeValueMemberS{Value: string(lastLapTime)},
+		"InPit":                   &types.AttributeValueMemberBOOL{Value: lapTime.InPit},
+		"PitOut":                  &types.AttributeValueMemberBOOL{Value: lapTime.PitOut},
+		"Stopped":                 &types.AttributeValueMemberBOOL{Value: lapTime.Stopped},
 	}
 	_, err = dbClient.PutItem(*ctx, &dynamodb.PutItemInput{
 		TableName: aws.String("timings"),
@@ -216,6 +238,15 @@ func dereferenceString(value *string) string {
 
 func parseTimestamp(timestamp string) (int64, error) {
 	t, err := time.ParseInLocation("2006-01-02T15:04:05", timestamp, time.UTC)
+	if err != nil {
+		fmt.Println("Error parsing time:", err)
+		return 0, err
+	}
+	return t.Unix(), nil
+}
+
+func parseTimestampBis(timestamp string) (int64, error) {
+	t, err := time.ParseInLocation("2006-01-02T15:04:05Z", timestamp, time.UTC)
 	if err != nil {
 		fmt.Println("Error parsing time:", err)
 		return 0, err

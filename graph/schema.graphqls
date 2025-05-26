@@ -13,6 +13,7 @@ type Query {
   lapTimes(session_key: Int!): [Timing]!
   sectors(session_key: Int!): [Sector]!
   stints(session_key: Int!): [Stint]!
+  trackStatus(session_key: Int!): [TrackStatus]!
 }
 
 type Subscription {
@@ -22,6 +23,7 @@ type Subscription {
   raceControl: [RaceControl]!
   stints: [Stint]!
   sectors: [Sector]!
+  trackStatus: [TrackStatus]!
 }
 
 type Session {
@@ -61,7 +63,7 @@ type Driver {
 type Position {
   session_key: Int!
   racing_number: Int!
-  position: Int!
+  position: Int
   retired: Boolean!
   in_pit: Boolean!
   pit_out: Boolean!
@@ -97,6 +99,12 @@ type Lap {
   lap_number: Int!
 }
 
+type TrackStatus {
+    session_key: Int!
+    status: String!
+    timestamp: String!
+}
+
 type LapTime {
   session_key: Int!
   racing_number: String!
@@ -105,6 +113,9 @@ type LapTime {
   last_lap_time: TimeRef!
   gap_to_leader: String
   interval_to_position_ahead: Any
+  retired: Boolean!
+  in_pit: Boolean!
+  pit_out: Boolean!
 }
 
 type TimeRef {

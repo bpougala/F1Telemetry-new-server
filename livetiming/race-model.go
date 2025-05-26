@@ -71,10 +71,15 @@ type PositionLine struct {
 	Line int `json:"Line"`
 }
 
+type TrackStatus struct {
+	Utc    time.Time `json:"Utc"`
+	Status string    `json:"Status"`
+}
+
 type Position struct {
 	SessionKey   int  `json:"SessionKey"`
 	RacingNumber int  `json:"RacingNumber"`
-	Position     int  `json:"Position"`
+	Position     *int `json:"Position"`
 	Retired      bool `json:"Retired"`
 	InPit        bool `json:"InPit"`
 	PitOut       bool `json:"PitOut"`
@@ -144,16 +149,18 @@ type TimingData struct {
 	Lines map[string]interface{} `json:"Lines"`
 }
 
+type StatusSeries struct {
+	Utc           time.Time `json:"Utc"`
+	TrackStatus   string    `json:"TrackStatus,omitempty"`
+	SessionStatus string    `json:"SessionStatus,omitempty"`
+}
+
 type InitialSessionData struct {
 	R struct {
 		SessionData struct {
-			Series       []interface{} `json:"Series"`
-			StatusSeries []struct {
-				Utc           time.Time `json:"Utc"`
-				TrackStatus   string    `json:"TrackStatus,omitempty"`
-				SessionStatus string    `json:"SessionStatus,omitempty"`
-			} `json:"StatusSeries"`
-			Kf bool `json:"_kf"`
+			Series       []interface{}  `json:"Series"`
+			StatusSeries []StatusSeries `json:"StatusSeries"`
+			Kf           bool           `json:"_kf"`
 		} `json:"SessionData"`
 		SessionInfo struct {
 			Meeting struct {
@@ -366,6 +373,9 @@ type LapTimeMetric struct {
 	RacingNumber            string `json:"RacingNumber"`
 	NumberOfLaps            int    `json:"NumberOfLaps"`
 	GapToLeader             string `json:"GapToLeader"`
+	InPit                   bool   `json:"InPit"`
+	PitOut                  bool   `json:"PitOut"`
+	Stopped                 bool   `json:"Stopped"`
 	IntervalToPositionAhead struct {
 		Value    string `json:"Value"`
 		Catching bool   `json:"Catching"`

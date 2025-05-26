@@ -179,7 +179,7 @@ func ProcessSessionDataAndInfo(connection *websocket.Conn, dbClient *dynamodb.Cl
 					_, err := dbClient.UpdateItem(ctx, &dynamodb.UpdateItemInput{
 						TableName: aws.String("sessions"),
 						Key: map[string]types.AttributeValue{
-							"archiveStatus": &types.AttributeValueMemberS{Value: "Generating"},
+							"SessionKey": &types.AttributeValueMemberN{Value: fmt.Sprintf("%d", sessionKey)},
 						},
 						UpdateExpression: aws.String("SET archiveStatus = :newStatus"),
 						ExpressionAttributeValues: map[string]types.AttributeValue{
@@ -249,6 +249,9 @@ func ProcessSessionDataAndInfo(connection *websocket.Conn, dbClient *dynamodb.Cl
 					lapTime.LastLapTime = time
 					lapTime.GapToLeader = &timing.GapToLeader
 					lapTime.IntervalToPositionAhead = &timing.IntervalToPositionAhead
+					lapTime.InPit = timing.InPit
+					lapTime.PitOut = timing.PitOut
+					lapTime.Retired = timing.Stopped
 					timing.SessionKey = sessionKey
 					err = SaveLapTime(dbClient, &ctx, timing)
 					if err != nil {
@@ -263,6 +266,22 @@ func ProcessSessionDataAndInfo(connection *websocket.Conn, dbClient *dynamodb.Cl
 				var carDataModel model.CarData
 				carDataModel.Compressed = carData.Compressed
 				resolver.NotifyCarDataSubscribers(&carDataModel)
+			}
+			trackStatus, err := BuildTrackStatus(msg)
+			if err == nil {
+				var trackStatusModel []*model.TrackStatus
+				for _, status := range trackStatus {
+					var trackStatusEntry model.TrackStatus
+					trackStatusEntry.Status = status.Status
+					trackStatusEntry.Timestamp = status.Utc.Format(time.RFC3339)
+					trackStatusEntry.SessionKey = sessionKey
+					trackStatusModel = append(trackStatusModel, &trackStatusEntry)
+				}
+				resolver.NotifyTrackStatusSubscribers(trackStatusModel)
+				err = SaveTrackStatus(dbClient, &ctx, trackStatusModel)
+				if err != nil {
+					fmt.Println("error saving track status:", err)
+				}
 			}
 			raceControlMessages, err := BuildRaceControl(msg)
 			if err == nil {

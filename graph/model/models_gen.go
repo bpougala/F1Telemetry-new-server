@@ -50,6 +50,9 @@ type LapTime struct {
 	LastLapTime             *TimeRef `json:"last_lap_time"`
 	GapToLeader             *string  `json:"gap_to_leader,omitempty"`
 	IntervalToPositionAhead any      `json:"interval_to_position_ahead,omitempty"`
+	Retired                 bool     `json:"retired"`
+	InPit                   bool     `json:"in_pit"`
+	PitOut                  bool     `json:"pit_out"`
 }
 
 type Meeting struct {
@@ -65,7 +68,7 @@ type Meeting struct {
 type Position struct {
 	SessionKey   int  `json:"session_key"`
 	RacingNumber int  `json:"racing_number"`
-	Position     int  `json:"position"`
+	Position     *int `json:"position,omitempty"`
 	Retired      bool `json:"retired"`
 	InPit        bool `json:"in_pit"`
 	PitOut       bool `json:"pit_out"`
@@ -141,4 +144,10 @@ type Timing struct {
 	InPit                   bool   `json:"in_pit"`
 	GapToLeader             string `json:"gap_to_leader"`
 	BestLapTime             any    `json:"best_lap_time,omitempty"`
+}
+
+type TrackStatus struct {
+	SessionKey int    `json:"session_key"`
+	Status     string `json:"status"`
+	Timestamp  string `json:"timestamp"`
 }

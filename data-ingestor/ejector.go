@@ -9,6 +9,9 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb/types"
+	"github.com/google/uuid"
+	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/mongo"
 	"strconv"
 	"time"
 )
@@ -157,6 +160,45 @@ func FetchStints(dbClient *dynamodb.Client, ctx context.Context, sessionKey int)
 	return stints, nil
 }
 
+func FetchAndSaveSectors(dbClient *mongo.Client, ddbClient *dynamodb.Client, ctx context.Context, sessionKey int) error {
+	cursor, err := dbClient.Database("f1").Collection("sectors").Find(ctx, bson.D{{"sessionkey", sessionKey}})
+	if err != nil {
+		return err
+	}
+	var sectors []model.Sector
+	err = cursor.All(ctx, &sectors)
+	if err != nil {
+		return err
+	}
+	for _, sector := range sectors {
+		var reference string
+		if sector.LapNumber == 0 {
+			reference = uuid.New().String()
+		} else {
+			reference = fmt.Sprintf("%d#%d#%d", sector.RacingNumber, sector.LapNumber, sector.SectorNumber)
+		}
+
+		item := map[string]types.AttributeValue{
+			"SessionKey":      &types.AttributeValueMemberN{Value: fmt.Sprintf("%d", sessionKey)},
+			"RacingNumber":    &types.AttributeValueMemberN{Value: fmt.Sprintf("%d", sector.RacingNumber)},
+			"Reference":       &types.AttributeValueMemberS{Value: reference},
+			"SectorNumber":    &types.AttributeValueMemberN{Value: fmt.Sprintf("%d", sector.SectorNumber)},
+			"LapNumber":       &types.AttributeValueMemberN{Value: fmt.Sprintf("%d", sector.LapNumber)},
+			"Utc":             &types.AttributeValueMemberS{Value: sector.Utc.Format(time.RFC3339)},
+			"OverallFastest":  &types.AttributeValueMemberBOOL{Value: sector.OverallFastest},
+			"PersonalFastest": &types.AttributeValueMemberBOOL{Value: sector.PersonalFastest},
+			"Value":           &types.AttributeValueMemberS{Value: sector.Value},
+		}
+		if _, err := ddbClient.PutItem(ctx, &dynamodb.PutItemInput{
+			TableName: aws.String("sectors"),
+			Item:      item,
+		}); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
 func FetchSectors(dbClient *dynamodb.Client, ctx context.Context, sessionKey int) ([]model.Sector, error) {
 	input := &dynamodb.QueryInput{
 		TableName: aws.String("sectors"),
@@ -212,6 +254,7 @@ func FetchPositions(dbClient *dynamodb.Client, ctx context.Context, sessionKey i
 
 	var positions []model.Position
 	for _, item := range result.Items {
+		starPosition := getIntAttr(item, "Position")
 		position := model.Position{
 			SessionKey:   getIntAttr(item, "SessionKey"),
 			RacingNumber: getIntAttr(item, "RacingNumber"),
@@ -219,11 +262,45 @@ func FetchPositions(dbClient *dynamodb.Client, ctx context.Context, sessionKey i
 			PitOut:       getBoolAttr(item, "PitOut"),
 			Retired:      getBoolAttr(item, "Retired"),
 			Stopped:      getBoolAttr(item, "Stopped"),
-			Position:     getIntAttr(item, "Position"),
+			Position:     &starPosition,
 		}
 		positions = append(positions, position)
 	}
 	return positions, nil
+}
+
+func FetchTrackStatus(dbClient *dynamodb.Client, ctx context.Context, sessionKey int) ([]model.TrackStatus, error) {
+	input := &dynamodb.QueryInput{
+		TableName: aws.String("trackstatus"),
+		KeyConditions: map[string]types.Condition{
+			"SessionKey": {
+				ComparisonOperator: types.ComparisonOperatorEq,
+				AttributeValueList: []types.AttributeValue{
+					&types.AttributeValueMemberN{Value: fmt.Sprintf("%d", sessionKey)},
+				},
+			},
+		},
+	}
+
+	result, err := dbClient.Query(ctx, input)
+	if err != nil {
+		return nil, err
+	}
+
+	var trackStatuses []model.TrackStatus
+	for _, item := range result.Items {
+		date, err := getTimeStringFromTimestamp(getIntAttr(item, "Utc"))
+		if err != nil {
+			return nil, err
+		}
+		status := model.TrackStatus{
+			SessionKey: getIntAttr(item, "SessionKey"),
+			Status:     getStringAttr(item, "Status"),
+			Timestamp:  date,
+		}
+		trackStatuses = append(trackStatuses, status)
+	}
+	return trackStatuses, nil
 }
 
 func FetchTimings(dbClient *dynamodb.Client, ctx context.Context, sessionKey int) ([]model.Timing, error) {

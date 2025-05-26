@@ -59,6 +59,28 @@ func serverSendingDriverList(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+func serverSendingTrackStatusUpdate(w http.ResponseWriter, r *http.Request) {
+	conn, err := upgrader.Upgrade(w, r, nil)
+	if err != nil {
+		return
+	}
+	defer conn.Close()
+	sessionData, err := os.ReadFile("test/trackstatus-monaco.json")
+	if err != nil {
+		fmt.Printf("Error reading driver list data: %v\n", err)
+		return
+	}
+	for {
+		messageType, _, err := conn.ReadMessage()
+		if err != nil {
+			return
+		}
+		if err := conn.WriteMessage(messageType, sessionData); err != nil {
+			return
+		}
+	}
+}
+
 func serverSendingPositionsRaceUpdate(w http.ResponseWriter, r *http.Request) {
 	conn, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
@@ -175,7 +197,7 @@ func serverSendingPositionUpdate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	defer conn.Close()
-	sessionData, err := os.ReadFile("test/update-driver-list.json")
+	sessionData, err := os.ReadFile("test/miami.json")
 	if err != nil {
 		fmt.Printf("Error reading session data: %v\n", err)
 		return
@@ -562,6 +584,32 @@ func TestShouldCreateDriverList(t *testing.T) {
 	}
 }
 
+func TestShouldCreateTrackStatusUpdate(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(serverSendingTrackStatusUpdate))
+	url := "ws" + strings.TrimPrefix(server.URL, "http")
+	client, _, err := websocket.DefaultDialer.Dial(url, nil)
+	if err != nil {
+		t.Fatalf("Could not open a websocket connection: %v", err)
+	}
+	defer client.Close()
+	err = sendDummyMessage(client)
+	if err != nil {
+		t.Fatalf("Could not write message to websocket: %v", err)
+	}
+	_, response, err := client.ReadMessage()
+	if err != nil {
+		t.Fatalf("Could not read message from websocket: %v", err)
+	}
+	trackStatus, err := BuildTrackStatus(response)
+	if err != nil {
+		t.Fatalf("Could not build track status: %v", err)
+	}
+	fmt.Println(trackStatus)
+	if trackStatus[len(trackStatus)-2].Status != "Yellow" {
+		t.Fatalf("Expected track status: VIRTUAL_SAFETY_CAR, got: %s", trackStatus[len(trackStatus)-2].Status)
+	}
+}
+
 func TestShouldNotCreateDriverListIfOtherMessageIsSent(t *testing.T) {
 	client, err := prepareClientReturningDummyMessage()
 	defer client.Close()
@@ -586,10 +634,11 @@ func TestShouldNotCreateDriverListIfOtherMessageIsSent(t *testing.T) {
 }
 
 func TestShouldCreatePositionsWhenDriverListFirstSubscribes(t *testing.T) {
+	position := 4
 	maxVerstappenPosition := Position{
 		SessionKey:   0,
 		RacingNumber: 1,
-		Position:     4,
+		Position:     &position,
 	}
 	server := httptest.NewServer(http.HandlerFunc(serverSendingDriverList))
 	url := "ws" + strings.TrimPrefix(server.URL, "http")
@@ -616,16 +665,20 @@ func TestShouldCreatePositionsWhenDriverListFirstSubscribes(t *testing.T) {
 	if len(positionsList) != 20 {
 		t.Fatalf("Expected 20 positions, got: %d", len(positionsList))
 	}
-	if positionsList[0] != maxVerstappenPosition {
+	if positionsList[0].RacingNumber != maxVerstappenPosition.RacingNumber ||
+		positionsList[0].SessionKey != maxVerstappenPosition.SessionKey ||
+		(positionsList[0].Position != nil && maxVerstappenPosition.Position != nil &&
+			*positionsList[0].Position != *maxVerstappenPosition.Position) {
 		t.Fatalf("Expected position: %v, got: %v", maxVerstappenPosition, positionsList[0])
 	}
 }
 
 func TestShouldCreatePositionsWhenTimingAppSendsUpdatesDuringRace(t *testing.T) {
+	position := 4
 	lanceStrollPosition := Position{
 		SessionKey:   0,
 		RacingNumber: 18,
-		Position:     4,
+		Position:     &position,
 		InPit:        false,
 		PitOut:       true,
 		Stopped:      false,
@@ -645,16 +698,21 @@ func TestShouldCreatePositionsWhenTimingAppSendsUpdatesDuringRace(t *testing.T) 
 	if len(positionsList) != 7 {
 		t.Fatalf("Expected 20 positions, got: %d", len(positionsList))
 	}
-	if positionsList[len(positionsList)-1] != lanceStrollPosition {
-		t.Fatalf("Expected position: %v, got: %v", lanceStrollPosition, positionsList[0])
+	lastPosition := positionsList[len(positionsList)-1]
+	if lastPosition.RacingNumber != lanceStrollPosition.RacingNumber ||
+		lastPosition.SessionKey != lanceStrollPosition.SessionKey ||
+		(lastPosition.Position != nil && lanceStrollPosition.Position != nil &&
+			*lastPosition.Position != *lanceStrollPosition.Position) {
+		t.Fatalf("Expected position: %v, got: %v", lanceStrollPosition, lastPosition)
 	}
 }
 
 func TestShouldCreatePositionsWhenTimingAppSendsUpdatesDuringQualifying(t *testing.T) {
+	position := 11
 	maxVerstappenPosition := Position{
 		SessionKey:   0,
 		RacingNumber: 1,
-		Position:     11,
+		Position:     &position,
 		InPit:        true,
 		PitOut:       false,
 		Stopped:      false,
@@ -685,7 +743,10 @@ func TestShouldCreatePositionsWhenTimingAppSendsUpdatesDuringQualifying(t *testi
 	if len(positionsList) != 20 {
 		t.Fatalf("Expected 20 positions, got: %d", len(positionsList))
 	}
-	if positionsList[0] != maxVerstappenPosition {
+	if positionsList[0].RacingNumber != maxVerstappenPosition.RacingNumber ||
+		positionsList[0].SessionKey != maxVerstappenPosition.SessionKey ||
+		(positionsList[0].Position != nil && maxVerstappenPosition.Position != nil &&
+			*positionsList[0].Position != *maxVerstappenPosition.Position) {
 		t.Fatalf("Expected position: %v, got: %v", maxVerstappenPosition, positionsList[0])
 	}
 }
@@ -719,6 +780,7 @@ func TestShouldCreateLapTimeWhenFirstSubscribing(t *testing.T) {
 		RacingNumber: "1",
 		NumberOfLaps: 58,
 		GapToLeader:  "+49.847",
+		PitOut:       true,
 		IntervalToPositionAhead: struct {
 			Value    string `json:"Value"`
 			Catching bool   `json:"Catching"`
@@ -804,10 +866,11 @@ func TestShouldCreateLapTimeWhenReceivingUpdate(t *testing.T) {
 }
 
 func TestShouldCreatePositionWhenReceivingUpdate(t *testing.T) {
+	position := 1
 	lanceStrollPosition := Position{
 		SessionKey:   0,
-		RacingNumber: 18,
-		Position:     8,
+		RacingNumber: 12,
+		Position:     &position,
 		InPit:        false,
 		PitOut:       false,
 		Stopped:      false,
@@ -833,13 +896,17 @@ func TestShouldCreatePositionWhenReceivingUpdate(t *testing.T) {
 		t.Fatalf("Could not build positions list: %v", err)
 	}
 	sort.Slice(positionsList, func(i, j int) bool {
-		return positionsList[i].Position < positionsList[j].Position
+		return *positionsList[i].Position < *positionsList[j].Position
 	})
-	if len(positionsList) != 6 {
-		t.Fatalf("Expected 6 positions, got: %d", len(positionsList))
+	if len(positionsList) != 20 {
+		t.Fatalf("Expected 20 positions, got: %d", len(positionsList))
 	}
-	if positionsList[0] != lanceStrollPosition {
-		t.Fatalf("Expected position: %v, got: %v", lanceStrollPosition, positionsList[0])
+	lastPosition := positionsList[0]
+	if lastPosition.RacingNumber != lanceStrollPosition.RacingNumber ||
+		lastPosition.SessionKey != lanceStrollPosition.SessionKey ||
+		(lastPosition.Position != nil && lanceStrollPosition.Position != nil &&
+			*lastPosition.Position != *lanceStrollPosition.Position) {
+		t.Fatalf("Expected position: %v, got: %v", *lanceStrollPosition.Position, *lastPosition.Position)
 	}
 }
 

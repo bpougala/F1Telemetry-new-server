@@ -90,7 +90,33 @@ func BuildDriverList(data []byte) ([]Driver, error) {
 	}
 	return drivers, nil
 }
-
+func BuildTrackStatus(data []byte) ([]TrackStatus, error) {
+	var trackStatus []TrackStatus
+	var obj map[string]interface{}
+	if err := json.Unmarshal(data, &obj); err != nil {
+		return trackStatus, err
+	}
+	var initialData InitialSessionData
+	if err := json.Unmarshal(data, &initialData); err != nil {
+		return trackStatus, fmt.Errorf("failed to unmarshal data: %v", err)
+	}
+	if initialData.R.SessionData.StatusSeries == nil {
+		return trackStatus, fmt.Errorf("no track status found")
+	}
+	statusSeries := initialData.R.SessionData.StatusSeries
+	if len(statusSeries) == 0 {
+		return trackStatus, fmt.Errorf("no track status found")
+	}
+	for _, status := range statusSeries {
+		var trackStatusItem TrackStatus
+		trackStatusItem.Status = status.TrackStatus
+		trackStatusItem.Utc = status.Utc
+		if trackStatusItem.Status != "" {
+			trackStatus = append(trackStatus, trackStatusItem)
+		}
+	}
+	return trackStatus, nil
+}
 func BuildPositions(data []byte) ([]Position, error) {
 	var positions []Position
 	var obj map[string]interface{}
@@ -110,7 +136,7 @@ func BuildPositions(data []byte) ([]Position, error) {
 		}
 		var position Position
 		position.RacingNumber, _ = strconv.Atoi(key)
-		position.Position = value.Line
+		position.Position = &value.Line
 		positions = append(positions, position)
 	}
 	return positions, nil
@@ -132,7 +158,7 @@ func buildRacePositions(data []byte) ([]Position, error) {
 		}
 		var position Position
 		position.RacingNumber, _ = strconv.Atoi(key)
-		position.Position = value.Line
+		position.Position = &value.Line
 		position.InPit = value.InPit
 		position.PitOut = value.PitOut
 		position.Stopped = value.Stopped
@@ -260,17 +286,14 @@ func buildTimingDataPositionsUpdate(message Message) ([]Position, error) {
 		if err != nil {
 			continue
 		}
-		positionNumber, err := strconv.Atoi(rawPosition.Position)
-		if err != nil {
-			continue
-		}
+		positionNumber, _ := strconv.Atoi(rawPosition.Position)
 		racingNumber, err := strconv.Atoi(key)
 		if err != nil {
 			continue
 		}
 		position := Position{
 			RacingNumber: racingNumber,
-			Position:     positionNumber,
+			Position:     &positionNumber,
 			InPit:        rawPosition.InPit,
 			PitOut:       rawPosition.PitOut,
 			Stopped:      rawPosition.Stopped,
@@ -306,7 +329,7 @@ func buildUpdatedPositions(data []byte) ([]Position, error) {
 		for key, value := range positionData {
 			var position Position
 			position.RacingNumber, _ = strconv.Atoi(key)
-			position.Position = value.Line
+			position.Position = &value.Line
 			positions = append(positions, position)
 		}
 	}

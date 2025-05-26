@@ -88,10 +88,13 @@ type ComplexityRoot struct {
 	LapTime struct {
 		BestLapTime             func(childComplexity int) int
 		GapToLeader             func(childComplexity int) int
+		InPit                   func(childComplexity int) int
 		IntervalToPositionAhead func(childComplexity int) int
 		LastLapTime             func(childComplexity int) int
 		NumberOfLaps            func(childComplexity int) int
+		PitOut                  func(childComplexity int) int
 		RacingNumber            func(childComplexity int) int
+		Retired                 func(childComplexity int) int
 		SessionKey              func(childComplexity int) int
 	}
 
@@ -125,6 +128,7 @@ type ComplexityRoot struct {
 		Sectors     func(childComplexity int, sessionKey int) int
 		Sessions    func(childComplexity int, meetingKeys []*int) int
 		Stints      func(childComplexity int, sessionKey int) int
+		TrackStatus func(childComplexity int, sessionKey int) int
 	}
 
 	RaceControl struct {
@@ -176,6 +180,7 @@ type ComplexityRoot struct {
 		RaceControl func(childComplexity int) int
 		Sectors     func(childComplexity int) int
 		Stints      func(childComplexity int) int
+		TrackStatus func(childComplexity int) int
 	}
 
 	TimeRef struct {
@@ -199,6 +204,12 @@ type ComplexityRoot struct {
 		Status                  func(childComplexity int) int
 		Stopped                 func(childComplexity int) int
 	}
+
+	TrackStatus struct {
+		SessionKey func(childComplexity int) int
+		Status     func(childComplexity int) int
+		Timestamp  func(childComplexity int) int
+	}
 }
 
 type QueryResolver interface {
@@ -210,6 +221,7 @@ type QueryResolver interface {
 	LapTimes(ctx context.Context, sessionKey int) ([]*model.Timing, error)
 	Sectors(ctx context.Context, sessionKey int) ([]*model.Sector, error)
 	Stints(ctx context.Context, sessionKey int) ([]*model.Stint, error)
+	TrackStatus(ctx context.Context, sessionKey int) ([]*model.TrackStatus, error)
 }
 type SubscriptionResolver interface {
 	LapTimes(ctx context.Context) (<-chan []*model.LapTime, error)
@@ -218,6 +230,7 @@ type SubscriptionResolver interface {
 	RaceControl(ctx context.Context) (<-chan []*model.RaceControl, error)
 	Stints(ctx context.Context) (<-chan []*model.Stint, error)
 	Sectors(ctx context.Context) (<-chan []*model.Sector, error)
+	TrackStatus(ctx context.Context) (<-chan []*model.TrackStatus, error)
 }
 
 type executableSchema struct {
@@ -442,6 +455,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.LapTime.GapToLeader(childComplexity), true
 
+	case "LapTime.in_pit":
+		if e.complexity.LapTime.InPit == nil {
+			break
+		}
+
+		return e.complexity.LapTime.InPit(childComplexity), true
+
 	case "LapTime.interval_to_position_ahead":
 		if e.complexity.LapTime.IntervalToPositionAhead == nil {
 			break
@@ -463,12 +483,26 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.LapTime.NumberOfLaps(childComplexity), true
 
+	case "LapTime.pit_out":
+		if e.complexity.LapTime.PitOut == nil {
+			break
+		}
+
+		return e.complexity.LapTime.PitOut(childComplexity), true
+
 	case "LapTime.racing_number":
 		if e.complexity.LapTime.RacingNumber == nil {
 			break
 		}
 
 		return e.complexity.LapTime.RacingNumber(childComplexity), true
+
+	case "LapTime.retired":
+		if e.complexity.LapTime.Retired == nil {
+			break
+		}
+
+		return e.complexity.LapTime.Retired(childComplexity), true
 
 	case "LapTime.session_key":
 		if e.complexity.LapTime.SessionKey == nil {
@@ -672,6 +706,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Query.Stints(childComplexity, args["session_key"].(int)), true
+
+	case "Query.trackStatus":
+		if e.complexity.Query.TrackStatus == nil {
+			break
+		}
+
+		args, err := ec.field_Query_trackStatus_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.TrackStatus(childComplexity, args["session_key"].(int)), true
 
 	case "RaceControl.category":
 		if e.complexity.RaceControl.Category == nil {
@@ -925,6 +971,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Subscription.Stints(childComplexity), true
 
+	case "Subscription.trackStatus":
+		if e.complexity.Subscription.TrackStatus == nil {
+			break
+		}
+
+		return e.complexity.Subscription.TrackStatus(childComplexity), true
+
 	case "TimeRef.overallFastest":
 		if e.complexity.TimeRef.OverallFastest == nil {
 			break
@@ -1036,6 +1089,27 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Timing.Stopped(childComplexity), true
+
+	case "TrackStatus.session_key":
+		if e.complexity.TrackStatus.SessionKey == nil {
+			break
+		}
+
+		return e.complexity.TrackStatus.SessionKey(childComplexity), true
+
+	case "TrackStatus.status":
+		if e.complexity.TrackStatus.Status == nil {
+			break
+		}
+
+		return e.complexity.TrackStatus.Status(childComplexity), true
+
+	case "TrackStatus.timestamp":
+		if e.complexity.TrackStatus.Timestamp == nil {
+			break
+		}
+
+		return e.complexity.TrackStatus.Timestamp(childComplexity), true
 
 	}
 	return 0, false
@@ -1334,6 +1408,29 @@ func (ec *executionContext) field_Query_stints_args(ctx context.Context, rawArgs
 	return args, nil
 }
 func (ec *executionContext) field_Query_stints_argsSessionKey(
+	ctx context.Context,
+	rawArgs map[string]interface{},
+) (int, error) {
+	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("session_key"))
+	if tmp, ok := rawArgs["session_key"]; ok {
+		return ec.unmarshalNInt2int(ctx, tmp)
+	}
+
+	var zeroVal int
+	return zeroVal, nil
+}
+
+func (ec *executionContext) field_Query_trackStatus_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	arg0, err := ec.field_Query_trackStatus_argsSessionKey(ctx, rawArgs)
+	if err != nil {
+		return nil, err
+	}
+	args["session_key"] = arg0
+	return args, nil
+}
+func (ec *executionContext) field_Query_trackStatus_argsSessionKey(
 	ctx context.Context,
 	rawArgs map[string]interface{},
 ) (int, error) {
@@ -2856,6 +2953,138 @@ func (ec *executionContext) fieldContext_LapTime_interval_to_position_ahead(_ co
 	return fc, nil
 }
 
+func (ec *executionContext) _LapTime_retired(ctx context.Context, field graphql.CollectedField, obj *model.LapTime) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_LapTime_retired(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Retired, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(bool)
+	fc.Result = res
+	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_LapTime_retired(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "LapTime",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _LapTime_in_pit(ctx context.Context, field graphql.CollectedField, obj *model.LapTime) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_LapTime_in_pit(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.InPit, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(bool)
+	fc.Result = res
+	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_LapTime_in_pit(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "LapTime",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _LapTime_pit_out(ctx context.Context, field graphql.CollectedField, obj *model.LapTime) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_LapTime_pit_out(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.PitOut, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(bool)
+	fc.Result = res
+	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_LapTime_pit_out(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "LapTime",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Meeting_meeting_name(ctx context.Context, field graphql.CollectedField, obj *model.Meeting) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Meeting_meeting_name(ctx, field)
 	if err != nil {
@@ -3273,14 +3502,11 @@ func (ec *executionContext) _Position_position(ctx context.Context, field graphq
 		return graphql.Null
 	}
 	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
 		return graphql.Null
 	}
-	res := resTmp.(int)
+	res := resTmp.(*int)
 	fc.Result = res
-	return ec.marshalNInt2int(ctx, field.Selections, res)
+	return ec.marshalOInt2ᚖint(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Position_position(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -4091,6 +4317,69 @@ func (ec *executionContext) fieldContext_Query_stints(ctx context.Context, field
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
 	if fc.Args, err = ec.field_Query_stints_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Query_trackStatus(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Query_trackStatus(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Query().TrackStatus(rctx, fc.Args["session_key"].(int))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]*model.TrackStatus)
+	fc.Result = res
+	return ec.marshalNTrackStatus2ᚕᚖF1TelemetryᚑnewᚑserverᚋgraphᚋmodelᚐTrackStatus(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Query_trackStatus(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "session_key":
+				return ec.fieldContext_TrackStatus_session_key(ctx, field)
+			case "status":
+				return ec.fieldContext_TrackStatus_status(ctx, field)
+			case "timestamp":
+				return ec.fieldContext_TrackStatus_timestamp(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type TrackStatus", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Query_trackStatus_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return fc, err
 	}
@@ -5598,6 +5887,12 @@ func (ec *executionContext) fieldContext_Subscription_lapTimes(_ context.Context
 				return ec.fieldContext_LapTime_gap_to_leader(ctx, field)
 			case "interval_to_position_ahead":
 				return ec.fieldContext_LapTime_interval_to_position_ahead(ctx, field)
+			case "retired":
+				return ec.fieldContext_LapTime_retired(ctx, field)
+			case "in_pit":
+				return ec.fieldContext_LapTime_in_pit(ctx, field)
+			case "pit_out":
+				return ec.fieldContext_LapTime_pit_out(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type LapTime", field.Name)
 		},
@@ -5962,6 +6257,72 @@ func (ec *executionContext) fieldContext_Subscription_sectors(_ context.Context,
 				return ec.fieldContext_Sector_lap_number(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Sector", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Subscription_trackStatus(ctx context.Context, field graphql.CollectedField) (ret func(ctx context.Context) graphql.Marshaler) {
+	fc, err := ec.fieldContext_Subscription_trackStatus(ctx, field)
+	if err != nil {
+		return nil
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = nil
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Subscription().TrackStatus(rctx)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return nil
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return nil
+	}
+	return func(ctx context.Context) graphql.Marshaler {
+		select {
+		case res, ok := <-resTmp.(<-chan []*model.TrackStatus):
+			if !ok {
+				return nil
+			}
+			return graphql.WriterFunc(func(w io.Writer) {
+				w.Write([]byte{'{'})
+				graphql.MarshalString(field.Alias).MarshalGQL(w)
+				w.Write([]byte{':'})
+				ec.marshalNTrackStatus2ᚕᚖF1TelemetryᚑnewᚑserverᚋgraphᚋmodelᚐTrackStatus(ctx, field.Selections, res).MarshalGQL(w)
+				w.Write([]byte{'}'})
+			})
+		case <-ctx.Done():
+			return nil
+		}
+	}
+}
+
+func (ec *executionContext) fieldContext_Subscription_trackStatus(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Subscription",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "session_key":
+				return ec.fieldContext_TrackStatus_session_key(ctx, field)
+			case "status":
+				return ec.fieldContext_TrackStatus_status(ctx, field)
+			case "timestamp":
+				return ec.fieldContext_TrackStatus_timestamp(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type TrackStatus", field.Name)
 		},
 	}
 	return fc, nil
@@ -6657,6 +7018,138 @@ func (ec *executionContext) fieldContext_Timing_best_lap_time(_ context.Context,
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			return nil, errors.New("field of type Any does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _TrackStatus_session_key(ctx context.Context, field graphql.CollectedField, obj *model.TrackStatus) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_TrackStatus_session_key(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.SessionKey, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(int)
+	fc.Result = res
+	return ec.marshalNInt2int(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_TrackStatus_session_key(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "TrackStatus",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _TrackStatus_status(ctx context.Context, field graphql.CollectedField, obj *model.TrackStatus) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_TrackStatus_status(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Status, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_TrackStatus_status(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "TrackStatus",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _TrackStatus_timestamp(ctx context.Context, field graphql.CollectedField, obj *model.TrackStatus) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_TrackStatus_timestamp(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Timestamp, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_TrackStatus_timestamp(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "TrackStatus",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
 		},
 	}
 	return fc, nil
@@ -8678,6 +9171,21 @@ func (ec *executionContext) _LapTime(ctx context.Context, sel ast.SelectionSet, 
 			out.Values[i] = ec._LapTime_gap_to_leader(ctx, field, obj)
 		case "interval_to_position_ahead":
 			out.Values[i] = ec._LapTime_interval_to_position_ahead(ctx, field, obj)
+		case "retired":
+			out.Values[i] = ec._LapTime_retired(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "in_pit":
+			out.Values[i] = ec._LapTime_in_pit(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "pit_out":
+			out.Values[i] = ec._LapTime_pit_out(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -8793,9 +9301,6 @@ func (ec *executionContext) _Position(ctx context.Context, sel ast.SelectionSet,
 			}
 		case "position":
 			out.Values[i] = ec._Position_position(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				out.Invalids++
-			}
 		case "retired":
 			out.Values[i] = ec._Position_retired(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
@@ -9027,6 +9532,28 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 					}
 				}()
 				res = ec._Query_stints(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx,
+					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
+		case "trackStatus":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_trackStatus(ctx, field)
 				if res == graphql.Null {
 					atomic.AddUint32(&fs.Invalids, 1)
 				}
@@ -9366,6 +9893,8 @@ func (ec *executionContext) _Subscription(ctx context.Context, sel ast.Selection
 		return ec._Subscription_stints(ctx, fields[0])
 	case "sectors":
 		return ec._Subscription_sectors(ctx, fields[0])
+	case "trackStatus":
+		return ec._Subscription_trackStatus(ctx, fields[0])
 	default:
 		panic("unknown field " + strconv.Quote(fields[0].Name))
 	}
@@ -9487,6 +10016,55 @@ func (ec *executionContext) _Timing(ctx context.Context, sel ast.SelectionSet, o
 			}
 		case "best_lap_time":
 			out.Values[i] = ec._Timing_best_lap_time(ctx, field, obj)
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.processDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
+var trackStatusImplementors = []string{"TrackStatus"}
+
+func (ec *executionContext) _TrackStatus(ctx context.Context, sel ast.SelectionSet, obj *model.TrackStatus) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, trackStatusImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("TrackStatus")
+		case "session_key":
+			out.Values[i] = ec._TrackStatus_session_key(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "status":
+			out.Values[i] = ec._TrackStatus_status(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "timestamp":
+			out.Values[i] = ec._TrackStatus_timestamp(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -10273,6 +10851,44 @@ func (ec *executionContext) marshalNTiming2ᚕᚖF1Telemetryᚑnewᚑserverᚋgr
 	return ret
 }
 
+func (ec *executionContext) marshalNTrackStatus2ᚕᚖF1TelemetryᚑnewᚑserverᚋgraphᚋmodelᚐTrackStatus(ctx context.Context, sel ast.SelectionSet, v []*model.TrackStatus) graphql.Marshaler {
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalOTrackStatus2ᚖF1TelemetryᚑnewᚑserverᚋgraphᚋmodelᚐTrackStatus(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+
+	return ret
+}
+
 func (ec *executionContext) marshalN__Directive2githubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐDirective(ctx context.Context, sel ast.SelectionSet, v introspection.Directive) graphql.Marshaler {
 	return ec.___Directive(ctx, sel, &v)
 }
@@ -10725,6 +11341,13 @@ func (ec *executionContext) marshalOTiming2ᚖF1Telemetryᚑnewᚑserverᚋgraph
 		return graphql.Null
 	}
 	return ec._Timing(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalOTrackStatus2ᚖF1TelemetryᚑnewᚑserverᚋgraphᚋmodelᚐTrackStatus(ctx context.Context, sel ast.SelectionSet, v *model.TrackStatus) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return ec._TrackStatus(ctx, sel, v)
 }
 
 func (ec *executionContext) marshalO__EnumValue2ᚕgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐEnumValueᚄ(ctx context.Context, sel ast.SelectionSet, v []introspection.EnumValue) graphql.Marshaler {

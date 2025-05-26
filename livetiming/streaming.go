@@ -181,7 +181,7 @@ func ProcessSessionDataAndInfo(connection *websocket.Conn, dbClient *dynamodb.Cl
 						Key: map[string]types.AttributeValue{
 							"SessionKey": &types.AttributeValueMemberN{Value: fmt.Sprintf("%d", sessionKey)},
 						},
-						UpdateExpression: aws.String("SET archiveStatus = :newStatus"),
+						UpdateExpression: aws.String("SET ArchiveStatus = :newStatus"),
 						ExpressionAttributeValues: map[string]types.AttributeValue{
 							":newStatus": &types.AttributeValueMemberS{Value: "Complete"},
 						},

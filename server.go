@@ -4,6 +4,7 @@ import (
 	dataingestor "F1Telemetry-new-server/data-ingestor"
 	"F1Telemetry-new-server/graph"
 	"F1Telemetry-new-server/livetiming"
+	"F1Telemetry-new-server/ws"
 	"context"
 	"fmt"
 	"github.com/99designs/gqlgen/graphql/handler"
@@ -30,11 +31,19 @@ func main() {
 		port = defaultPort
 	}
 	resolver := graph.NewResolver()
+
+	hub := ws.NewHub(dbClient)
+	go hub.Run()
+	hub.RegisterOnResolver(resolver)
+
 	server := handler.NewDefaultServer(graph.NewExecutableSchema(graph.Config{Resolvers: resolver}))
 	server.AddTransport(&transport.Websocket{})
 
 	http.Handle("/", playground.Handler("GraphQL playground", "/query"))
 	http.Handle("/query", server)
+	http.HandleFunc("/ws", func(w http.ResponseWriter, r *http.Request) {
+		ws.ServeWs(hub, w, r)
+	})
 
 	log.Printf("connect to http://localhost:%s/ for lost of fun!\n", port)
 	go func() {
@@ -65,7 +74,7 @@ func main() {
 				panic(err)
 			}
 			defer connection.Close()
-			err = livetiming.ProcessSessionDataAndInfo(connection, dbClient, ctx, resolver)
+			err = livetiming.ProcessSessionDataAndInfo(connection, dbClient, ctx, resolver, hub)
 			if err != nil {
 				fmt.Println("error occurred, retrying:", err)
 				time.Sleep(2 * time.Second)

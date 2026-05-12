@@ -1,13 +1,58 @@
 package livetiming
 
 import (
+	"bytes"
+	"compress/flate"
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
+	"io"
 	"strconv"
 	"time"
 
 	"github.com/mitchellh/mapstructure"
 )
+
+// DecompressZData decodes a base64+zlib compressed string into raw JSON bytes.
+func DecompressZData(compressed string) ([]byte, error) {
+	decoded, err := base64.StdEncoding.DecodeString(compressed)
+	if err != nil {
+		return nil, fmt.Errorf("base64 decode failed: %w", err)
+	}
+	r := flate.NewReader(bytes.NewReader(decoded))
+	defer r.Close()
+	decompressed, err := io.ReadAll(r)
+	if err != nil {
+		return nil, fmt.Errorf("deflate decompress failed: %w", err)
+	}
+	return decompressed, nil
+}
+
+// DecompressCarData decompresses a CarData.z compressed string into a Root struct.
+func DecompressCarData(compressed string) (Root, error) {
+	var root Root
+	data, err := DecompressZData(compressed)
+	if err != nil {
+		return root, err
+	}
+	if err := json.Unmarshal(data, &root); err != nil {
+		return root, fmt.Errorf("json unmarshal failed: %w", err)
+	}
+	return root, nil
+}
+
+// DecompressPositionData decompresses a Position.z compressed string into a PositionRoot struct.
+func DecompressPositionData(compressed string) (PositionRoot, error) {
+	var posRoot PositionRoot
+	data, err := DecompressZData(compressed)
+	if err != nil {
+		return posRoot, err
+	}
+	if err := json.Unmarshal(data, &posRoot); err != nil {
+		return posRoot, fmt.Errorf("json unmarshal failed: %w", err)
+	}
+	return posRoot, nil
+}
 
 func BuildMeetingData(data []byte) (MeetingData, error) {
 	var meetingData MeetingData
@@ -371,7 +416,7 @@ func BuildTimingData(data []byte) ([]LapTimeMetric, error) {
 			if err != nil {
 				continue
 			}
-			if timing.BestLapTime.Lap == 0 || timing.BestLapTime.Value == "" {
+			if timing.BestLapTime.Lap == 0 && timing.BestLapTime.Value == "" {
 				continue
 			}
 			timing.RacingNumber = key
@@ -580,38 +625,16 @@ func BuildSectors(data []byte) ([]AllSectors, error) {
 		}
 		var sector AllSectors
 		sector.RacingNumber, _ = strconv.Atoi(key)
-		var firstSector Sector
-		rawFirstSector := value.Sectors[0]
-
-		firstSector.Value = rawFirstSector.Value
-		firstSector.OverallFastest = rawFirstSector.OverallFastest
-		firstSector.PersonalFastest = rawFirstSector.PersonalFastest
-		firstSector.SectorNumber = 1
-		firstSector.LapNumber = value.NumberOfLaps
-		if firstSector.Value != "" {
-			sector.Sectors = append(sector.Sectors, firstSector)
-		}
-
-		var secondSector Sector
-		rawSecondSector := value.Sectors[1]
-		secondSector.Value = rawSecondSector.Value
-		secondSector.OverallFastest = rawSecondSector.OverallFastest
-		secondSector.PersonalFastest = rawSecondSector.PersonalFastest
-		secondSector.SectorNumber = 2
-		secondSector.LapNumber = value.NumberOfLaps
-		if secondSector.Value != "" {
-			sector.Sectors = append(sector.Sectors, secondSector)
-		}
-
-		var thirdSector Sector
-		rawThirdSector := value.Sectors[2]
-		thirdSector.Value = rawThirdSector.Value
-		thirdSector.OverallFastest = rawThirdSector.OverallFastest
-		thirdSector.PersonalFastest = rawThirdSector.PersonalFastest
-		thirdSector.SectorNumber = 3
-		thirdSector.LapNumber = value.NumberOfLaps
-		if thirdSector.Value != "" {
-			sector.Sectors = append(sector.Sectors, thirdSector)
+		for i, rawSector := range value.Sectors {
+			var s Sector
+			s.Value = rawSector.Value
+			s.OverallFastest = rawSector.OverallFastest
+			s.PersonalFastest = rawSector.PersonalFastest
+			s.SectorNumber = i + 1
+			s.LapNumber = value.NumberOfLaps
+			if s.Value != "" {
+				sector.Sectors = append(sector.Sectors, s)
+			}
 		}
 		sectors = append(sectors, sector)
 	}
@@ -678,4 +701,78 @@ func buildRaceSectors(data []byte) ([]AllSectors, error) {
 		return nil, fmt.Errorf("no sectors found")
 	}
 	return sectors, nil
+}
+
+// BuildPositionZ parses Position.z data from the initial snapshot.
+func BuildPositionZ(data []byte) (PositionRoot, error) {
+	var posRoot PositionRoot
+	var initialData InitialData
+	if err := json.Unmarshal(data, &initialData); err != nil {
+		return posRoot, err
+	}
+	compressed := initialData.R.PositionZ
+	if compressed == "" {
+		return buildUpdatePositionZ(data)
+	}
+	return DecompressPositionData(compressed)
+}
+
+func buildUpdatePositionZ(data []byte) (PositionRoot, error) {
+	var posRoot PositionRoot
+	var updateData UpdateData
+	if err := json.Unmarshal(data, &updateData); err != nil {
+		return posRoot, err
+	}
+	for _, message := range updateData.M {
+		elements := message.A
+		if len(elements) < 2 {
+			continue
+		}
+		if elements[0] != "Position.z" {
+			continue
+		}
+		compressed, ok := elements[1].(string)
+		if !ok {
+			continue
+		}
+		return DecompressPositionData(compressed)
+	}
+	return posRoot, fmt.Errorf("no position data found")
+}
+
+// BuildTrackStatusUpdate parses TrackStatus topic update messages.
+func BuildTrackStatusUpdate(data []byte) ([]TrackStatus, error) {
+	var updateData UpdateData
+	if err := json.Unmarshal(data, &updateData); err != nil {
+		return nil, err
+	}
+	var statuses []TrackStatus
+	for _, message := range updateData.M {
+		elements := message.A
+		if len(elements) < 2 {
+			continue
+		}
+		if elements[0] != "TrackStatus" {
+			continue
+		}
+		statusMap, ok := elements[1].(map[string]interface{})
+		if !ok {
+			continue
+		}
+		statusBytes, err := json.Marshal(statusMap)
+		if err != nil {
+			continue
+		}
+		var ts TrackStatus
+		if err := json.Unmarshal(statusBytes, &ts); err != nil {
+			continue
+		}
+		if ts.Status != "" {
+			statuses = append(statuses, ts)
+		}
+	}
+	if len(statuses) == 0 {
+		return nil, fmt.Errorf("no track status found")
+	}
+	return statuses, nil
 }

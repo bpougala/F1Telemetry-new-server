@@ -1281,3 +1281,127 @@ func TestShouldCreateSectorsWhenUpdateIsSent(t *testing.T) {
 	}
 
 }
+
+func TestDecompressCarDataShouldReturnEntries(t *testing.T) {
+	compressed := "7ZQ9DsIwDIXv4rkgO3Z+mhVxA1hADAghgYQ6QLeqd6cENgJEZkBCXdyo7RfbL87rYN605+P+AnHdwbLdQQSDRiZEE8YF+Wg52nrK4p2wrKCC2fY8/N0B3cLssG2a/Sm9QIhYgUmRUxSIhFKBfTxlWIS+Tx8KWEwk3jm8cYRa8JtqSV2uy4Bch/CevScNyqQmpxE5osJujdEmZi2o1df4XKtoS1tl7Thx2Tg9g1Km0Ytbo9XJ2gwo6D6wKanTnqrPHU4JGHLiDgNsi2QadnhnZD546wOPRva9kQlSPRrZaGS/NjKumf/SyDb9FQ=="
+	root, err := DecompressCarData(compressed)
+	if err != nil {
+		t.Fatalf("Could not decompress car data: %v", err)
+	}
+	if len(root.Entries) == 0 {
+		t.Fatalf("Expected at least one entry, got 0")
+	}
+	firstEntry := root.Entries[0]
+	if len(firstEntry.Cars) == 0 {
+		t.Fatalf("Expected at least one car in first entry, got 0")
+	}
+	// Verify car 1 has channel data (RPM=0, Speed=0, etc.)
+	car1, ok := firstEntry.Cars["1"]
+	if !ok {
+		t.Fatalf("Expected car 1 to be present in first entry")
+	}
+	if len(car1.Channels) == 0 {
+		t.Fatalf("Expected channels for car 1, got none")
+	}
+}
+
+func TestDecompressCarDataShouldFailOnInvalidInput(t *testing.T) {
+	_, err := DecompressCarData("not-valid-base64!!!")
+	if err == nil {
+		t.Fatalf("Expected error for invalid input, got nil")
+	}
+}
+
+func TestBuildSectorsShouldHandleFewerThanThreeSectors(t *testing.T) {
+	// Simulate a message with TimingData containing a driver with only 1 sector
+	jsonData := `{
+		"R": {
+			"TimingData": {
+				"Lines": {
+					"44": {
+						"NumberOfLaps": 1,
+						"Sectors": [
+							{"Value": "28.123", "OverallFastest": false, "PersonalFastest": true}
+						],
+						"Line": 1
+					}
+				}
+			}
+		},
+		"I": "1"
+	}`
+	sectors, err := BuildSectors([]byte(jsonData))
+	if err != nil {
+		t.Fatalf("BuildSectors should not error with fewer sectors: %v", err)
+	}
+	if len(sectors) != 1 {
+		t.Fatalf("Expected 1 driver sectors, got %d", len(sectors))
+	}
+	if len(sectors[0].Sectors) != 1 {
+		t.Fatalf("Expected 1 sector, got %d", len(sectors[0].Sectors))
+	}
+	if sectors[0].Sectors[0].Value != "28.123" {
+		t.Fatalf("Expected sector value 28.123, got %s", sectors[0].Sectors[0].Value)
+	}
+	if sectors[0].Sectors[0].SectorNumber != 1 {
+		t.Fatalf("Expected sector number 1, got %d", sectors[0].Sectors[0].SectorNumber)
+	}
+}
+
+func TestBuildSectorsShouldHandleEmptySectors(t *testing.T) {
+	jsonData := `{
+		"R": {
+			"TimingData": {
+				"Lines": {
+					"44": {
+						"NumberOfLaps": 0,
+						"Sectors": [],
+						"Line": 1
+					}
+				}
+			}
+		},
+		"I": "1"
+	}`
+	sectors, err := BuildSectors([]byte(jsonData))
+	if err != nil {
+		t.Fatalf("BuildSectors should not error with empty sectors: %v", err)
+	}
+	if len(sectors) != 1 {
+		t.Fatalf("Expected 1 driver entry, got %d", len(sectors))
+	}
+	if len(sectors[0].Sectors) != 0 {
+		t.Fatalf("Expected 0 sectors, got %d", len(sectors[0].Sectors))
+	}
+}
+
+func TestTimingDataShouldIncludePartialBestLapTime(t *testing.T) {
+	// A driver with BestLapTime.Value set but Lap=0 should NOT be filtered out (AND logic)
+	jsonData := `{
+		"R": {
+			"TimingData": {
+				"Lines": {
+					"44": {
+						"Line": 1,
+						"NumberOfLaps": 3,
+						"GapToLeader": "+1.234",
+						"BestLapTime": {"Value": "1:30.000", "Lap": 0},
+						"LastLapTime": {"Value": "1:31.000"},
+						"Sectors": []
+					}
+				}
+			}
+		},
+		"I": "1"
+	}`
+	timingData, err := BuildTimingData([]byte(jsonData))
+	if err != nil {
+		t.Fatalf("BuildTimingData should not error with partial BestLapTime: %v", err)
+	}
+	if len(timingData) != 1 {
+		t.Fatalf("Expected 1 timing entry (partial BestLapTime should be kept), got %d", len(timingData))
+	}
+	if timingData[0].BestLapTime.Value != "1:30.000" {
+		t.Fatalf("Expected BestLapTime.Value=1:30.000, got %s", timingData[0].BestLapTime.Value)
+	}
+}

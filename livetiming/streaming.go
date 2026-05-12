@@ -3,6 +3,7 @@ package livetiming
 import (
 	"F1Telemetry-new-server/graph"
 	"F1Telemetry-new-server/graph/model"
+	"F1Telemetry-new-server/ws"
 	"context"
 	"encoding/json"
 	"fmt"
@@ -122,7 +123,7 @@ func SetWebSocket(connectionToken string, cookies []*http.Cookie) (*websocket.Co
 
 func CreateOriginalSessionMessage() SubscribeMessage {
 	var topics []string
-	topics = append(topics, "SessionInfo", "SessionData", "TimingData", "DriverList", "TimingStats", "TimingAppData", "LapCount", "CarData.z", "RaceControlMessages")
+	topics = append(topics, "SessionInfo", "SessionData", "TimingData", "DriverList", "TimingStats", "TimingAppData", "LapCount", "CarData.z", "RaceControlMessages", "Position.z", "TrackStatus")
 	var topicsList [][]string
 	topicsList = append(topicsList, topics)
 	return SubscribeMessage{
@@ -133,7 +134,7 @@ func CreateOriginalSessionMessage() SubscribeMessage {
 	}
 }
 
-func ProcessSessionDataAndInfo(connection *websocket.Conn, dbClient *dynamodb.Client, ctx context.Context, resolver *graph.Resolver) error {
+func ProcessSessionDataAndInfo(connection *websocket.Conn, dbClient *dynamodb.Client, ctx context.Context, resolver *graph.Resolver, hub *ws.Hub) error {
 	subscribeMessage := CreateOriginalSessionMessage()
 	err := connection.WriteJSON(subscribeMessage)
 	if err != nil {
@@ -157,22 +158,107 @@ func ProcessSessionDataAndInfo(connection *websocket.Conn, dbClient *dynamodb.Cl
 			}
 		}
 	}()
+	var sessionKey int
 	for {
 		_, message, err := connection.ReadMessage()
 		if err != nil {
 			return err
 		}
-		var sessionKey int
 
-		go func(msg []byte) {
-			meetingData, err := BuildMeetingData(msg)
-			if err == nil {
-				meetingDB := convertMeetingToDB(meetingData)
-				err = SaveMeeting(dbClient, &ctx, meetingDB)
-				if err != nil {
-					fmt.Println("error saving meeting data:", err)
-				}
-			}
+		// Determine message type by checking for "R" (initial snapshot) or "M" (updates) key
+		var raw map[string]json.RawMessage
+		if err := json.Unmarshal(message, &raw); err != nil {
+			fmt.Println("error unmarshaling message:", err)
+			continue
+		}
+
+		if _, hasR := raw["R"]; hasR {
+			// Initial snapshot — dispatch to all initial parsers
+			sessionKey = processInitialSnapshot(message, sessionKey, dbClient, ctx, resolver, hub)
+		} else if _, hasM := raw["M"]; hasM {
+			// Update messages — dispatch by topic
+			sessionKey = processUpdateMessages(message, sessionKey, dbClient, ctx, resolver, hub)
+		}
+	}
+}
+
+func processInitialSnapshot(msg []byte, sessionKey int, dbClient *dynamodb.Client, ctx context.Context, resolver *graph.Resolver, hub *ws.Hub) int {
+	meetingData, err := BuildMeetingData(msg)
+	if err == nil {
+		meetingDB := convertMeetingToDB(meetingData)
+		err = SaveMeeting(dbClient, &ctx, meetingDB)
+		if err != nil {
+			fmt.Println("error saving meeting data:", err)
+		}
+	}
+	sessionInfo, err := BuildSessionInfo(msg)
+	if err == nil && sessionInfo.Key != 0 {
+		sessionKey = sessionInfo.Key
+		hub.SetSessionKey(sessionKey)
+		err = SaveSession(dbClient, &ctx, sessionInfo)
+		if err != nil {
+			fmt.Println("error saving session info:", err)
+		}
+	}
+	drivers, err := BuildDriverList(msg)
+	if err == nil {
+		for i := range drivers {
+			drivers[i].SessionKey = sessionKey
+		}
+		err = SaveDrivers(dbClient, &ctx, drivers, sessionKey)
+		if err != nil {
+			fmt.Println("error saving drivers:", err)
+		}
+	}
+	positions, err := BuildPositions(msg)
+	if err == nil {
+		processPositions(positions, sessionKey, dbClient, ctx, resolver)
+	}
+	timingData, err := BuildTimingData(msg)
+	if err == nil {
+		processTimingData(timingData, sessionKey, dbClient, ctx, resolver)
+	}
+	carData, err := BuildCarData(msg)
+	if err == nil {
+		var carDataModel model.CarData
+		carDataModel.Compressed = carData.Compressed
+		resolver.NotifyCarDataSubscribers(&carDataModel)
+	}
+	trackStatus, err := BuildTrackStatus(msg)
+	if err == nil {
+		processTrackStatus(trackStatus, sessionKey, dbClient, ctx, resolver)
+	}
+	raceControlMessages, err := BuildRaceControl(msg)
+	if err == nil {
+		processRaceControl(raceControlMessages, sessionKey, dbClient, ctx, resolver)
+	}
+	stints, err := BuildStints(msg)
+	if err == nil {
+		processStints(stints, sessionKey, dbClient, ctx, resolver)
+	}
+	sectors, err := BuildSectors(msg)
+	if err == nil {
+		processSectors(sectors, sessionKey, dbClient, ctx, resolver)
+	}
+	return sessionKey
+}
+
+func processUpdateMessages(msg []byte, sessionKey int, dbClient *dynamodb.Client, ctx context.Context, resolver *graph.Resolver, hub *ws.Hub) int {
+	var updateData UpdateData
+	if err := json.Unmarshal(msg, &updateData); err != nil {
+		fmt.Println("error unmarshaling update data:", err)
+		return sessionKey
+	}
+	for _, message := range updateData.M {
+		if len(message.A) < 2 {
+			continue
+		}
+		topic, ok := message.A[0].(string)
+		if !ok {
+			continue
+		}
+		switch topic {
+		case "SessionInfo":
 			sessionInfo, err := BuildSessionInfo(msg)
 			if err == nil {
 				if sessionInfo.Key == 0 {
@@ -191,160 +277,209 @@ func ProcessSessionDataAndInfo(connection *websocket.Conn, dbClient *dynamodb.Cl
 					}
 				} else {
 					sessionKey = sessionInfo.Key
+					hub.SetSessionKey(sessionKey)
 					err = SaveSession(dbClient, &ctx, sessionInfo)
 					if err != nil {
 						fmt.Println("error saving session info:", err)
 					}
 				}
 			}
-			drivers, err := BuildDriverList(msg)
-			for _, driver := range drivers {
-				driver.SessionKey = sessionKey
-			}
+		case "SessionData":
+			sessionInfo, err := BuildSessionInfo(msg)
 			if err == nil {
-				err = SaveDrivers(dbClient, &ctx, drivers, sessionKey)
-				if err != nil {
-					fmt.Println("error saving drivers:", err)
+				if sessionInfo.Key == 0 {
+					_, err := dbClient.UpdateItem(ctx, &dynamodb.UpdateItemInput{
+						TableName: aws.String("sessions"),
+						Key: map[string]types.AttributeValue{
+							"SessionKey": &types.AttributeValueMemberN{Value: fmt.Sprintf("%d", sessionKey)},
+						},
+						UpdateExpression: aws.String("SET ArchiveStatus = :newStatus"),
+						ExpressionAttributeValues: map[string]types.AttributeValue{
+							":newStatus": &types.AttributeValueMemberS{Value: "Complete"},
+						},
+					})
+					if err != nil {
+						fmt.Println("error updating DynamoDB:", err)
+					}
 				}
 			}
+		case "TimingData":
 			positions, err := BuildPositions(msg)
 			if err == nil {
-				var positionsWithSessionKey []Position
-				var modelPositions []*model.Position
-				for _, position := range positions {
-					var modelPosition model.Position
-					modelPosition.Position = position.Position
-					modelPosition.RacingNumber = position.RacingNumber
-					modelPosition.SessionKey = sessionKey
-					modelPosition.Retired = position.Retired
-					modelPosition.InPit = position.InPit
-					modelPosition.Stopped = position.Stopped
-					modelPosition.Status = position.Status
-					modelPositions = append(modelPositions, &modelPosition)
-					position.SessionKey = sessionKey
-					positionsWithSessionKey = append(positionsWithSessionKey, position)
-				}
-				err = SavePositions(dbClient, &ctx, positionsWithSessionKey)
-				if err != nil {
-					fmt.Println("error saving positions:", err)
-				} else {
-
-				}
-				resolver.NotifyPositionSubscribers(modelPositions)
+				processPositions(positions, sessionKey, dbClient, ctx, resolver)
 			}
 			timingData, err := BuildTimingData(msg)
 			if err == nil {
-				var laptimes []*model.LapTime
-				for _, timing := range timingData {
-					var lapTime model.LapTime
-					time := &model.TimeRef{
-						Value:           timing.LastLapTime.Value,
-						OverallFastest:  timing.LastLapTime.OverallFastest,
-						PersonalFastest: timing.LastLapTime.PersonalFastest,
-					}
-					lapTime.SessionKey = sessionKey
-					lapTime.BestLapTime = timing.BestLapTime.Value
-					lapTime.NumberOfLaps = timing.NumberOfLaps
-					lapTime.RacingNumber = timing.RacingNumber
-					lapTime.LastLapTime = time
-					lapTime.GapToLeader = &timing.GapToLeader
-					lapTime.IntervalToPositionAhead = &timing.IntervalToPositionAhead
-					lapTime.InPit = timing.InPit
-					lapTime.PitOut = timing.PitOut
-					lapTime.Retired = timing.Stopped
-					timing.SessionKey = sessionKey
-					err = SaveLapTime(dbClient, &ctx, timing)
-					if err != nil {
-						fmt.Println("error saving lap time:", err)
-					}
-					laptimes = append(laptimes, &lapTime)
-				}
-				resolver.NotifyLapTimeSubscribers(laptimes)
+				processTimingData(timingData, sessionKey, dbClient, ctx, resolver)
 			}
+			sectors, err := BuildSectors(msg)
+			if err == nil {
+				processSectors(sectors, sessionKey, dbClient, ctx, resolver)
+			}
+		case "DriverList":
+			positions, err := BuildPositions(msg)
+			if err == nil {
+				processPositions(positions, sessionKey, dbClient, ctx, resolver)
+			}
+		case "CarData.z":
 			carData, err := BuildCarData(msg)
 			if err == nil {
 				var carDataModel model.CarData
 				carDataModel.Compressed = carData.Compressed
 				resolver.NotifyCarDataSubscribers(&carDataModel)
 			}
-			trackStatus, err := BuildTrackStatus(msg)
-			if err == nil {
-				var trackStatusModel []*model.TrackStatus
-				for _, status := range trackStatus {
-					var trackStatusEntry model.TrackStatus
-					trackStatusEntry.Status = status.Status
-					trackStatusEntry.Timestamp = status.Utc.Format(time.RFC3339)
-					trackStatusEntry.SessionKey = sessionKey
-					trackStatusModel = append(trackStatusModel, &trackStatusEntry)
-				}
-				resolver.NotifyTrackStatusSubscribers(trackStatusModel)
-				err = SaveTrackStatus(dbClient, &ctx, trackStatusModel)
-				if err != nil {
-					fmt.Println("error saving track status:", err)
-				}
+		case "Position.z":
+			// Position.z data is decompressed via BuildPositionZ
+			_, err := BuildPositionZ(msg)
+			if err != nil {
+				fmt.Println("error parsing Position.z:", err)
 			}
+		case "TrackStatus":
+			trackStatus, err := BuildTrackStatusUpdate(msg)
+			if err == nil {
+				processTrackStatus(trackStatus, sessionKey, dbClient, ctx, resolver)
+			}
+		case "RaceControlMessages":
 			raceControlMessages, err := BuildRaceControl(msg)
 			if err == nil {
-				var raceControlModel []*model.RaceControl
-				for _, message := range raceControlMessages {
-					var raceControl model.RaceControl
-					raceControl.Message = message.Message
-					raceControl.Category = &message.Category
-					raceControl.Date = message.Utc
-					raceControl.Flag = &message.Flag
-					raceControlModel = append(raceControlModel, &raceControl)
-				}
-				resolver.NotifyRaceControlSubscribers(raceControlModel)
-				err = SaveRaceControlMessages(dbClient, &ctx, sessionKey, raceControlModel)
-				if err != nil {
-					fmt.Printf("error: could not save race control messages: %v\n", err)
-				}
+				processRaceControl(raceControlMessages, sessionKey, dbClient, ctx, resolver)
 			}
+		case "TimingAppData":
 			stints, err := BuildStints(msg)
 			if err == nil {
-				var stintsModel []*model.Stint
-				for _, stint := range stints {
-					var stintModel model.Stint
-					stintModel.Compound = stint.Compound
-					stintModel.LapFlags = stint.LapFlags
-					stintModel.RacingNumber = stint.RacingNumber
-					stintModel.New = stint.New
-					stintModel.StartLaps = stint.StartLaps
-					stintModel.StintNumber = stint.StintNumber
-					stintModel.Timestamp = stint.Timestamp
-					stintModel.TotalLaps = stint.TotalLaps
-					stintModel.TyresNotChanged = stint.TyresNotChanged
-					stintsModel = append(stintsModel, &stintModel)
-				}
-				resolver.NotifyStintSubscribers(stintsModel)
-				err = SaveStints(dbClient, &ctx, stints, sessionKey)
-				if err != nil {
-					fmt.Println("error saving stints:", err)
-				}
+				processStints(stints, sessionKey, dbClient, ctx, resolver)
 			}
-			sectors, err := BuildSectors(msg)
-			if err == nil {
-				var sectorsModel []*model.Sector
-				for _, sectorTime := range sectors {
-					for _, sector := range sectorTime.Sectors {
-						var sectorModel model.Sector
-						sectorModel.LapNumber = sector.LapNumber
-						sectorModel.RacingNumber = sectorTime.RacingNumber
-						sectorModel.SectorNumber = sector.SectorNumber
-						sectorModel.Value = sector.Value
-						sectorModel.OverallFastest = sector.OverallFastest
-						sectorModel.PersonalFastest = sector.PersonalFastest
-						sectorModel.Utc = &sectorTime.Utc
-						sectorsModel = append(sectorsModel, &sectorModel)
-					}
-				}
-				resolver.NotifySectorTimeSubscribers(sectorsModel)
-				err = SaveSectors(dbClient, &ctx, sessionKey, sectorsModel)
-				if err != nil {
-					fmt.Println("error saving sectors:", err)
-				}
-			}
-		}(message)
+		}
+	}
+	return sessionKey
+}
+
+func processPositions(positions []Position, sessionKey int, dbClient *dynamodb.Client, ctx context.Context, resolver *graph.Resolver) {
+	var positionsWithSessionKey []Position
+	var modelPositions []*model.Position
+	for _, position := range positions {
+		var modelPosition model.Position
+		modelPosition.Position = position.Position
+		modelPosition.RacingNumber = position.RacingNumber
+		modelPosition.SessionKey = sessionKey
+		modelPosition.Retired = position.Retired
+		modelPosition.InPit = position.InPit
+		modelPosition.Stopped = position.Stopped
+		modelPosition.Status = position.Status
+		modelPositions = append(modelPositions, &modelPosition)
+		position.SessionKey = sessionKey
+		positionsWithSessionKey = append(positionsWithSessionKey, position)
+	}
+	err := SavePositions(dbClient, &ctx, positionsWithSessionKey)
+	if err != nil {
+		fmt.Println("error saving positions:", err)
+	}
+	resolver.NotifyPositionSubscribers(modelPositions)
+}
+
+func processTimingData(timingData []LapTimeMetric, sessionKey int, dbClient *dynamodb.Client, ctx context.Context, resolver *graph.Resolver) {
+	var laptimes []*model.LapTime
+	for _, timing := range timingData {
+		var lapTime model.LapTime
+		t := &model.TimeRef{
+			Value:           timing.LastLapTime.Value,
+			OverallFastest:  timing.LastLapTime.OverallFastest,
+			PersonalFastest: timing.LastLapTime.PersonalFastest,
+		}
+		lapTime.SessionKey = sessionKey
+		lapTime.BestLapTime = timing.BestLapTime.Value
+		lapTime.NumberOfLaps = timing.NumberOfLaps
+		lapTime.RacingNumber = timing.RacingNumber
+		lapTime.LastLapTime = t
+		lapTime.GapToLeader = &timing.GapToLeader
+		lapTime.IntervalToPositionAhead = &timing.IntervalToPositionAhead
+		lapTime.InPit = timing.InPit
+		lapTime.PitOut = timing.PitOut
+		lapTime.Retired = timing.Stopped
+		timing.SessionKey = sessionKey
+		err := SaveLapTime(dbClient, &ctx, timing)
+		if err != nil {
+			fmt.Println("error saving lap time:", err)
+		}
+		laptimes = append(laptimes, &lapTime)
+	}
+	resolver.NotifyLapTimeSubscribers(laptimes)
+}
+
+func processTrackStatus(trackStatus []TrackStatus, sessionKey int, dbClient *dynamodb.Client, ctx context.Context, resolver *graph.Resolver) {
+	var trackStatusModel []*model.TrackStatus
+	for _, status := range trackStatus {
+		var trackStatusEntry model.TrackStatus
+		trackStatusEntry.Status = status.Status
+		trackStatusEntry.Timestamp = status.Utc.Format(time.RFC3339)
+		trackStatusEntry.SessionKey = sessionKey
+		trackStatusModel = append(trackStatusModel, &trackStatusEntry)
+	}
+	resolver.NotifyTrackStatusSubscribers(trackStatusModel)
+	err := SaveTrackStatus(dbClient, &ctx, trackStatusModel)
+	if err != nil {
+		fmt.Println("error saving track status:", err)
+	}
+}
+
+func processRaceControl(raceControlMessages []RaceControl, sessionKey int, dbClient *dynamodb.Client, ctx context.Context, resolver *graph.Resolver) {
+	var raceControlModel []*model.RaceControl
+	for _, message := range raceControlMessages {
+		var raceControl model.RaceControl
+		raceControl.Message = message.Message
+		raceControl.Category = &message.Category
+		raceControl.Date = message.Utc
+		raceControl.Flag = &message.Flag
+		raceControlModel = append(raceControlModel, &raceControl)
+	}
+	resolver.NotifyRaceControlSubscribers(raceControlModel)
+	err := SaveRaceControlMessages(dbClient, &ctx, sessionKey, raceControlModel)
+	if err != nil {
+		fmt.Printf("error: could not save race control messages: %v\n", err)
+	}
+}
+
+func processStints(stints []Stint, sessionKey int, dbClient *dynamodb.Client, ctx context.Context, resolver *graph.Resolver) {
+	var stintsModel []*model.Stint
+	for _, stint := range stints {
+		var stintModel model.Stint
+		stintModel.Compound = stint.Compound
+		stintModel.LapFlags = stint.LapFlags
+		stintModel.RacingNumber = stint.RacingNumber
+		stintModel.New = stint.New
+		stintModel.StartLaps = stint.StartLaps
+		stintModel.StintNumber = stint.StintNumber
+		stintModel.Timestamp = stint.Timestamp
+		stintModel.TotalLaps = stint.TotalLaps
+		stintModel.TyresNotChanged = stint.TyresNotChanged
+		stintsModel = append(stintsModel, &stintModel)
+	}
+	resolver.NotifyStintSubscribers(stintsModel)
+	err := SaveStints(dbClient, &ctx, stints, sessionKey)
+	if err != nil {
+		fmt.Println("error saving stints:", err)
+	}
+}
+
+func processSectors(sectors []AllSectors, sessionKey int, dbClient *dynamodb.Client, ctx context.Context, resolver *graph.Resolver) {
+	var sectorsModel []*model.Sector
+	for _, sectorTime := range sectors {
+		for _, sector := range sectorTime.Sectors {
+			var sectorModel model.Sector
+			sectorModel.LapNumber = sector.LapNumber
+			sectorModel.RacingNumber = sectorTime.RacingNumber
+			sectorModel.SectorNumber = sector.SectorNumber
+			sectorModel.Value = sector.Value
+			sectorModel.OverallFastest = sector.OverallFastest
+			sectorModel.PersonalFastest = sector.PersonalFastest
+			sectorModel.Utc = &sectorTime.Utc
+			sectorsModel = append(sectorsModel, &sectorModel)
+		}
+	}
+	resolver.NotifySectorTimeSubscribers(sectorsModel)
+	err := SaveSectors(dbClient, &ctx, sessionKey, sectorsModel)
+	if err != nil {
+		fmt.Println("error saving sectors:", err)
 	}
 }
 

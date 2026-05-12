@@ -108,3 +108,45 @@ func (r *Resolver) NotifyTrackStatusSubscribers(trackStatuses []*model.TrackStat
 		observer <- trackStatuses
 	}
 }
+
+func (r *Resolver) RegisterLapTimeObserver(id string, ch chan []*model.LapTime) {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	r.LapTimeObservers[id] = ch
+}
+
+func (r *Resolver) RegisterPositionObserver(id string, ch chan []*model.Position) {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	r.PositionObservers[id] = ch
+}
+
+func (r *Resolver) RegisterCarDataObserver(id string, ch chan *model.CarData) {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	r.CarDataObservers[id] = ch
+}
+
+func (r *Resolver) RegisterRaceControlObserver(id string, ch chan []*model.RaceControl) {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	r.RaceControlObservers[id] = ch
+}
+
+func (r *Resolver) RegisterStintObserver(id string, ch chan []*model.Stint) {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	r.StintObservers[id] = ch
+}
+
+func (r *Resolver) RegisterSectorTimeObserver(id string, ch chan []*model.Sector) {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	r.SectorTimeObservers[id] = ch
+}
+
+func (r *Resolver) RegisterTrackStatusObserver(id string, ch chan []*model.TrackStatus) {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	r.TrackStatusObservers[id] = ch
+}

@@ -324,8 +324,9 @@ type InitialData struct {
 			} `json:"Lines"`
 			Kf bool `json:"_kf"`
 		} `json:"TimingAppData"`
-		CarData  string `json:"CarData.Z"`
-		LapCount struct {
+		CarData   string `json:"CarData.Z"`
+		PositionZ string `json:"Position.z"`
+		LapCount  struct {
 			CurrentLap int  `json:"CurrentLap"`
 			TotalLaps  int  `json:"TotalLaps"`
 			Kf         bool `json:"_kf"`
@@ -417,13 +418,13 @@ type CarData struct {
 }
 
 type RaceControl struct {
-	SessionKey int    `json:"sessionkey"`
-	Utc        string `json:"utc"`
-	Category   string `json:"category"`
-	Flag       string `json:"flag"`
-	Scope      string `json:"scope"`
-	Message    string `json:"message"`
-	LapNumber  *int   `json:"lapnumber"`
+	SessionKey int    `json:"SessionKey"`
+	Utc        string `json:"Utc"`
+	Category   string `json:"Category"`
+	Flag       string `json:"Flag"`
+	Scope      string `json:"Scope"`
+	Message    string `json:"Message"`
+	LapNumber  *int   `json:"LapNumber"`
 }
 
 type RawRaceControl struct {
@@ -443,6 +444,25 @@ type Entry struct {
 // Car represents a car in the Cars map
 type Car struct {
 	Channels map[string]int `json:"Channels"`
+}
+
+// PositionRoot represents decompressed Position.z data
+type PositionRoot struct {
+	Position []PositionEntry `json:"Position"`
+}
+
+// PositionEntry represents a timestamped set of car positions
+type PositionEntry struct {
+	Timestamp time.Time              `json:"Timestamp"`
+	Entries   map[string]CarPosition `json:"Entries"`
+}
+
+// CarPosition represents a single car's GPS position
+type CarPosition struct {
+	Status string `json:"Status"`
+	X      int    `json:"X"`
+	Y      int    `json:"Y"`
+	Z      int    `json:"Z"`
 }
 
 type UpdateSector struct {

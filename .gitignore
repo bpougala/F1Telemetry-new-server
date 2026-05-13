@@ -4,3 +4,4 @@
 *.txt
 *__debug*
 messages.json
+*.log

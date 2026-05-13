@@ -1,0 +1,663 @@
+{
+  "/F1TelemetryStack": [
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "Kernel._Kernel_create (/private/var/folders/tx/lxl4cmgd0kl3t0lt2zr1nywr0000gn/T/jsii-runtime.2320861717/lib/program.js:1:61273)",
+        "Kernel.create (/private/var/folders/tx/lxl4cmgd0kl3t0lt2zr1nywr0000gn/T/jsii-runtime.2320861717/lib/program.js:1:52004)",
+        "KernelHost.processRequest (/private/var/folders/tx/lxl4cmgd0kl3t0lt2zr1nywr0000gn/T/jsii-runtime.2320861717/lib/program.js:1:212888)",
+        "KernelHost.run (/private/var/folders/tx/lxl4cmgd0kl3t0lt2zr1nywr0000gn/T/jsii-runtime.2320861717/lib/program.js:1:211943)",
+        "Immediate._onImmediate (/private/var/folders/tx/lxl4cmgd0kl3t0lt2zr1nywr0000gn/T/jsii-runtime.2320861717/lib/program.js:1:211987)",
+        "...node internals..."
+      ]
+    }
+  ],
+  "/F1TelemetryStack/Table-meetings": [
+    {
+      "type": "aws:cdk:hasPhysicalName",
+      "data": {
+        "Ref": "Tablemeetings3C9E354E"
+      }
+    }
+  ],
+  "/F1TelemetryStack/Table-sessions": [
+    {
+      "type": "aws:cdk:hasPhysicalName",
+      "data": {
+        "Ref": "Tablesessions5F65A6A6"
+      }
+    }
+  ],
+  "/F1TelemetryStack/Table-drivers": [
+    {
+      "type": "aws:cdk:hasPhysicalName",
+      "data": {
+        "Ref": "Tabledrivers3EC3C7E8"
+      }
+    }
+  ],
+  "/F1TelemetryStack/Table-positions": [
+    {
+      "type": "aws:cdk:hasPhysicalName",
+      "data": {
+        "Ref": "Tablepositions78B15C1B"
+      }
+    }
+  ],
+  "/F1TelemetryStack/Table-timings": [
+    {
+      "type": "aws:cdk:hasPhysicalName",
+      "data": {
+        "Ref": "Tabletimings966D60A4"
+      }
+    }
+  ],
+  "/F1TelemetryStack/Table-sectors": [
+    {
+      "type": "aws:cdk:hasPhysicalName",
+      "data": {
+        "Ref": "Tablesectors8C3228F6"
+      }
+    }
+  ],
+  "/F1TelemetryStack/Table-trackstatus": [
+    {
+      "type": "aws:cdk:hasPhysicalName",
+      "data": {
+        "Ref": "Tabletrackstatus1180CC5A"
+      }
+    }
+  ],
+  "/F1TelemetryStack/Table-racecontrol": [
+    {
+      "type": "aws:cdk:hasPhysicalName",
+      "data": {
+        "Ref": "Tableracecontrol6B88F830"
+      }
+    }
+  ],
+  "/F1TelemetryStack/Table-stints": [
+    {
+      "type": "aws:cdk:hasPhysicalName",
+      "data": {
+        "Ref": "TablestintsB1D54635"
+      }
+    }
+  ],
+  "/F1TelemetryStack/SsmParameterValue:--aws--service--ami-amazon-linux-latest--al2023-ami-kernel-6.1-x86_64:C96584B6-F00A-464E-AD19-53AFF4B05118.Parameter": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "SsmParameterValueawsserviceamiamazonlinuxlatestal2023amikernel61x8664C96584B6F00A464EAD1953AFF4B05118Parameter"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...new Instance2 in aws-cdk-lib...",
+        "Kernel._Kernel_create (/private/var/folders/tx/lxl4cmgd0kl3t0lt2zr1nywr0000gn/T/jsii-runtime.2320861717/lib/program.js:1:61273)",
+        "Kernel.create (/private/var/folders/tx/lxl4cmgd0kl3t0lt2zr1nywr0000gn/T/jsii-runtime.2320861717/lib/program.js:1:52004)",
+        "KernelHost.processRequest (/private/var/folders/tx/lxl4cmgd0kl3t0lt2zr1nywr0000gn/T/jsii-runtime.2320861717/lib/program.js:1:212888)",
+        "KernelHost.run (/private/var/folders/tx/lxl4cmgd0kl3t0lt2zr1nywr0000gn/T/jsii-runtime.2320861717/lib/program.js:1:211943)",
+        "Immediate._onImmediate (/private/var/folders/tx/lxl4cmgd0kl3t0lt2zr1nywr0000gn/T/jsii-runtime.2320861717/lib/program.js:1:211987)",
+        "...node internals..."
+      ]
+    }
+  ],
+  "/F1TelemetryStack/InstancePublicIP": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "InstancePublicIP"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "Kernel._Kernel_create (/private/var/folders/tx/lxl4cmgd0kl3t0lt2zr1nywr0000gn/T/jsii-runtime.2320861717/lib/program.js:1:61273)",
+        "Kernel.create (/private/var/folders/tx/lxl4cmgd0kl3t0lt2zr1nywr0000gn/T/jsii-runtime.2320861717/lib/program.js:1:52004)",
+        "KernelHost.processRequest (/private/var/folders/tx/lxl4cmgd0kl3t0lt2zr1nywr0000gn/T/jsii-runtime.2320861717/lib/program.js:1:212888)",
+        "KernelHost.run (/private/var/folders/tx/lxl4cmgd0kl3t0lt2zr1nywr0000gn/T/jsii-runtime.2320861717/lib/program.js:1:211943)",
+        "Immediate._onImmediate (/private/var/folders/tx/lxl4cmgd0kl3t0lt2zr1nywr0000gn/T/jsii-runtime.2320861717/lib/program.js:1:211987)",
+        "...node internals..."
+      ]
+    }
+  ],
+  "/F1TelemetryStack/ServerURL": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "ServerURL"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "Kernel._Kernel_create (/private/var/folders/tx/lxl4cmgd0kl3t0lt2zr1nywr0000gn/T/jsii-runtime.2320861717/lib/program.js:1:61273)",
+        "Kernel.create (/private/var/folders/tx/lxl4cmgd0kl3t0lt2zr1nywr0000gn/T/jsii-runtime.2320861717/lib/program.js:1:52004)",
+        "KernelHost.processRequest (/private/var/folders/tx/lxl4cmgd0kl3t0lt2zr1nywr0000gn/T/jsii-runtime.2320861717/lib/program.js:1:212888)",
+        "KernelHost.run (/private/var/folders/tx/lxl4cmgd0kl3t0lt2zr1nywr0000gn/T/jsii-runtime.2320861717/lib/program.js:1:211943)",
+        "Immediate._onImmediate (/private/var/folders/tx/lxl4cmgd0kl3t0lt2zr1nywr0000gn/T/jsii-runtime.2320861717/lib/program.js:1:211987)",
+        "...node internals..."
+      ]
+    }
+  ],
+  "/F1TelemetryStack/BootstrapVersion": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "BootstrapVersion"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...App.synth in aws-cdk-lib...",
+        "/private/var/folders/tx/lxl4cmgd0kl3t0lt2zr1nywr0000gn/T/jsii-runtime.2320861717/lib/program.js:1:543 (/private/var/folders/tx/lxl4cmgd0kl3t0lt2zr1nywr0000gn/T/jsii-runtime.2320861717/lib/program.js:1:5434)",
+        "Kernel._Kernel_ensureSync (/private/var/folders/tx/lxl4cmgd0kl3t0lt2zr1nywr0000gn/T/jsii-runtime.2320861717/lib/program.js:1:69992)",
+        "Kernel.invoke (/private/var/folders/tx/lxl4cmgd0kl3t0lt2zr1nywr0000gn/T/jsii-runtime.2320861717/lib/program.js:1:54294)",
+        "KernelHost.processRequest (/private/var/folders/tx/lxl4cmgd0kl3t0lt2zr1nywr0000gn/T/jsii-runtime.2320861717/lib/program.js:1:212888)",
+        "KernelHost.run (/private/var/folders/tx/lxl4cmgd0kl3t0lt2zr1nywr0000gn/T/jsii-runtime.2320861717/lib/program.js:1:211943)",
+        "Immediate._onImmediate (/private/var/folders/tx/lxl4cmgd0kl3t0lt2zr1nywr0000gn/T/jsii-runtime.2320861717/lib/program.js:1:211987)",
+        "...node internals..."
+      ]
+    }
+  ],
+  "/F1TelemetryStack/CheckBootstrapVersion": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "CheckBootstrapVersion"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...App.synth in aws-cdk-lib...",
+        "/private/var/folders/tx/lxl4cmgd0kl3t0lt2zr1nywr0000gn/T/jsii-runtime.2320861717/lib/program.js:1:543 (/private/var/folders/tx/lxl4cmgd0kl3t0lt2zr1nywr0000gn/T/jsii-runtime.2320861717/lib/program.js:1:5434)",
+        "Kernel._Kernel_ensureSync (/private/var/folders/tx/lxl4cmgd0kl3t0lt2zr1nywr0000gn/T/jsii-runtime.2320861717/lib/program.js:1:69992)",
+        "Kernel.invoke (/private/var/folders/tx/lxl4cmgd0kl3t0lt2zr1nywr0000gn/T/jsii-runtime.2320861717/lib/program.js:1:54294)",
+        "KernelHost.processRequest (/private/var/folders/tx/lxl4cmgd0kl3t0lt2zr1nywr0000gn/T/jsii-runtime.2320861717/lib/program.js:1:212888)",
+        "KernelHost.run (/private/var/folders/tx/lxl4cmgd0kl3t0lt2zr1nywr0000gn/T/jsii-runtime.2320861717/lib/program.js:1:211943)",
+        "Immediate._onImmediate (/private/var/folders/tx/lxl4cmgd0kl3t0lt2zr1nywr0000gn/T/jsii-runtime.2320861717/lib/program.js:1:211987)",
+        "...node internals..."
+      ]
+    }
+  ],
+  "/F1TelemetryStack/Vpc/Resource": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "Vpc8378EB38"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...new Vpc2 in aws-cdk-lib...",
+        "Kernel._Kernel_create (/private/var/folders/tx/lxl4cmgd0kl3t0lt2zr1nywr0000gn/T/jsii-runtime.2320861717/lib/program.js:1:61273)",
+        "Kernel.create (/private/var/folders/tx/lxl4cmgd0kl3t0lt2zr1nywr0000gn/T/jsii-runtime.2320861717/lib/program.js:1:52004)",
+        "KernelHost.processRequest (/private/var/folders/tx/lxl4cmgd0kl3t0lt2zr1nywr0000gn/T/jsii-runtime.2320861717/lib/program.js:1:212888)",
+        "KernelHost.run (/private/var/folders/tx/lxl4cmgd0kl3t0lt2zr1nywr0000gn/T/jsii-runtime.2320861717/lib/program.js:1:211943)",
+        "Immediate._onImmediate (/private/var/folders/tx/lxl4cmgd0kl3t0lt2zr1nywr0000gn/T/jsii-runtime.2320861717/lib/program.js:1:211987)",
+        "...node internals..."
+      ]
+    }
+  ],
+  "/F1TelemetryStack/Vpc/IGW": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "VpcIGWD7BA715C"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...new Vpc2 in aws-cdk-lib...",
+        "Kernel._Kernel_create (/private/var/folders/tx/lxl4cmgd0kl3t0lt2zr1nywr0000gn/T/jsii-runtime.2320861717/lib/program.js:1:61273)",
+        "Kernel.create (/private/var/folders/tx/lxl4cmgd0kl3t0lt2zr1nywr0000gn/T/jsii-runtime.2320861717/lib/program.js:1:52004)",
+        "KernelHost.processRequest (/private/var/folders/tx/lxl4cmgd0kl3t0lt2zr1nywr0000gn/T/jsii-runtime.2320861717/lib/program.js:1:212888)",
+        "KernelHost.run (/private/var/folders/tx/lxl4cmgd0kl3t0lt2zr1nywr0000gn/T/jsii-runtime.2320861717/lib/program.js:1:211943)",
+        "Immediate._onImmediate (/private/var/folders/tx/lxl4cmgd0kl3t0lt2zr1nywr0000gn/T/jsii-runtime.2320861717/lib/program.js:1:211987)",
+        "...node internals..."
+      ]
+    }
+  ],
+  "/F1TelemetryStack/Vpc/VPCGW": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "VpcVPCGWBF912B6E"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...new Vpc2 in aws-cdk-lib...",
+        "Kernel._Kernel_create (/private/var/folders/tx/lxl4cmgd0kl3t0lt2zr1nywr0000gn/T/jsii-runtime.2320861717/lib/program.js:1:61273)",
+        "Kernel.create (/private/var/folders/tx/lxl4cmgd0kl3t0lt2zr1nywr0000gn/T/jsii-runtime.2320861717/lib/program.js:1:52004)",
+        "KernelHost.processRequest (/private/var/folders/tx/lxl4cmgd0kl3t0lt2zr1nywr0000gn/T/jsii-runtime.2320861717/lib/program.js:1:212888)",
+        "KernelHost.run (/private/var/folders/tx/lxl4cmgd0kl3t0lt2zr1nywr0000gn/T/jsii-runtime.2320861717/lib/program.js:1:211943)",
+        "Immediate._onImmediate (/private/var/folders/tx/lxl4cmgd0kl3t0lt2zr1nywr0000gn/T/jsii-runtime.2320861717/lib/program.js:1:211987)",
+        "...node internals..."
+      ]
+    }
+  ],
+  "/F1TelemetryStack/ServerSG/Resource": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "ServerSG6D12D859"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...new SecurityGroup2 in aws-cdk-lib...",
+        "Kernel._Kernel_create (/private/var/folders/tx/lxl4cmgd0kl3t0lt2zr1nywr0000gn/T/jsii-runtime.2320861717/lib/program.js:1:61273)",
+        "Kernel.create (/private/var/folders/tx/lxl4cmgd0kl3t0lt2zr1nywr0000gn/T/jsii-runtime.2320861717/lib/program.js:1:52004)",
+        "KernelHost.processRequest (/private/var/folders/tx/lxl4cmgd0kl3t0lt2zr1nywr0000gn/T/jsii-runtime.2320861717/lib/program.js:1:212888)",
+        "KernelHost.run (/private/var/folders/tx/lxl4cmgd0kl3t0lt2zr1nywr0000gn/T/jsii-runtime.2320861717/lib/program.js:1:211943)",
+        "Immediate._onImmediate (/private/var/folders/tx/lxl4cmgd0kl3t0lt2zr1nywr0000gn/T/jsii-runtime.2320861717/lib/program.js:1:211987)",
+        "...node internals..."
+      ]
+    }
+  ],
+  "/F1TelemetryStack/InstanceRole/Resource": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "InstanceRole3CCE2F1D"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...new Role2 in aws-cdk-lib...",
+        "Kernel._Kernel_create (/private/var/folders/tx/lxl4cmgd0kl3t0lt2zr1nywr0000gn/T/jsii-runtime.2320861717/lib/program.js:1:61273)",
+        "Kernel.create (/private/var/folders/tx/lxl4cmgd0kl3t0lt2zr1nywr0000gn/T/jsii-runtime.2320861717/lib/program.js:1:52004)",
+        "KernelHost.processRequest (/private/var/folders/tx/lxl4cmgd0kl3t0lt2zr1nywr0000gn/T/jsii-runtime.2320861717/lib/program.js:1:212888)",
+        "KernelHost.run (/private/var/folders/tx/lxl4cmgd0kl3t0lt2zr1nywr0000gn/T/jsii-runtime.2320861717/lib/program.js:1:211943)",
+        "Immediate._onImmediate (/private/var/folders/tx/lxl4cmgd0kl3t0lt2zr1nywr0000gn/T/jsii-runtime.2320861717/lib/program.js:1:211987)",
+        "...node internals..."
+      ]
+    }
+  ],
+  "/F1TelemetryStack/Table-meetings/Resource": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "Tablemeetings3C9E354E"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...new Table2 in aws-cdk-lib...",
+        "Kernel._Kernel_create (/private/var/folders/tx/lxl4cmgd0kl3t0lt2zr1nywr0000gn/T/jsii-runtime.2320861717/lib/program.js:1:61273)",
+        "Kernel.create (/private/var/folders/tx/lxl4cmgd0kl3t0lt2zr1nywr0000gn/T/jsii-runtime.2320861717/lib/program.js:1:52004)",
+        "KernelHost.processRequest (/private/var/folders/tx/lxl4cmgd0kl3t0lt2zr1nywr0000gn/T/jsii-runtime.2320861717/lib/program.js:1:212888)",
+        "KernelHost.run (/private/var/folders/tx/lxl4cmgd0kl3t0lt2zr1nywr0000gn/T/jsii-runtime.2320861717/lib/program.js:1:211943)",
+        "Immediate._onImmediate (/private/var/folders/tx/lxl4cmgd0kl3t0lt2zr1nywr0000gn/T/jsii-runtime.2320861717/lib/program.js:1:211987)",
+        "...node internals..."
+      ]
+    }
+  ],
+  "/F1TelemetryStack/Table-sessions/Resource": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "Tablesessions5F65A6A6"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...new Table2 in aws-cdk-lib...",
+        "Kernel._Kernel_create (/private/var/folders/tx/lxl4cmgd0kl3t0lt2zr1nywr0000gn/T/jsii-runtime.2320861717/lib/program.js:1:61273)",
+        "Kernel.create (/private/var/folders/tx/lxl4cmgd0kl3t0lt2zr1nywr0000gn/T/jsii-runtime.2320861717/lib/program.js:1:52004)",
+        "KernelHost.processRequest (/private/var/folders/tx/lxl4cmgd0kl3t0lt2zr1nywr0000gn/T/jsii-runtime.2320861717/lib/program.js:1:212888)",
+        "KernelHost.run (/private/var/folders/tx/lxl4cmgd0kl3t0lt2zr1nywr0000gn/T/jsii-runtime.2320861717/lib/program.js:1:211943)",
+        "Immediate._onImmediate (/private/var/folders/tx/lxl4cmgd0kl3t0lt2zr1nywr0000gn/T/jsii-runtime.2320861717/lib/program.js:1:211987)",
+        "...node internals..."
+      ]
+    }
+  ],
+  "/F1TelemetryStack/Table-drivers/Resource": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "Tabledrivers3EC3C7E8"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...new Table2 in aws-cdk-lib...",
+        "Kernel._Kernel_create (/private/var/folders/tx/lxl4cmgd0kl3t0lt2zr1nywr0000gn/T/jsii-runtime.2320861717/lib/program.js:1:61273)",
+        "Kernel.create (/private/var/folders/tx/lxl4cmgd0kl3t0lt2zr1nywr0000gn/T/jsii-runtime.2320861717/lib/program.js:1:52004)",
+        "KernelHost.processRequest (/private/var/folders/tx/lxl4cmgd0kl3t0lt2zr1nywr0000gn/T/jsii-runtime.2320861717/lib/program.js:1:212888)",
+        "KernelHost.run (/private/var/folders/tx/lxl4cmgd0kl3t0lt2zr1nywr0000gn/T/jsii-runtime.2320861717/lib/program.js:1:211943)",
+        "Immediate._onImmediate (/private/var/folders/tx/lxl4cmgd0kl3t0lt2zr1nywr0000gn/T/jsii-runtime.2320861717/lib/program.js:1:211987)",
+        "...node internals..."
+      ]
+    }
+  ],
+  "/F1TelemetryStack/Table-positions/Resource": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "Tablepositions78B15C1B"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...new Table2 in aws-cdk-lib...",
+        "Kernel._Kernel_create (/private/var/folders/tx/lxl4cmgd0kl3t0lt2zr1nywr0000gn/T/jsii-runtime.2320861717/lib/program.js:1:61273)",
+        "Kernel.create (/private/var/folders/tx/lxl4cmgd0kl3t0lt2zr1nywr0000gn/T/jsii-runtime.2320861717/lib/program.js:1:52004)",
+        "KernelHost.processRequest (/private/var/folders/tx/lxl4cmgd0kl3t0lt2zr1nywr0000gn/T/jsii-runtime.2320861717/lib/program.js:1:212888)",
+        "KernelHost.run (/private/var/folders/tx/lxl4cmgd0kl3t0lt2zr1nywr0000gn/T/jsii-runtime.2320861717/lib/program.js:1:211943)",
+        "Immediate._onImmediate (/private/var/folders/tx/lxl4cmgd0kl3t0lt2zr1nywr0000gn/T/jsii-runtime.2320861717/lib/program.js:1:211987)",
+        "...node internals..."
+      ]
+    }
+  ],
+  "/F1TelemetryStack/Table-timings/Resource": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "Tabletimings966D60A4"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...new Table2 in aws-cdk-lib...",
+        "Kernel._Kernel_create (/private/var/folders/tx/lxl4cmgd0kl3t0lt2zr1nywr0000gn/T/jsii-runtime.2320861717/lib/program.js:1:61273)",
+        "Kernel.create (/private/var/folders/tx/lxl4cmgd0kl3t0lt2zr1nywr0000gn/T/jsii-runtime.2320861717/lib/program.js:1:52004)",
+        "KernelHost.processRequest (/private/var/folders/tx/lxl4cmgd0kl3t0lt2zr1nywr0000gn/T/jsii-runtime.2320861717/lib/program.js:1:212888)",
+        "KernelHost.run (/private/var/folders/tx/lxl4cmgd0kl3t0lt2zr1nywr0000gn/T/jsii-runtime.2320861717/lib/program.js:1:211943)",
+        "Immediate._onImmediate (/private/var/folders/tx/lxl4cmgd0kl3t0lt2zr1nywr0000gn/T/jsii-runtime.2320861717/lib/program.js:1:211987)",
+        "...node internals..."
+      ]
+    }
+  ],
+  "/F1TelemetryStack/Table-sectors/Resource": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "Tablesectors8C3228F6"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...new Table2 in aws-cdk-lib...",
+        "Kernel._Kernel_create (/private/var/folders/tx/lxl4cmgd0kl3t0lt2zr1nywr0000gn/T/jsii-runtime.2320861717/lib/program.js:1:61273)",
+        "Kernel.create (/private/var/folders/tx/lxl4cmgd0kl3t0lt2zr1nywr0000gn/T/jsii-runtime.2320861717/lib/program.js:1:52004)",
+        "KernelHost.processRequest (/private/var/folders/tx/lxl4cmgd0kl3t0lt2zr1nywr0000gn/T/jsii-runtime.2320861717/lib/program.js:1:212888)",
+        "KernelHost.run (/private/var/folders/tx/lxl4cmgd0kl3t0lt2zr1nywr0000gn/T/jsii-runtime.2320861717/lib/program.js:1:211943)",
+        "Immediate._onImmediate (/private/var/folders/tx/lxl4cmgd0kl3t0lt2zr1nywr0000gn/T/jsii-runtime.2320861717/lib/program.js:1:211987)",
+        "...node internals..."
+      ]
+    }
+  ],
+  "/F1TelemetryStack/Table-trackstatus/Resource": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "Tabletrackstatus1180CC5A"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...new Table2 in aws-cdk-lib...",
+        "Kernel._Kernel_create (/private/var/folders/tx/lxl4cmgd0kl3t0lt2zr1nywr0000gn/T/jsii-runtime.2320861717/lib/program.js:1:61273)",
+        "Kernel.create (/private/var/folders/tx/lxl4cmgd0kl3t0lt2zr1nywr0000gn/T/jsii-runtime.2320861717/lib/program.js:1:52004)",
+        "KernelHost.processRequest (/private/var/folders/tx/lxl4cmgd0kl3t0lt2zr1nywr0000gn/T/jsii-runtime.2320861717/lib/program.js:1:212888)",
+        "KernelHost.run (/private/var/folders/tx/lxl4cmgd0kl3t0lt2zr1nywr0000gn/T/jsii-runtime.2320861717/lib/program.js:1:211943)",
+        "Immediate._onImmediate (/private/var/folders/tx/lxl4cmgd0kl3t0lt2zr1nywr0000gn/T/jsii-runtime.2320861717/lib/program.js:1:211987)",
+        "...node internals..."
+      ]
+    }
+  ],
+  "/F1TelemetryStack/Table-racecontrol/Resource": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "Tableracecontrol6B88F830"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...new Table2 in aws-cdk-lib...",
+        "Kernel._Kernel_create (/private/var/folders/tx/lxl4cmgd0kl3t0lt2zr1nywr0000gn/T/jsii-runtime.2320861717/lib/program.js:1:61273)",
+        "Kernel.create (/private/var/folders/tx/lxl4cmgd0kl3t0lt2zr1nywr0000gn/T/jsii-runtime.2320861717/lib/program.js:1:52004)",
+        "KernelHost.processRequest (/private/var/folders/tx/lxl4cmgd0kl3t0lt2zr1nywr0000gn/T/jsii-runtime.2320861717/lib/program.js:1:212888)",
+        "KernelHost.run (/private/var/folders/tx/lxl4cmgd0kl3t0lt2zr1nywr0000gn/T/jsii-runtime.2320861717/lib/program.js:1:211943)",
+        "Immediate._onImmediate (/private/var/folders/tx/lxl4cmgd0kl3t0lt2zr1nywr0000gn/T/jsii-runtime.2320861717/lib/program.js:1:211987)",
+        "...node internals..."
+      ]
+    }
+  ],
+  "/F1TelemetryStack/Table-stints/Resource": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "TablestintsB1D54635"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...new Table2 in aws-cdk-lib...",
+        "Kernel._Kernel_create (/private/var/folders/tx/lxl4cmgd0kl3t0lt2zr1nywr0000gn/T/jsii-runtime.2320861717/lib/program.js:1:61273)",
+        "Kernel.create (/private/var/folders/tx/lxl4cmgd0kl3t0lt2zr1nywr0000gn/T/jsii-runtime.2320861717/lib/program.js:1:52004)",
+        "KernelHost.processRequest (/private/var/folders/tx/lxl4cmgd0kl3t0lt2zr1nywr0000gn/T/jsii-runtime.2320861717/lib/program.js:1:212888)",
+        "KernelHost.run (/private/var/folders/tx/lxl4cmgd0kl3t0lt2zr1nywr0000gn/T/jsii-runtime.2320861717/lib/program.js:1:211943)",
+        "Immediate._onImmediate (/private/var/folders/tx/lxl4cmgd0kl3t0lt2zr1nywr0000gn/T/jsii-runtime.2320861717/lib/program.js:1:211987)",
+        "...node internals..."
+      ]
+    }
+  ],
+  "/F1TelemetryStack/Server/InstanceProfile": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "ServerInstanceProfileB511E411"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...new Instance2 in aws-cdk-lib...",
+        "Kernel._Kernel_create (/private/var/folders/tx/lxl4cmgd0kl3t0lt2zr1nywr0000gn/T/jsii-runtime.2320861717/lib/program.js:1:61273)",
+        "Kernel.create (/private/var/folders/tx/lxl4cmgd0kl3t0lt2zr1nywr0000gn/T/jsii-runtime.2320861717/lib/program.js:1:52004)",
+        "KernelHost.processRequest (/private/var/folders/tx/lxl4cmgd0kl3t0lt2zr1nywr0000gn/T/jsii-runtime.2320861717/lib/program.js:1:212888)",
+        "KernelHost.run (/private/var/folders/tx/lxl4cmgd0kl3t0lt2zr1nywr0000gn/T/jsii-runtime.2320861717/lib/program.js:1:211943)",
+        "Immediate._onImmediate (/private/var/folders/tx/lxl4cmgd0kl3t0lt2zr1nywr0000gn/T/jsii-runtime.2320861717/lib/program.js:1:211987)",
+        "...node internals..."
+      ]
+    }
+  ],
+  "/F1TelemetryStack/Server/Resource": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "Server7E7D21FA"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...new Instance2 in aws-cdk-lib...",
+        "Kernel._Kernel_create (/private/var/folders/tx/lxl4cmgd0kl3t0lt2zr1nywr0000gn/T/jsii-runtime.2320861717/lib/program.js:1:61273)",
+        "Kernel.create (/private/var/folders/tx/lxl4cmgd0kl3t0lt2zr1nywr0000gn/T/jsii-runtime.2320861717/lib/program.js:1:52004)",
+        "KernelHost.processRequest (/private/var/folders/tx/lxl4cmgd0kl3t0lt2zr1nywr0000gn/T/jsii-runtime.2320861717/lib/program.js:1:212888)",
+        "KernelHost.run (/private/var/folders/tx/lxl4cmgd0kl3t0lt2zr1nywr0000gn/T/jsii-runtime.2320861717/lib/program.js:1:211943)",
+        "Immediate._onImmediate (/private/var/folders/tx/lxl4cmgd0kl3t0lt2zr1nywr0000gn/T/jsii-runtime.2320861717/lib/program.js:1:211987)",
+        "...node internals..."
+      ]
+    }
+  ],
+  "/F1TelemetryStack/CDKMetadata/Default": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "CDKMetadata"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...App.synth in aws-cdk-lib...",
+        "/private/var/folders/tx/lxl4cmgd0kl3t0lt2zr1nywr0000gn/T/jsii-runtime.2320861717/lib/program.js:1:543 (/private/var/folders/tx/lxl4cmgd0kl3t0lt2zr1nywr0000gn/T/jsii-runtime.2320861717/lib/program.js:1:5434)",
+        "Kernel._Kernel_ensureSync (/private/var/folders/tx/lxl4cmgd0kl3t0lt2zr1nywr0000gn/T/jsii-runtime.2320861717/lib/program.js:1:69992)",
+        "Kernel.invoke (/private/var/folders/tx/lxl4cmgd0kl3t0lt2zr1nywr0000gn/T/jsii-runtime.2320861717/lib/program.js:1:54294)",
+        "KernelHost.processRequest (/private/var/folders/tx/lxl4cmgd0kl3t0lt2zr1nywr0000gn/T/jsii-runtime.2320861717/lib/program.js:1:212888)",
+        "KernelHost.run (/private/var/folders/tx/lxl4cmgd0kl3t0lt2zr1nywr0000gn/T/jsii-runtime.2320861717/lib/program.js:1:211943)",
+        "Immediate._onImmediate (/private/var/folders/tx/lxl4cmgd0kl3t0lt2zr1nywr0000gn/T/jsii-runtime.2320861717/lib/program.js:1:211987)",
+        "...node internals..."
+      ]
+    }
+  ],
+  "/F1TelemetryStack/Vpc/PublicSubnet1/Subnet": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "VpcPublicSubnet1Subnet5C2D37C4"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        ".../var/folders/tx/lxl4cmgd0kl3t0lt2zr1nywr0000gn/T/jsii-kernel-47hjA5/node_modules/aws-cdk-lib/aws-ec2/lib/vpc.js:1:257 in aws-cdk-lib...",
+        "Array.forEach (:)",
+        "...new Vpc2 in aws-cdk-lib...",
+        "Kernel._Kernel_create (/private/var/folders/tx/lxl4cmgd0kl3t0lt2zr1nywr0000gn/T/jsii-runtime.2320861717/lib/program.js:1:61273)",
+        "Kernel.create (/private/var/folders/tx/lxl4cmgd0kl3t0lt2zr1nywr0000gn/T/jsii-runtime.2320861717/lib/program.js:1:52004)",
+        "KernelHost.processRequest (/private/var/folders/tx/lxl4cmgd0kl3t0lt2zr1nywr0000gn/T/jsii-runtime.2320861717/lib/program.js:1:212888)",
+        "KernelHost.run (/private/var/folders/tx/lxl4cmgd0kl3t0lt2zr1nywr0000gn/T/jsii-runtime.2320861717/lib/program.js:1:211943)",
+        "Immediate._onImmediate (/private/var/folders/tx/lxl4cmgd0kl3t0lt2zr1nywr0000gn/T/jsii-runtime.2320861717/lib/program.js:1:211987)",
+        "...node internals..."
+      ]
+    }
+  ],
+  "/F1TelemetryStack/Vpc/PublicSubnet1/RouteTable": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "VpcPublicSubnet1RouteTable6C95E38E"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        ".../var/folders/tx/lxl4cmgd0kl3t0lt2zr1nywr0000gn/T/jsii-kernel-47hjA5/node_modules/aws-cdk-lib/aws-ec2/lib/vpc.js:1:257 in aws-cdk-lib...",
+        "Array.forEach (:)",
+        "...new Vpc2 in aws-cdk-lib...",
+        "Kernel._Kernel_create (/private/var/folders/tx/lxl4cmgd0kl3t0lt2zr1nywr0000gn/T/jsii-runtime.2320861717/lib/program.js:1:61273)",
+        "Kernel.create (/private/var/folders/tx/lxl4cmgd0kl3t0lt2zr1nywr0000gn/T/jsii-runtime.2320861717/lib/program.js:1:52004)",
+        "KernelHost.processRequest (/private/var/folders/tx/lxl4cmgd0kl3t0lt2zr1nywr0000gn/T/jsii-runtime.2320861717/lib/program.js:1:212888)",
+        "KernelHost.run (/private/var/folders/tx/lxl4cmgd0kl3t0lt2zr1nywr0000gn/T/jsii-runtime.2320861717/lib/program.js:1:211943)",
+        "Immediate._onImmediate (/private/var/folders/tx/lxl4cmgd0kl3t0lt2zr1nywr0000gn/T/jsii-runtime.2320861717/lib/program.js:1:211987)",
+        "...node internals..."
+      ]
+    }
+  ],
+  "/F1TelemetryStack/Vpc/PublicSubnet1/RouteTableAssociation": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "VpcPublicSubnet1RouteTableAssociation97140677"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        ".../var/folders/tx/lxl4cmgd0kl3t0lt2zr1nywr0000gn/T/jsii-kernel-47hjA5/node_modules/aws-cdk-lib/aws-ec2/lib/vpc.js:1:257 in aws-cdk-lib...",
+        "Array.forEach (:)",
+        "...new Vpc2 in aws-cdk-lib...",
+        "Kernel._Kernel_create (/private/var/folders/tx/lxl4cmgd0kl3t0lt2zr1nywr0000gn/T/jsii-runtime.2320861717/lib/program.js:1:61273)",
+        "Kernel.create (/private/var/folders/tx/lxl4cmgd0kl3t0lt2zr1nywr0000gn/T/jsii-runtime.2320861717/lib/program.js:1:52004)",
+        "KernelHost.processRequest (/private/var/folders/tx/lxl4cmgd0kl3t0lt2zr1nywr0000gn/T/jsii-runtime.2320861717/lib/program.js:1:212888)",
+        "KernelHost.run (/private/var/folders/tx/lxl4cmgd0kl3t0lt2zr1nywr0000gn/T/jsii-runtime.2320861717/lib/program.js:1:211943)",
+        "Immediate._onImmediate (/private/var/folders/tx/lxl4cmgd0kl3t0lt2zr1nywr0000gn/T/jsii-runtime.2320861717/lib/program.js:1:211987)",
+        "...node internals..."
+      ]
+    }
+  ],
+  "/F1TelemetryStack/Vpc/PublicSubnet1/DefaultRoute": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "VpcPublicSubnet1DefaultRoute3DA9E72A"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        ".../var/folders/tx/lxl4cmgd0kl3t0lt2zr1nywr0000gn/T/jsii-kernel-47hjA5/node_modules/aws-cdk-lib/aws-ec2/lib/vpc.js:1:197 in aws-cdk-lib...",
+        "Array.forEach (:)",
+        "...new Vpc2 in aws-cdk-lib...",
+        "Kernel._Kernel_create (/private/var/folders/tx/lxl4cmgd0kl3t0lt2zr1nywr0000gn/T/jsii-runtime.2320861717/lib/program.js:1:61273)",
+        "Kernel.create (/private/var/folders/tx/lxl4cmgd0kl3t0lt2zr1nywr0000gn/T/jsii-runtime.2320861717/lib/program.js:1:52004)",
+        "KernelHost.processRequest (/private/var/folders/tx/lxl4cmgd0kl3t0lt2zr1nywr0000gn/T/jsii-runtime.2320861717/lib/program.js:1:212888)",
+        "KernelHost.run (/private/var/folders/tx/lxl4cmgd0kl3t0lt2zr1nywr0000gn/T/jsii-runtime.2320861717/lib/program.js:1:211943)",
+        "Immediate._onImmediate (/private/var/folders/tx/lxl4cmgd0kl3t0lt2zr1nywr0000gn/T/jsii-runtime.2320861717/lib/program.js:1:211987)",
+        "...node internals..."
+      ]
+    }
+  ],
+  "/F1TelemetryStack/Vpc/PublicSubnet2/Subnet": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "VpcPublicSubnet2Subnet691E08A3"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        ".../var/folders/tx/lxl4cmgd0kl3t0lt2zr1nywr0000gn/T/jsii-kernel-47hjA5/node_modules/aws-cdk-lib/aws-ec2/lib/vpc.js:1:257 in aws-cdk-lib...",
+        "Array.forEach (:)",
+        "...new Vpc2 in aws-cdk-lib...",
+        "Kernel._Kernel_create (/private/var/folders/tx/lxl4cmgd0kl3t0lt2zr1nywr0000gn/T/jsii-runtime.2320861717/lib/program.js:1:61273)",
+        "Kernel.create (/private/var/folders/tx/lxl4cmgd0kl3t0lt2zr1nywr0000gn/T/jsii-runtime.2320861717/lib/program.js:1:52004)",
+        "KernelHost.processRequest (/private/var/folders/tx/lxl4cmgd0kl3t0lt2zr1nywr0000gn/T/jsii-runtime.2320861717/lib/program.js:1:212888)",
+        "KernelHost.run (/private/var/folders/tx/lxl4cmgd0kl3t0lt2zr1nywr0000gn/T/jsii-runtime.2320861717/lib/program.js:1:211943)",
+        "Immediate._onImmediate (/private/var/folders/tx/lxl4cmgd0kl3t0lt2zr1nywr0000gn/T/jsii-runtime.2320861717/lib/program.js:1:211987)",
+        "...node internals..."
+      ]
+    }
+  ],
+  "/F1TelemetryStack/Vpc/PublicSubnet2/RouteTable": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "VpcPublicSubnet2RouteTable94F7E489"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        ".../var/folders/tx/lxl4cmgd0kl3t0lt2zr1nywr0000gn/T/jsii-kernel-47hjA5/node_modules/aws-cdk-lib/aws-ec2/lib/vpc.js:1:257 in aws-cdk-lib...",
+        "Array.forEach (:)",
+        "...new Vpc2 in aws-cdk-lib...",
+        "Kernel._Kernel_create (/private/var/folders/tx/lxl4cmgd0kl3t0lt2zr1nywr0000gn/T/jsii-runtime.2320861717/lib/program.js:1:61273)",
+        "Kernel.create (/private/var/folders/tx/lxl4cmgd0kl3t0lt2zr1nywr0000gn/T/jsii-runtime.2320861717/lib/program.js:1:52004)",
+        "KernelHost.processRequest (/private/var/folders/tx/lxl4cmgd0kl3t0lt2zr1nywr0000gn/T/jsii-runtime.2320861717/lib/program.js:1:212888)",
+        "KernelHost.run (/private/var/folders/tx/lxl4cmgd0kl3t0lt2zr1nywr0000gn/T/jsii-runtime.2320861717/lib/program.js:1:211943)",
+        "Immediate._onImmediate (/private/var/folders/tx/lxl4cmgd0kl3t0lt2zr1nywr0000gn/T/jsii-runtime.2320861717/lib/program.js:1:211987)",
+        "...node internals..."
+      ]
+    }
+  ],
+  "/F1TelemetryStack/Vpc/PublicSubnet2/RouteTableAssociation": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "VpcPublicSubnet2RouteTableAssociationDD5762D8"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        ".../var/folders/tx/lxl4cmgd0kl3t0lt2zr1nywr0000gn/T/jsii-kernel-47hjA5/node_modules/aws-cdk-lib/aws-ec2/lib/vpc.js:1:257 in aws-cdk-lib...",
+        "Array.forEach (:)",
+        "...new Vpc2 in aws-cdk-lib...",
+        "Kernel._Kernel_create (/private/var/folders/tx/lxl4cmgd0kl3t0lt2zr1nywr0000gn/T/jsii-runtime.2320861717/lib/program.js:1:61273)",
+        "Kernel.create (/private/var/folders/tx/lxl4cmgd0kl3t0lt2zr1nywr0000gn/T/jsii-runtime.2320861717/lib/program.js:1:52004)",
+        "KernelHost.processRequest (/private/var/folders/tx/lxl4cmgd0kl3t0lt2zr1nywr0000gn/T/jsii-runtime.2320861717/lib/program.js:1:212888)",
+        "KernelHost.run (/private/var/folders/tx/lxl4cmgd0kl3t0lt2zr1nywr0000gn/T/jsii-runtime.2320861717/lib/program.js:1:211943)",
+        "Immediate._onImmediate (/private/var/folders/tx/lxl4cmgd0kl3t0lt2zr1nywr0000gn/T/jsii-runtime.2320861717/lib/program.js:1:211987)",
+        "...node internals..."
+      ]
+    }
+  ],
+  "/F1TelemetryStack/Vpc/PublicSubnet2/DefaultRoute": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "VpcPublicSubnet2DefaultRoute97F91067"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        ".../var/folders/tx/lxl4cmgd0kl3t0lt2zr1nywr0000gn/T/jsii-kernel-47hjA5/node_modules/aws-cdk-lib/aws-ec2/lib/vpc.js:1:197 in aws-cdk-lib...",
+        "Array.forEach (:)",
+        "...new Vpc2 in aws-cdk-lib...",
+        "Kernel._Kernel_create (/private/var/folders/tx/lxl4cmgd0kl3t0lt2zr1nywr0000gn/T/jsii-runtime.2320861717/lib/program.js:1:61273)",
+        "Kernel.create (/private/var/folders/tx/lxl4cmgd0kl3t0lt2zr1nywr0000gn/T/jsii-runtime.2320861717/lib/program.js:1:52004)",
+        "KernelHost.processRequest (/private/var/folders/tx/lxl4cmgd0kl3t0lt2zr1nywr0000gn/T/jsii-runtime.2320861717/lib/program.js:1:212888)",
+        "KernelHost.run (/private/var/folders/tx/lxl4cmgd0kl3t0lt2zr1nywr0000gn/T/jsii-runtime.2320861717/lib/program.js:1:211943)",
+        "Immediate._onImmediate (/private/var/folders/tx/lxl4cmgd0kl3t0lt2zr1nywr0000gn/T/jsii-runtime.2320861717/lib/program.js:1:211987)",
+        "...node internals..."
+      ]
+    }
+  ],
+  "/F1TelemetryStack/InstanceRole/DefaultPolicy/Resource": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "InstanceRoleDefaultPolicy1531605C"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...WrappedClass.grantReadWriteData in aws-cdk-lib...",
+        "/private/var/folders/tx/lxl4cmgd0kl3t0lt2zr1nywr0000gn/T/jsii-runtime.2320861717/lib/program.js:1:543 (/private/var/folders/tx/lxl4cmgd0kl3t0lt2zr1nywr0000gn/T/jsii-runtime.2320861717/lib/program.js:1:5434)",
+        "Kernel._Kernel_ensureSync (/private/var/folders/tx/lxl4cmgd0kl3t0lt2zr1nywr0000gn/T/jsii-runtime.2320861717/lib/program.js:1:69992)",
+        "Kernel.invoke (/private/var/folders/tx/lxl4cmgd0kl3t0lt2zr1nywr0000gn/T/jsii-runtime.2320861717/lib/program.js:1:54294)",
+        "KernelHost.processRequest (/private/var/folders/tx/lxl4cmgd0kl3t0lt2zr1nywr0000gn/T/jsii-runtime.2320861717/lib/program.js:1:212888)",
+        "KernelHost.run (/private/var/folders/tx/lxl4cmgd0kl3t0lt2zr1nywr0000gn/T/jsii-runtime.2320861717/lib/program.js:1:211943)",
+        "Immediate._onImmediate (/private/var/folders/tx/lxl4cmgd0kl3t0lt2zr1nywr0000gn/T/jsii-runtime.2320861717/lib/program.js:1:211987)",
+        "...node internals..."
+      ]
+    }
+  ]
+}

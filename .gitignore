@@ -5,6 +5,6 @@
 *__debug*
 messages.json
 *.login
-cdk.out/
+infra/cdk.out
 *.log
 *.pem

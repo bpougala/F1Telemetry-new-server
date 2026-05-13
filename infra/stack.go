@@ -99,6 +99,8 @@ func NewF1TelemetryStack(scope constructs.Construct, id string, props *awscdk.St
 		jsii.String("docker run -d --name f1telemetry --restart unless-stopped -p 8080:8080 -e AWS_DEFAULT_REGION=eu-west-1 f1telemetry"),
 	)
 
+	keyPair := awsec2.KeyPair_FromKeyPairName(stack, jsii.String("KeyPair"), jsii.String("f1telemetry"))
+
 	instance := awsec2.NewInstance(stack, jsii.String("Server"), &awsec2.InstanceProps{
 		Vpc:           vpc,
 		InstanceType:  awsec2.NewInstanceType(jsii.String("t3.small")),
@@ -106,6 +108,7 @@ func NewF1TelemetryStack(scope constructs.Construct, id string, props *awscdk.St
 		SecurityGroup: sg,
 		Role:          role,
 		UserData:      userData,
+		KeyPair:       keyPair,
 		VpcSubnets: &awsec2.SubnetSelection{
 			SubnetType: awsec2.SubnetType_PUBLIC,
 		},

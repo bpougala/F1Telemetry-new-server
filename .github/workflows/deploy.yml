@@ -20,3 +20,5 @@ jobs:
             docker build -t f1telemetry .
             docker stop f1telemetry && docker rm f1telemetry
             docker run -d --name f1telemetry --restart unless-stopped -p 8080:8080 -e AWS_DEFAULT_REGION=eu-west-1 f1telemetry
+            sudo cp /home/ec2-user/app/Caddyfile /etc/caddy/Caddyfile
+            sudo systemctl reload caddy

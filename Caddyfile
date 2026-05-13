@@ -1,0 +1,3 @@
+pushlap.co, www.pushlap.co {
+    reverse_proxy localhost:8080
+}

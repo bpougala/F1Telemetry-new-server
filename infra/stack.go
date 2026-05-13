@@ -37,10 +37,11 @@ func NewF1TelemetryStack(scope constructs.Construct, id string, props *awscdk.St
 	// --- Security Group ---
 	sg := awsec2.NewSecurityGroup(stack, jsii.String("ServerSG"), &awsec2.SecurityGroupProps{
 		Vpc:              vpc,
-		Description:      jsii.String("Allow HTTP/WS on 8080 and SSH"),
+		Description:      jsii.String("Allow HTTPS, HTTP and SSH"),
 		AllowAllOutbound: jsii.Bool(true),
 	})
-	sg.AddIngressRule(awsec2.Peer_AnyIpv4(), awsec2.Port_Tcp(jsii.Number(8080)), jsii.String("HTTP/WS"), nil)
+	sg.AddIngressRule(awsec2.Peer_AnyIpv4(), awsec2.Port_Tcp(jsii.Number(80)), jsii.String("HTTP"), nil)
+	sg.AddIngressRule(awsec2.Peer_AnyIpv4(), awsec2.Port_Tcp(jsii.Number(443)), jsii.String("HTTPS"), nil)
 	sg.AddIngressRule(awsec2.Peer_AnyIpv4(), awsec2.Port_Tcp(jsii.Number(22)), jsii.String("SSH"), nil)
 
 	// --- DynamoDB Tables ---
@@ -89,6 +90,7 @@ func NewF1TelemetryStack(scope constructs.Construct, id string, props *awscdk.St
 	// --- EC2 Instance ---
 	userData := awsec2.UserData_ForLinux(&awsec2.LinuxUserDataOptions{})
 	userData.AddCommands(
+		// Docker & app
 		jsii.String("dnf install -y docker git"),
 		jsii.String("systemctl enable docker"),
 		jsii.String("systemctl start docker"),
@@ -98,6 +100,13 @@ func NewF1TelemetryStack(scope constructs.Construct, id string, props *awscdk.St
 		jsii.String("cd app"),
 		jsii.String("docker build -t f1telemetry ."),
 		jsii.String("docker run -d --name f1telemetry --restart unless-stopped -p 8080:8080 -e AWS_DEFAULT_REGION=eu-west-1 f1telemetry"),
+		// Caddy reverse proxy
+		jsii.String("dnf install -y 'dnf-command(copr)'"),
+		jsii.String("dnf copr enable -y @caddy/caddy"),
+		jsii.String("dnf install -y caddy"),
+		jsii.String("cp /home/ec2-user/app/Caddyfile /etc/caddy/Caddyfile"),
+		jsii.String("systemctl enable caddy"),
+		jsii.String("systemctl start caddy"),
 	)
 
 	keyPair := awsec2.KeyPair_FromKeyPairName(stack, jsii.String("KeyPair"), jsii.String("f1telemetry"))
@@ -116,13 +125,20 @@ func NewF1TelemetryStack(scope constructs.Construct, id string, props *awscdk.St
 		AssociatePublicIpAddress: jsii.Bool(true),
 	})
 
+	// --- Elastic IP ---
+	eip := awsec2.NewCfnEIP(stack, jsii.String("ServerEIP"), &awsec2.CfnEIPProps{})
+	awsec2.NewCfnEIPAssociation(stack, jsii.String("EIPAssoc"), &awsec2.CfnEIPAssociationProps{
+		AllocationId: eip.AttrAllocationId(),
+		InstanceId:   instance.InstanceId(),
+	})
+
 	// --- Outputs ---
-	awscdk.NewCfnOutput(stack, jsii.String("InstancePublicIP"), &awscdk.CfnOutputProps{
-		Value:       instance.InstancePublicIp(),
-		Description: jsii.String("Public IP of the EC2 instance"),
+	awscdk.NewCfnOutput(stack, jsii.String("ElasticIP"), &awscdk.CfnOutputProps{
+		Value:       eip.AttrPublicIp(),
+		Description: jsii.String("Elastic IP — point pushlap.co DNS A record here"),
 	})
 	awscdk.NewCfnOutput(stack, jsii.String("ServerURL"), &awscdk.CfnOutputProps{
-		Value:       jsii.String(fmt.Sprintf("http://%s:8080", *instance.InstancePublicIp())),
+		Value:       jsii.String("https://pushlap.co"),
 		Description: jsii.String("F1 Telemetry server URL"),
 	})
 

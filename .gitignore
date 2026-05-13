@@ -4,4 +4,7 @@
 *.txt
 *__debug*
 messages.json
+*.login
+cdk.out/
 *.log
+*.pem

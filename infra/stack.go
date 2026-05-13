@@ -101,9 +101,32 @@ func NewF1TelemetryStack(scope constructs.Construct, id string, props *awscdk.St
 		jsii.String("docker build -t f1telemetry ."),
 		jsii.String("docker run -d --name f1telemetry --restart unless-stopped -p 8080:8080 -e AWS_DEFAULT_REGION=eu-west-1 f1telemetry"),
 		// Caddy reverse proxy
-		jsii.String("dnf install -y 'dnf-command(copr)'"),
-		jsii.String("dnf copr enable -y @caddy/caddy"),
-		jsii.String("dnf install -y caddy"),
+		jsii.String("curl -fsSL https://github.com/caddyserver/caddy/releases/download/v2.9.1/caddy_2.9.1_linux_amd64.tar.gz -o /tmp/caddy.tar.gz"),
+		jsii.String("tar -xzf /tmp/caddy.tar.gz -C /usr/bin caddy"),
+		jsii.String("chmod +x /usr/bin/caddy"),
+		jsii.String("mkdir -p /etc/caddy"),
+		jsii.String("groupadd --system caddy || true"),
+		jsii.String("useradd --system --gid caddy --create-home --home /var/lib/caddy --shell /usr/sbin/nologin caddy || true"),
+		jsii.String(`cat > /etc/systemd/system/caddy.service <<'UNIT'
+[Unit]
+Description=Caddy
+After=network.target network-online.target
+Requires=network-online.target
+
+[Service]
+Type=notify
+User=caddy
+Group=caddy
+ExecStart=/usr/bin/caddy run --environ --config /etc/caddy/Caddyfile
+ExecReload=/usr/bin/caddy reload --config /etc/caddy/Caddyfile --force
+TimeoutStopSec=5s
+LimitNOFILE=1048576
+AmbientCapabilities=CAP_NET_BIND_SERVICE
+
+[Install]
+WantedBy=multi-user.target
+UNIT`),
+		jsii.String("systemctl daemon-reload"),
 		jsii.String("cp /home/ec2-user/app/Caddyfile /etc/caddy/Caddyfile"),
 		jsii.String("systemctl enable caddy"),
 		jsii.String("systemctl start caddy"),

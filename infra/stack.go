@@ -92,6 +92,7 @@ func NewF1TelemetryStack(scope constructs.Construct, id string, props *awscdk.St
 		jsii.String("dnf install -y docker git"),
 		jsii.String("systemctl enable docker"),
 		jsii.String("systemctl start docker"),
+		jsii.String("usermod -aG docker ec2-user"),
 		jsii.String("cd /home/ec2-user"),
 		jsii.String("git clone https://github.com/bpougala/F1Telemetry-new-server.git app"),
 		jsii.String("cd app"),

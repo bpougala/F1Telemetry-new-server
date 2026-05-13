@@ -97,6 +97,7 @@ func NewF1TelemetryStack(scope constructs.Construct, id string, props *awscdk.St
 		jsii.String("usermod -aG docker ec2-user"),
 		jsii.String("cd /home/ec2-user"),
 		jsii.String("git clone https://github.com/bpougala/F1Telemetry-new-server.git app"),
+		jsii.String("chown -R ec2-user:ec2-user app"),
 		jsii.String("cd app"),
 		jsii.String("docker build -t f1telemetry ."),
 		jsii.String("docker run -d --name f1telemetry --restart unless-stopped -p 8080:8080 -e AWS_DEFAULT_REGION=eu-west-1 f1telemetry"),

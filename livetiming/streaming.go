@@ -185,7 +185,7 @@ func ProcessSessionDataAndInfo(connection *websocket.Conn, dbClient *dynamodb.Cl
 func processInitialSnapshot(msg []byte, sessionKey int, dbClient *dynamodb.Client, ctx context.Context, resolver *graph.Resolver, hub *ws.Hub) int {
 	meetingData, err := BuildMeetingData(msg)
 	if err == nil {
-		meetingDB := convertMeetingToDB(meetingData)
+		meetingDB := ConvertMeetingToDB(meetingData)
 		err = SaveMeeting(dbClient, &ctx, meetingDB)
 		if err != nil {
 			fmt.Println("error saving meeting data:", err)
@@ -483,7 +483,7 @@ func processSectors(sectors []AllSectors, sessionKey int, dbClient *dynamodb.Cli
 	}
 }
 
-func convertMeetingToDB(meeting MeetingData) MeetingDataDB {
+func ConvertMeetingToDB(meeting MeetingData) MeetingDataDB {
 	return MeetingDataDB{
 		Key:          meeting.Key,
 		Name:         meeting.Name,

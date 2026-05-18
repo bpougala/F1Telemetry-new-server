@@ -17,6 +17,7 @@ type Resolver struct {
 	CurrentStints              []*model.Stint
 	CurrentSectorTimes         []*model.Sector
 	CurrentTrackStatus         []*model.TrackStatus
+	CurrentWeather             *model.Weather
 	LapTimeObservers           map[string]chan []*model.LapTime
 	PositionObservers          map[string]chan []*model.Position
 	CarDataObservers           map[string]chan *model.CarData
@@ -24,6 +25,7 @@ type Resolver struct {
 	StintObservers             map[string]chan []*model.Stint
 	SectorTimeObservers        map[string]chan []*model.Sector
 	TrackStatusObservers       map[string]chan []*model.TrackStatus
+	WeatherObservers           map[string]chan *model.Weather
 	mu                         sync.Mutex
 }
 
@@ -43,6 +45,7 @@ func NewResolver() *Resolver {
 		StintObservers:             make(map[string]chan []*model.Stint),
 		SectorTimeObservers:        make(map[string]chan []*model.Sector),
 		TrackStatusObservers:       make(map[string]chan []*model.TrackStatus),
+		WeatherObservers:           make(map[string]chan *model.Weather),
 	}
 }
 
@@ -107,6 +110,21 @@ func (r *Resolver) NotifyTrackStatusSubscribers(trackStatuses []*model.TrackStat
 	for _, observer := range r.TrackStatusObservers {
 		observer <- trackStatuses
 	}
+}
+
+func (r *Resolver) NotifyWeatherSubscribers(weather *model.Weather) {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	r.CurrentWeather = weather
+	for _, observer := range r.WeatherObservers {
+		observer <- weather
+	}
+}
+
+func (r *Resolver) RegisterWeatherObserver(id string, ch chan *model.Weather) {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	r.WeatherObservers[id] = ch
 }
 
 func (r *Resolver) RegisterLapTimeObserver(id string, ch chan []*model.LapTime) {

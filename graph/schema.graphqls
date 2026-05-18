@@ -14,6 +14,7 @@ type Query {
   sectors(session_key: Int!): [Sector]!
   stints(session_key: Int!): [Stint]!
   trackStatus(session_key: Int!): [TrackStatus]!
+  weather(session_key: Int!): [Weather]!
 }
 
 type Subscription {
@@ -24,6 +25,7 @@ type Subscription {
   stints: [Stint]!
   sectors: [Sector]!
   trackStatus: [TrackStatus]!
+  weather: Weather!
 }
 
 type Session {
@@ -148,6 +150,18 @@ type Sector {
   personal_fastest: Boolean!
   utc: Time
   lap_number: Int!
+}
+
+type Weather {
+  session_key: Int!
+  air_temperature: Float!
+  track_temperature: Float!
+  humidity: Float!
+  pressure: Float!
+  rainfall: Boolean!
+  wind_speed: Float!
+  wind_direction: Int!
+  timestamp: String!
 }
 
 type Timing {

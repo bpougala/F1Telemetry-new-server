@@ -201,6 +201,25 @@ func SaveSectors(dbClient *dynamodb.Client, ctx *context.Context, sessionKey int
 	return nil
 }
 
+func SaveWeather(dbClient *dynamodb.Client, ctx *context.Context, weather *model.Weather) error {
+	item := map[string]types.AttributeValue{
+		"SessionKey":    &types.AttributeValueMemberN{Value: fmt.Sprintf("%d", weather.SessionKey)},
+		"Utc":           &types.AttributeValueMemberN{Value: fmt.Sprintf("%d", time.Now().UTC().Unix())},
+		"AirTemp":       &types.AttributeValueMemberN{Value: fmt.Sprintf("%f", weather.AirTemperature)},
+		"TrackTemp":     &types.AttributeValueMemberN{Value: fmt.Sprintf("%f", weather.TrackTemperature)},
+		"Humidity":      &types.AttributeValueMemberN{Value: fmt.Sprintf("%f", weather.Humidity)},
+		"Pressure":      &types.AttributeValueMemberN{Value: fmt.Sprintf("%f", weather.Pressure)},
+		"Rainfall":      &types.AttributeValueMemberBOOL{Value: weather.Rainfall},
+		"WindSpeed":     &types.AttributeValueMemberN{Value: fmt.Sprintf("%f", weather.WindSpeed)},
+		"WindDirection": &types.AttributeValueMemberN{Value: fmt.Sprintf("%d", weather.WindDirection)},
+	}
+	_, err := dbClient.PutItem(*ctx, &dynamodb.PutItemInput{
+		TableName: aws.String("weather"),
+		Item:      item,
+	})
+	return err
+}
+
 func SaveRaceControlMessages(dbClient *dynamodb.Client, ctx *context.Context, sessionKey int, raceControlMessages []*model.RaceControl) error {
 	for _, raceControlMessage := range raceControlMessages {
 		category := raceControlMessage.Category

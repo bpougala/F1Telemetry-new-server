@@ -335,6 +335,7 @@ type InitialData struct {
 		RaceControlMessages struct {
 			Messages []RaceControl `json:"Messages"`
 		} `json:"RaceControlMessages"`
+		WeatherData Weather `json:"WeatherData"`
 	} `json:"R"`
 	I string `json:"I"`
 }
@@ -481,4 +482,14 @@ type AllSectors struct {
 	RacingNumber int
 	Sectors      []Sector
 	Utc          time.Time
+}
+
+type Weather struct {
+	AirTemp       string `json:"AirTemp"`
+	TrackTemp     string `json:"TrackTemp"`
+	Humidity      string `json:"Humidity"`
+	Pressure      string `json:"Pressure"`
+	Rainfall      string `json:"Rainfall"`
+	WindSpeed     string `json:"WindSpeed"`
+	WindDirection string `json:"WindDirection"`
 }

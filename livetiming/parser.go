@@ -740,6 +740,50 @@ func buildUpdatePositionZ(data []byte) (PositionRoot, error) {
 	return posRoot, fmt.Errorf("no position data found")
 }
 
+// BuildWeatherData parses WeatherData from the initial snapshot.
+func BuildWeatherData(data []byte) (*Weather, error) {
+	var initialData InitialData
+	if err := json.Unmarshal(data, &initialData); err != nil {
+		return nil, err
+	}
+	w := initialData.R.WeatherData
+	if w.AirTemp == "" && w.TrackTemp == "" {
+		return nil, fmt.Errorf("no weather data found")
+	}
+	return &w, nil
+}
+
+// BuildWeatherDataUpdate parses WeatherData from update messages.
+func BuildWeatherDataUpdate(data []byte) (*Weather, error) {
+	var updateData UpdateData
+	if err := json.Unmarshal(data, &updateData); err != nil {
+		return nil, err
+	}
+	for _, message := range updateData.M {
+		elements := message.A
+		if len(elements) < 2 {
+			continue
+		}
+		if elements[0] != "WeatherData" {
+			continue
+		}
+		weatherMap, ok := elements[1].(map[string]interface{})
+		if !ok {
+			continue
+		}
+		weatherBytes, err := json.Marshal(weatherMap)
+		if err != nil {
+			continue
+		}
+		var w Weather
+		if err := json.Unmarshal(weatherBytes, &w); err != nil {
+			continue
+		}
+		return &w, nil
+	}
+	return nil, fmt.Errorf("no weather data found")
+}
+
 // BuildTrackStatusUpdate parses TrackStatus topic update messages.
 func BuildTrackStatusUpdate(data []byte) ([]TrackStatus, error) {
 	var updateData UpdateData

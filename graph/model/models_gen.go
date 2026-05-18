@@ -151,3 +151,15 @@ type TrackStatus struct {
 	Status     string `json:"status"`
 	Timestamp  string `json:"timestamp"`
 }
+
+type Weather struct {
+	SessionKey       int     `json:"session_key"`
+	AirTemperature   float64 `json:"air_temperature"`
+	TrackTemperature float64 `json:"track_temperature"`
+	Humidity         float64 `json:"humidity"`
+	Pressure         float64 `json:"pressure"`
+	Rainfall         bool    `json:"rainfall"`
+	WindSpeed        float64 `json:"wind_speed"`
+	WindDirection    int     `json:"wind_direction"`
+	Timestamp        string  `json:"timestamp"`
+}

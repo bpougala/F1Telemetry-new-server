@@ -17,6 +17,7 @@ import (
 	"net/url"
 	"os"
 	"os/signal"
+	"strconv"
 	"time"
 )
 
@@ -123,7 +124,7 @@ func SetWebSocket(connectionToken string, cookies []*http.Cookie) (*websocket.Co
 
 func CreateOriginalSessionMessage() SubscribeMessage {
 	var topics []string
-	topics = append(topics, "SessionInfo", "SessionData", "TimingData", "DriverList", "TimingStats", "TimingAppData", "LapCount", "CarData.z", "RaceControlMessages", "Position.z", "TrackStatus")
+	topics = append(topics, "SessionInfo", "SessionData", "TimingData", "DriverList", "TimingStats", "TimingAppData", "LapCount", "CarData.z", "RaceControlMessages", "Position.z", "TrackStatus", "WeatherData")
 	var topicsList [][]string
 	topicsList = append(topicsList, topics)
 	return SubscribeMessage{
@@ -227,6 +228,10 @@ func processInitialSnapshot(msg []byte, sessionKey int, dbClient *dynamodb.Clien
 	trackStatus, err := BuildTrackStatus(msg)
 	if err == nil {
 		processTrackStatus(trackStatus, sessionKey, dbClient, ctx, resolver)
+	}
+	weatherData, err := BuildWeatherData(msg)
+	if err == nil {
+		processWeather(weatherData, sessionKey, dbClient, ctx, resolver)
 	}
 	raceControlMessages, err := BuildRaceControl(msg)
 	if err == nil {
@@ -348,6 +353,11 @@ func processUpdateMessages(msg []byte, sessionKey int, dbClient *dynamodb.Client
 			stints, err := BuildStints(msg)
 			if err == nil {
 				processStints(stints, sessionKey, dbClient, ctx, resolver)
+			}
+		case "WeatherData":
+			weatherData, err := BuildWeatherDataUpdate(msg)
+			if err == nil {
+				processWeather(weatherData, sessionKey, dbClient, ctx, resolver)
 			}
 		}
 	}
@@ -480,6 +490,33 @@ func processSectors(sectors []AllSectors, sessionKey int, dbClient *dynamodb.Cli
 	err := SaveSectors(dbClient, &ctx, sessionKey, sectorsModel)
 	if err != nil {
 		fmt.Println("error saving sectors:", err)
+	}
+}
+
+func processWeather(weather *Weather, sessionKey int, dbClient *dynamodb.Client, ctx context.Context, resolver *graph.Resolver) {
+	airTemp, _ := strconv.ParseFloat(weather.AirTemp, 64)
+	trackTemp, _ := strconv.ParseFloat(weather.TrackTemp, 64)
+	humidity, _ := strconv.ParseFloat(weather.Humidity, 64)
+	pressure, _ := strconv.ParseFloat(weather.Pressure, 64)
+	windSpeed, _ := strconv.ParseFloat(weather.WindSpeed, 64)
+	windDirection, _ := strconv.Atoi(weather.WindDirection)
+	rainfall := weather.Rainfall == "1"
+
+	weatherModel := &model.Weather{
+		SessionKey:       sessionKey,
+		AirTemperature:   airTemp,
+		TrackTemperature: trackTemp,
+		Humidity:         humidity,
+		Pressure:         pressure,
+		Rainfall:         rainfall,
+		WindSpeed:        windSpeed,
+		WindDirection:    windDirection,
+		Timestamp:        time.Now().UTC().Format(time.RFC3339),
+	}
+	resolver.NotifyWeatherSubscribers(weatherModel)
+	err := SaveWeather(dbClient, &ctx, weatherModel)
+	if err != nil {
+		fmt.Println("error saving weather:", err)
 	}
 }
 

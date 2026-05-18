@@ -157,6 +157,22 @@ func (r *queryResolver) TrackStatus(ctx context.Context, sessionKey int) ([]*mod
 	return trackStatusInt, nil
 }
 
+// Weather is the resolver for the weather field.
+func (r *queryResolver) Weather(ctx context.Context, sessionKey int) ([]*model.Weather, error) {
+	if err != nil {
+		return nil, err
+	}
+	weather, err := dataingestor.FetchWeather(dbClient, ctx, sessionKey)
+	if err != nil {
+		return nil, err
+	}
+	var weatherInt []*model.Weather
+	for _, w := range weather {
+		weatherInt = append(weatherInt, &w)
+	}
+	return weatherInt, nil
+}
+
 func (r *subscriptionResolver) LapTimes(ctx context.Context) (<-chan []*model.LapTime, error) {
 	id := dataingestor.GenerateRandomString(8)
 	lapTimes := make(chan []*model.LapTime, 1)
@@ -276,6 +292,26 @@ func (r *subscriptionResolver) TrackStatus(ctx context.Context) (<-chan []*model
 	r.mu.Unlock()
 	r.TrackStatusObservers[id] <- r.CurrentTrackStatus
 	return trackStatus, nil
+}
+
+// Weather is the resolver for the weather subscription field.
+func (r *subscriptionResolver) Weather(ctx context.Context) (<-chan *model.Weather, error) {
+	id := dataingestor.GenerateRandomString(8)
+	weather := make(chan *model.Weather, 1)
+
+	go func() {
+		<-ctx.Done()
+		r.mu.Lock()
+		delete(r.WeatherObservers, id)
+		r.mu.Unlock()
+	}()
+	r.mu.Lock()
+	r.WeatherObservers[id] = weather
+	r.mu.Unlock()
+	if r.CurrentWeather != nil {
+		r.WeatherObservers[id] <- r.CurrentWeather
+	}
+	return weather, nil
 }
 
 // Query returns QueryResolver implementation.

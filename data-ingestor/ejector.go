@@ -395,6 +395,57 @@ func FetchRaceControl(dbClient *dynamodb.Client, ctx context.Context, sessionKey
 	return raceControlMessages, nil
 }
 
+func FetchWeather(dbClient *dynamodb.Client, ctx context.Context, sessionKey int) ([]model.Weather, error) {
+	input := &dynamodb.QueryInput{
+		TableName: aws.String("weather"),
+		KeyConditions: map[string]types.Condition{
+			"SessionKey": {
+				ComparisonOperator: types.ComparisonOperatorEq,
+				AttributeValueList: []types.AttributeValue{
+					&types.AttributeValueMemberN{Value: fmt.Sprintf("%d", sessionKey)},
+				},
+			},
+		},
+	}
+
+	result, err := dbClient.Query(ctx, input)
+	if err != nil {
+		return nil, err
+	}
+
+	var weatherData []model.Weather
+	for _, item := range result.Items {
+		date, err := getTimeStringFromTimestamp(getIntAttr(item, "Utc"))
+		if err != nil {
+			return nil, err
+		}
+		w := model.Weather{
+			SessionKey:       getIntAttr(item, "SessionKey"),
+			AirTemperature:   getFloatAttr(item, "AirTemp"),
+			TrackTemperature: getFloatAttr(item, "TrackTemp"),
+			Humidity:         getFloatAttr(item, "Humidity"),
+			Pressure:         getFloatAttr(item, "Pressure"),
+			Rainfall:         getBoolAttr(item, "Rainfall"),
+			WindSpeed:        getFloatAttr(item, "WindSpeed"),
+			WindDirection:    getIntAttr(item, "WindDirection"),
+			Timestamp:        date,
+		}
+		weatherData = append(weatherData, w)
+	}
+	return weatherData, nil
+}
+
+func getFloatAttr(item map[string]types.AttributeValue, key string) float64 {
+	if val, ok := item[key].(*types.AttributeValueMemberN); ok {
+		f, err := strconv.ParseFloat(val.Value, 64)
+		if err != nil {
+			return 0
+		}
+		return f
+	}
+	return 0
+}
+
 func getStringAttr(item map[string]types.AttributeValue, key string) string {
 	if val, ok := item[key].(*types.AttributeValueMemberS); ok {
 		return val.Value

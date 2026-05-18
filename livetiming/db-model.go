@@ -23,6 +23,7 @@ type MeetingDataDB struct {
 	CountryName  string `json:"CountryName"`
 	CountryCode  string `json:"CountryCode"`
 	Circuit      string `json:"Circuit"`
+	CircuitKey   int    `json:"CircuitKey"`
 }
 
 type IntervalsDB struct {

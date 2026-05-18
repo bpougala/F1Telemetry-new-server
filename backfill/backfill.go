@@ -138,10 +138,26 @@ func backfillYear(dbClient *dynamodb.Client, ctx context.Context, year int) erro
 	}
 	fmt.Printf("Found %d existing sessions in DB\n", len(existingSessionKeys))
 
+	// Build set of sessions that already have weather data
+	existingWeatherKeys := make(map[int]bool)
+	for sessionKey := range existingSessionKeys {
+		weather, err := dataingestor.FetchWeather(dbClient, ctx, sessionKey)
+		if err == nil && len(weather) > 0 {
+			existingWeatherKeys[sessionKey] = true
+		}
+	}
+
 	for _, meeting := range index.Meetings {
 		for _, session := range meeting.Sessions {
 			if existingSessionKeys[session.Key] {
-				fmt.Printf("Skipping session %d (%s - %s) — already in DB\n", session.Key, meeting.Name, session.Name)
+				if existingWeatherKeys[session.Key] {
+					fmt.Printf("Skipping session %d (%s - %s) — already in DB with weather\n", session.Key, meeting.Name, session.Name)
+					continue
+				}
+				fmt.Printf("Backfilling weather for existing session %d (%s - %s)...\n", session.Key, meeting.Name, session.Name)
+				basePath := fmt.Sprintf("%s/%s", staticBaseURL, session.Path)
+				backfillWeatherData(dbClient, ctx, basePath, session.Key)
+				time.Sleep(500 * time.Millisecond)
 				continue
 			}
 			fmt.Printf("Backfilling session %d (%s - %s)...\n", session.Key, meeting.Name, session.Name)
@@ -172,6 +188,9 @@ func backfillSession(dbClient *dynamodb.Client, ctx context.Context, meeting Ind
 
 	// 6. SessionData → track status
 	backfillSessionData(dbClient, ctx, basePath, session.Key)
+
+	// 7. WeatherData → weather
+	backfillWeatherData(dbClient, ctx, basePath, session.Key)
 
 	fmt.Printf("  Done session %d\n", session.Key)
 }
@@ -347,5 +366,43 @@ func backfillSessionData(dbClient *dynamodb.Client, ctx context.Context, basePat
 	}
 	if err := livetiming.SaveTrackStatus(dbClient, &ctx, trackStatusModel); err != nil {
 		fmt.Printf("  [SessionData] save error: %v\n", err)
+	}
+}
+
+func backfillWeatherData(dbClient *dynamodb.Client, ctx context.Context, basePath string, sessionKey int) {
+	data, err := fetchStaticJSON(basePath + "WeatherData.json")
+	if err != nil {
+		fmt.Printf("  [WeatherData] fetch error: %v\n", err)
+		return
+	}
+	wrapped := wrapInR("WeatherData", data)
+
+	weather, err := livetiming.BuildWeatherData(wrapped)
+	if err != nil {
+		fmt.Printf("  [WeatherData] parse error: %v\n", err)
+		return
+	}
+
+	airTemp, _ := strconv.ParseFloat(weather.AirTemp, 64)
+	trackTemp, _ := strconv.ParseFloat(weather.TrackTemp, 64)
+	humidity, _ := strconv.ParseFloat(weather.Humidity, 64)
+	pressure, _ := strconv.ParseFloat(weather.Pressure, 64)
+	windSpeed, _ := strconv.ParseFloat(weather.WindSpeed, 64)
+	windDirection, _ := strconv.Atoi(weather.WindDirection)
+	rainfall := weather.Rainfall == "1"
+
+	weatherModel := &model.Weather{
+		SessionKey:       sessionKey,
+		AirTemperature:   airTemp,
+		TrackTemperature: trackTemp,
+		Humidity:         humidity,
+		Pressure:         pressure,
+		Rainfall:         rainfall,
+		WindSpeed:        windSpeed,
+		WindDirection:    windDirection,
+		Timestamp:        time.Now().UTC().Format(time.RFC3339),
+	}
+	if err := livetiming.SaveWeather(dbClient, &ctx, weatherModel); err != nil {
+		fmt.Printf("  [WeatherData] save error: %v\n", err)
 	}
 }

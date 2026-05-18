@@ -26,6 +26,7 @@ type Subscription {
   sectors: [Sector]!
   trackStatus: [TrackStatus]!
   weather: Weather!
+  driverLocations: [DriverLocation]!
 }
 
 type Session {
@@ -47,6 +48,7 @@ type Meeting {
   country_name: String!
   circuit_short_name: String!
   meeting_key: Int!
+  circuit_key: Int!
 }
 
 type Driver {
@@ -161,6 +163,14 @@ type Weather {
   rainfall: Boolean!
   wind_speed: Float!
   wind_direction: Int!
+  timestamp: String!
+}
+
+type DriverLocation {
+  racing_number: Int!
+  x: Int!
+  y: Int!
+  z: Int!
   timestamp: String!
 }
 

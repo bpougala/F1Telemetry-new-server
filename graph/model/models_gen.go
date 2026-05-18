@@ -10,6 +10,14 @@ type CarData struct {
 	Compressed string `json:"compressed"`
 }
 
+type DriverLocation struct {
+	RacingNumber int    `json:"racing_number"`
+	X            int    `json:"x"`
+	Y            int    `json:"y"`
+	Z            int    `json:"z"`
+	Timestamp    string `json:"timestamp"`
+}
+
 type Driver struct {
 	SessionKey    int     `json:"session_key"`
 	BroadcastName string  `json:"broadcast_name"`
@@ -63,6 +71,7 @@ type Meeting struct {
 	CountryName         string `json:"country_name"`
 	CircuitShortName    string `json:"circuit_short_name"`
 	MeetingKey          int    `json:"meeting_key"`
+	CircuitKey          int    `json:"circuit_key"`
 }
 
 type Position struct {

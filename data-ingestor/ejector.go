@@ -44,6 +44,7 @@ func FetchMeetings(ddbClient *dynamodb.Client, ctx context.Context) ([]model.Mee
 			CountryName:         getStringAttr(item, "CountryName"),
 			CountryCode:         getStringAttr(item, "CountryCode"),
 			CircuitShortName:    getStringAttr(item, "CircuitShortName"),
+			CircuitKey:          getIntAttr(item, "CircuitKey"),
 		}
 		meetings = append(meetings, meeting)
 	}

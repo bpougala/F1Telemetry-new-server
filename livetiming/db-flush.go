@@ -21,6 +21,7 @@ func SaveMeeting(dbClient *dynamodb.Client, ctx *context.Context, meeting Meetin
 		"CountryName":         &types.AttributeValueMemberS{Value: meeting.CountryName},
 		"CountryCode":         &types.AttributeValueMemberS{Value: meeting.CountryCode},
 		"CircuitShortName":    &types.AttributeValueMemberS{Value: meeting.Circuit},
+		"CircuitKey":          &types.AttributeValueMemberN{Value: fmt.Sprintf("%d", meeting.CircuitKey)},
 	}
 	_, err := dbClient.PutItem(*ctx, &dynamodb.PutItemInput{
 		TableName: aws.String("meetings"),

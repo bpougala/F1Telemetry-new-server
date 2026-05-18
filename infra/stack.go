@@ -55,6 +55,7 @@ func NewF1TelemetryStack(scope constructs.Construct, id string, props *awscdk.St
 		{name: "trackstatus", pk: "SessionKey", pkT: awsdynamodb.AttributeType_NUMBER, sk: "Utc", skT: awsdynamodb.AttributeType_NUMBER},
 		{name: "racecontrol", pk: "SessionKey", pkT: awsdynamodb.AttributeType_NUMBER, sk: "Utc", skT: awsdynamodb.AttributeType_NUMBER},
 		{name: "stints", pk: "SessionKey", pkT: awsdynamodb.AttributeType_NUMBER, sk: "RacingNumber", skT: awsdynamodb.AttributeType_NUMBER},
+		{name: "weather", pk: "SessionKey", pkT: awsdynamodb.AttributeType_NUMBER, sk: "Utc", skT: awsdynamodb.AttributeType_NUMBER},
 	}
 
 	// --- IAM Role ---

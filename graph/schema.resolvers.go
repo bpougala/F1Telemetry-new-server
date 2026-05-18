@@ -13,6 +13,7 @@ import (
 var ctx = context.Background()
 var dbClient, err = dataingestor.GetDynamoClient(&ctx)
 
+// Meetings is the resolver for the meetings field.
 func (r *queryResolver) Meetings(ctx context.Context) ([]*model.Meeting, error) {
 	if err != nil {
 		return nil, err
@@ -142,6 +143,7 @@ func (r *queryResolver) Stints(ctx context.Context, sessionKey int) ([]*model.St
 	return stintsInt, nil
 }
 
+// TrackStatus is the resolver for the trackStatus field.
 func (r *queryResolver) TrackStatus(ctx context.Context, sessionKey int) ([]*model.TrackStatus, error) {
 	if err != nil {
 		return nil, err
@@ -173,6 +175,7 @@ func (r *queryResolver) Weather(ctx context.Context, sessionKey int) ([]*model.W
 	return weatherInt, nil
 }
 
+// LapTimes is the resolver for the lapTimes field.
 func (r *subscriptionResolver) LapTimes(ctx context.Context) (<-chan []*model.LapTime, error) {
 	id := dataingestor.GenerateRandomString(8)
 	lapTimes := make(chan []*model.LapTime, 1)
@@ -190,6 +193,7 @@ func (r *subscriptionResolver) LapTimes(ctx context.Context) (<-chan []*model.La
 	return lapTimes, nil
 }
 
+// Positions is the resolver for the positions field.
 func (r *subscriptionResolver) Positions(ctx context.Context) (<-chan []*model.Position, error) {
 	id := dataingestor.GenerateRandomString(8)
 	positions := make(chan []*model.Position, 1)

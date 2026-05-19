@@ -97,6 +97,11 @@ func NewF1TelemetryStack(scope constructs.Construct, id string, props *awscdk.St
 		},
 	})
 
+	role.AddToPolicy(awsiam.NewPolicyStatement(&awsiam.PolicyStatementProps{
+		Actions:   &[]*string{jsii.String("elasticache:DescribeServerlessCaches")},
+		Resources: &[]*string{jsii.String("*")},
+	}))
+
 	var ddbTables []awsdynamodb.Table
 	for _, t := range tables {
 		tableProps := &awsdynamodb.TableProps{

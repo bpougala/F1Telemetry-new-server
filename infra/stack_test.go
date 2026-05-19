@@ -20,7 +20,7 @@ func newTestStack() assertions.Template {
 
 func TestDynamoDBTableCount(t *testing.T) {
 	template := newTestStack()
-	template.ResourceCountIs(jsii.String("AWS::DynamoDB::Table"), jsii.Number(9))
+	template.ResourceCountIs(jsii.String("AWS::DynamoDB::Table"), jsii.Number(10))
 }
 
 func TestAllTablesPayPerRequest(t *testing.T) {
@@ -116,4 +116,14 @@ func TestInstanceProfileExists(t *testing.T) {
 func TestNoNATGateways(t *testing.T) {
 	template := newTestStack()
 	template.ResourceCountIs(jsii.String("AWS::EC2::NatGateway"), jsii.Number(0))
+}
+
+func TestElastiCacheServerlessCacheExists(t *testing.T) {
+	template := newTestStack()
+	template.ResourceCountIs(jsii.String("AWS::ElastiCache::ServerlessCache"), jsii.Number(1))
+}
+
+func TestLambdaFunctionExists(t *testing.T) {
+	template := newTestStack()
+	template.ResourceCountIs(jsii.String("AWS::Lambda::Function"), jsii.Number(2))
 }

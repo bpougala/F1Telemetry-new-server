@@ -138,6 +138,14 @@ func backfillYear(dbClient *dynamodb.Client, ctx context.Context, year int) erro
 	}
 	fmt.Printf("Found %d existing sessions in DB\n", len(existingSessionKeys))
 
+	// Build set of meeting keys that need circuit_key backfill
+	meetingsNeedCircuitKey := make(map[int]bool)
+	for _, m := range meetings {
+		if m.CircuitKey == 0 {
+			meetingsNeedCircuitKey[m.MeetingKey] = true
+		}
+	}
+
 	// Build set of sessions that already have weather data
 	existingWeatherKeys := make(map[int]bool)
 	for sessionKey := range existingSessionKeys {
@@ -148,6 +156,26 @@ func backfillYear(dbClient *dynamodb.Client, ctx context.Context, year int) erro
 	}
 
 	for _, meeting := range index.Meetings {
+		// Re-save meeting if circuit_key is missing
+		if meetingsNeedCircuitKey[meeting.Key] {
+			meetingDB := livetiming.MeetingDataDB{
+				Key:          meeting.Key,
+				Name:         meeting.Name,
+				OfficialName: meeting.OfficialName,
+				Location:     meeting.Location,
+				Number:       meeting.Number,
+				CountryName:  meeting.Country.Name,
+				CountryCode:  meeting.Country.Code,
+				Circuit:      meeting.Circuit.ShortName,
+				CircuitKey:   meeting.Circuit.Key,
+			}
+			if err := livetiming.SaveMeeting(dbClient, &ctx, meetingDB); err != nil {
+				fmt.Printf("  [Meeting] save circuit_key error: %v\n", err)
+			} else {
+				fmt.Printf("Backfilled circuit_key for meeting %d (%s)\n", meeting.Key, meeting.Name)
+			}
+		}
+
 		for _, session := range meeting.Sessions {
 			if existingSessionKeys[session.Key] {
 				if existingWeatherKeys[session.Key] {

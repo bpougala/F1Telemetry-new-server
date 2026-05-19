@@ -8,3 +8,4 @@ messages.json
 infra/cdk.out
 *.log
 *.pem
+node_modules/

@@ -1,6 +1,7 @@
 package main
 
 import (
+	"F1Telemetry-new-server/auth"
 	"F1Telemetry-new-server/backfill"
 	dataingestor "F1Telemetry-new-server/data-ingestor"
 	"F1Telemetry-new-server/graph"
@@ -44,13 +45,18 @@ func main() {
 	go hub.Run()
 	hub.RegisterOnResolver(resolver)
 
+	valkeyClient := auth.NewValkeyClient()
+	if err := valkeyClient.Ping(ctx).Err(); err != nil {
+		log.Printf("WARNING: Valkey not reachable at startup: %v", err)
+	}
+
 	server := handler.NewDefaultServer(graph.NewExecutableSchema(graph.Config{Resolvers: resolver}))
 	server.AddTransport(&transport.Websocket{})
 
 	http.Handle("/", playground.Handler("GraphQL playground", "/query"))
-	http.Handle("/query", server)
+	http.Handle("/query", auth.Middleware(valkeyClient, server))
 	http.HandleFunc("/ws", func(w http.ResponseWriter, r *http.Request) {
-		ws.ServeWs(hub, w, r)
+		ws.ServeWs(hub, w, r, valkeyClient)
 	})
 
 	log.Printf("connect to http://localhost:%s/ for lost of fun!\n", port)

@@ -1,10 +1,12 @@
 package ws
 
 import (
+	"F1Telemetry-new-server/auth"
 	"fmt"
 	"net/http"
 
 	"github.com/gorilla/websocket"
+	"github.com/redis/go-redis/v9"
 )
 
 var upgrader = websocket.Upgrader{
@@ -15,7 +17,13 @@ var upgrader = websocket.Upgrader{
 	},
 }
 
-func ServeWs(hub *Hub, w http.ResponseWriter, r *http.Request) {
+func ServeWs(hub *Hub, w http.ResponseWriter, r *http.Request, valkeyClient *redis.Client) {
+	_, err := auth.ValidateToken(r.Context(), valkeyClient, r)
+	if err != nil {
+		http.Error(w, `{"error":"unauthorized"}`, http.StatusUnauthorized)
+		return
+	}
+
 	conn, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
 		fmt.Println("ws upgrade error:", err)

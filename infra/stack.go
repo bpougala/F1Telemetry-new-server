@@ -195,6 +195,7 @@ func NewF1TelemetryStack(scope constructs.Construct, id string, props *awscdk.St
 			"VALKEY_ENDPOINT": valkeyCache.AttrEndpointAddress(),
 			"VALKEY_PORT":     valkeyCache.AttrEndpointPort(),
 			"APP_ID":          jsii.String("pushlap.PUSH-LAP"),
+			"DEV_ENV":         jsii.String("true"),
 			"DEV_TOKEN":       jsii.String("its-a-secret"),
 		},
 		Bundling: &awslambdanodejs.BundlingOptions{

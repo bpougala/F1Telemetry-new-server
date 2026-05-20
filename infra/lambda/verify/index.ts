@@ -66,6 +66,7 @@ async function handleAttestation(body: {
   );
 
   if (result.verifyError) {
+    console.error("attestation verifyError:", JSON.stringify(result.verifyError));
     return response(401, { error: "attestation verification failed" });
   }
 

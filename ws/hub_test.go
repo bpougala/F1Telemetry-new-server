@@ -22,7 +22,7 @@ func setupTestHub() *Hub {
 func connectTestClient(t *testing.T, hub *Hub) (*websocket.Conn, func()) {
 	t.Helper()
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		ServeWs(hub, w, r)
+		ServeWs(hub, w, r, nil)
 	}))
 	url := "ws" + strings.TrimPrefix(server.URL, "http")
 	conn, _, err := websocket.DefaultDialer.Dial(url, nil)

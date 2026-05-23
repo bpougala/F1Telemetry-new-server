@@ -18,10 +18,12 @@ var upgrader = websocket.Upgrader{
 }
 
 func ServeWs(hub *Hub, w http.ResponseWriter, r *http.Request, valkeyClient *redis.Client) {
-	_, err := auth.ValidateToken(r.Context(), valkeyClient, r)
-	if err != nil {
-		http.Error(w, `{"error":"unauthorized"}`, http.StatusUnauthorized)
-		return
+	if valkeyClient != nil {
+		_, err := auth.ValidateToken(r.Context(), valkeyClient, r)
+		if err != nil {
+			http.Error(w, `{"error":"unauthorized"}`, http.StatusUnauthorized)
+			return
+		}
 	}
 
 	conn, err := upgrader.Upgrade(w, r, nil)

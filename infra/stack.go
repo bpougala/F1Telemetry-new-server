@@ -102,6 +102,15 @@ func NewF1TelemetryStack(scope constructs.Construct, id string, props *awscdk.St
 		Resources: &[]*string{jsii.String("*")},
 	}))
 
+	role.AddToPolicy(awsiam.NewPolicyStatement(&awsiam.PolicyStatementProps{
+		Actions: &[]*string{
+			jsii.String("logs:CreateLogGroup"),
+			jsii.String("logs:CreateLogStream"),
+			jsii.String("logs:PutLogEvents"),
+		},
+		Resources: &[]*string{jsii.String("*")},
+	}))
+
 	var ddbTables []awsdynamodb.Table
 	for _, t := range tables {
 		tableProps := &awsdynamodb.TableProps{
@@ -196,7 +205,7 @@ func NewF1TelemetryStack(scope constructs.Construct, id string, props *awscdk.St
 			"VALKEY_PORT":     valkeyCache.AttrEndpointPort(),
 			"APP_ID":          jsii.String("9RDAU925Y3.pushlap.PUSH-LAP"),
 			"DEV_ENV":         jsii.String("true"),
-			"DEV_TOKEN":       jsii.String("its-a-secret"),
+			"DEV_TOKEN":       jsii.String("7FDA1B9A-5CB6-4870-8021-FFDB98ABBE6B"),
 		},
 		Bundling: &awslambdanodejs.BundlingOptions{
 			Minify: jsii.Bool(true),
@@ -222,6 +231,7 @@ func NewF1TelemetryStack(scope constructs.Construct, id string, props *awscdk.St
 		jsii.String("docker build -t f1telemetry ."),
 		awscdk.Fn_Join(jsii.String(""), &[]*string{
 			jsii.String("docker run -d --name f1telemetry --restart unless-stopped -p 8080:8080"),
+			jsii.String(" --log-driver=awslogs --log-opt awslogs-region=eu-west-1 --log-opt awslogs-group=/f1telemetry/server --log-opt awslogs-create-group=true"),
 			jsii.String(" -e AWS_DEFAULT_REGION=eu-west-1"),
 			jsii.String(" -e VALKEY_ENDPOINT="),
 			valkeyCache.AttrEndpointAddress(),

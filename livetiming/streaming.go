@@ -52,7 +52,13 @@ func Negotiate() ([]*http.Cookie, Connection, error) {
 		return nil, connection, err
 	}
 	websocketUrl := fmt.Sprintf("https://livetiming.formula1.com/signalr/negotiate?connectionData=%s&clientProtocol=1.5", string(jsonData))
-	resp, err := http.Get(websocketUrl)
+	req, err := http.NewRequest("GET", websocketUrl, nil)
+	if err != nil {
+		return nil, connection, err
+	}
+	req.Header.Set("User-Agent", "BestHTTP")
+	req.Header.Set("Accept-Encoding", "gzip,identity")
+	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
 		return nil, connection, err
 	}
@@ -62,6 +68,9 @@ func Negotiate() ([]*http.Cookie, Connection, error) {
 			fmt.Println("error defer func", err)
 		}
 	}(resp.Body)
+	if resp.StatusCode != 200 {
+		return nil, connection, fmt.Errorf("negotiate returned status %d", resp.StatusCode)
+	}
 	body, err := io.ReadAll(resp.Body)
 	err = json.Unmarshal(body, &connection)
 	if err != nil {

@@ -332,6 +332,12 @@ func buildTimingDataPositionsUpdate(message Message) ([]Position, error) {
 			continue
 		}
 		positionNumber, _ := strconv.Atoi(rawPosition.Position)
+		if positionNumber == 0 {
+			positionNumber = rawPosition.Line
+		}
+		if positionNumber == 0 {
+			continue // No position data in this update
+		}
 		racingNumber, err := strconv.Atoi(key)
 		if err != nil {
 			continue

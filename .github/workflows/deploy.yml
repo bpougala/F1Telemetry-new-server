@@ -24,7 +24,7 @@ jobs:
             docker stop f1telemetry && docker rm f1telemetry
             VALKEY_ENDPOINT=$(aws elasticache describe-serverless-caches --serverless-cache-name f1telemetry-challenges --query 'ServerlessCaches[0].Endpoint.Address' --output text)
             VALKEY_PORT=$(aws elasticache describe-serverless-caches --serverless-cache-name f1telemetry-challenges --query 'ServerlessCaches[0].Endpoint.Port' --output text)
-            docker run -d --name f1telemetry --restart unless-stopped -p 8080:8080 -e AWS_DEFAULT_REGION=eu-west-1 -e VALKEY_ENDPOINT=$VALKEY_ENDPOINT -e VALKEY_PORT=$VALKEY_PORT f1telemetry
+            docker run -d --name f1telemetry --restart unless-stopped -p 8080:8080 --log-driver=awslogs --log-opt awslogs-region=eu-west-1 --log-opt awslogs-group=/f1telemetry/server --log-opt awslogs-create-group=true -e AWS_DEFAULT_REGION=eu-west-1 -e VALKEY_ENDPOINT=$VALKEY_ENDPOINT -e VALKEY_PORT=$VALKEY_PORT f1telemetry
             if ! command -v caddy &> /dev/null; then
               curl -fsSL https://github.com/caddyserver/caddy/releases/download/v2.9.1/caddy_2.9.1_linux_amd64.tar.gz -o /tmp/caddy.tar.gz
               sudo tar -xzf /tmp/caddy.tar.gz -C /usr/bin caddy

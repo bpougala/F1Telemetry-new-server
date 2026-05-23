@@ -201,9 +201,16 @@ func buildRacePositions(data []byte) ([]Position, error) {
 		if key == "_kf" {
 			continue
 		}
+		positionNumber, _ := strconv.Atoi(value.Position)
+		if positionNumber == 0 {
+			positionNumber = value.Line
+		}
+		if positionNumber == 0 {
+			continue
+		}
 		var position Position
 		position.RacingNumber, _ = strconv.Atoi(key)
-		position.Position = &value.Line
+		position.Position = &positionNumber
 		position.InPit = value.InPit
 		position.PitOut = value.PitOut
 		position.Stopped = value.Stopped

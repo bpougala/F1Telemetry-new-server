@@ -59,7 +59,7 @@ func main() {
 		ws.ServeWs(hub, w, r, valkeyClient)
 	})
 
-	log.Printf("connect to http://localhost:%s/ for lost of fun!\n", port)
+	log.Printf("connect to http://localhost:%s/ for lots of fun!\n", port)
 	go func() {
 		err := http.ListenAndServe(":"+port, nil)
 		if err != nil {

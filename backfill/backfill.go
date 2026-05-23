@@ -60,7 +60,13 @@ type IndexSession struct {
 const staticBaseURL = "https://livetiming.formula1.com/static"
 
 func fetchStaticJSON(url string) ([]byte, error) {
-	resp, err := http.Get(url)
+	req, err := http.NewRequest("GET", url, nil)
+	if err != nil {
+		return nil, fmt.Errorf("fetch %s: %w", url, err)
+	}
+	req.Header.Set("User-Agent", "BestHTTP")
+	req.Header.Set("Accept-Encoding", "gzip,identity")
+	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
 		return nil, fmt.Errorf("fetch %s: %w", url, err)
 	}
@@ -90,9 +96,22 @@ func wrapInR(key string, data json.RawMessage) []byte {
 // Run parses the year from os.Args and runs the backfill.
 func Run() {
 	year := 2026
-	if len(os.Args) > 2 {
-		if y, err := strconv.Atoi(os.Args[2]); err == nil {
-			year = y
+	forceKeys := make(map[int]bool)
+	parseForce := false
+	for _, arg := range os.Args[2:] {
+		if arg == "--force" {
+			parseForce = true
+		} else if parseForce {
+			if k, err := strconv.Atoi(arg); err == nil {
+				forceKeys[k] = true
+			} else {
+				parseForce = false
+			}
+		}
+		if !parseForce {
+			if y, err := strconv.Atoi(arg); err == nil && y > 2000 {
+				year = y
+			}
 		}
 	}
 	ctx := context.Background()
@@ -100,8 +119,8 @@ func Run() {
 	if err != nil {
 		log.Fatalf("failed to create DynamoDB client: %v", err)
 	}
-	fmt.Printf("Starting backfill for year %d\n", year)
-	if err := backfillYear(dbClient, ctx, year); err != nil {
+	fmt.Printf("Starting backfill for year %d (force sessions: %v)\n", year, forceKeys)
+	if err := backfillYear(dbClient, ctx, year, forceKeys); err != nil {
 		log.Fatalf("backfill failed: %v", err)
 	}
 	fmt.Println("Backfill complete")
@@ -109,7 +128,7 @@ func Run() {
 
 // --- Orchestration ---
 
-func backfillYear(dbClient *dynamodb.Client, ctx context.Context, year int) error {
+func backfillYear(dbClient *dynamodb.Client, ctx context.Context, year int, forceKeys map[int]bool) error {
 	indexURL := fmt.Sprintf("%s/%d/Index.json", staticBaseURL, year)
 	body, err := fetchStaticJSON(indexURL)
 	if err != nil {
@@ -177,7 +196,7 @@ func backfillYear(dbClient *dynamodb.Client, ctx context.Context, year int) erro
 		}
 
 		for _, session := range meeting.Sessions {
-			if existingSessionKeys[session.Key] {
+			if existingSessionKeys[session.Key] && !forceKeys[session.Key] {
 				if existingWeatherKeys[session.Key] {
 					fmt.Printf("Skipping session %d (%s - %s) — already in DB with weather\n", session.Key, meeting.Name, session.Name)
 					continue
@@ -197,6 +216,11 @@ func backfillYear(dbClient *dynamodb.Client, ctx context.Context, year int) erro
 }
 
 func backfillSession(dbClient *dynamodb.Client, ctx context.Context, meeting IndexMeeting, session IndexSession) {
+	fmt.Printf("  Backfilling session %s...\n", session)
+	if session.Path == "" {
+		fmt.Printf("  Skipping session %d (%s) — no path\n", session.Key, session.Name)
+		return
+	}
 	basePath := fmt.Sprintf("%s/%s", staticBaseURL, session.Path)
 
 	// 1. SessionInfo → meeting + session

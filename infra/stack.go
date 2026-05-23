@@ -10,6 +10,7 @@ import (
 	"github.com/aws/aws-cdk-go/awscdk/v2/awsiam"
 	"github.com/aws/aws-cdk-go/awscdk/v2/awslambda"
 	"github.com/aws/aws-cdk-go/awscdk/v2/awslambdanodejs"
+	"github.com/aws/aws-cdk-go/awscdk/v2/awss3"
 	"github.com/aws/constructs-go/constructs/v10"
 	"github.com/aws/jsii-runtime-go"
 )
@@ -132,6 +133,13 @@ func NewF1TelemetryStack(scope constructs.Construct, id string, props *awscdk.St
 		table.GrantReadWriteData(role)
 		ddbTables = append(ddbTables, table)
 	}
+
+	// --- S3 Bucket for raw livetiming data ---
+	bucket := awss3.NewBucket(stack, jsii.String("LivetimingDataBucket"), &awss3.BucketProps{
+		BucketName:    jsii.String("f1-livetiming-data"),
+		RemovalPolicy: awscdk.RemovalPolicy_RETAIN,
+	})
+	bucket.GrantReadWrite(role, nil)
 
 	// --- ElastiCache Valkey Serverless ---
 	publicSubnets := vpc.SelectSubnets(&awsec2.SubnetSelection{

@@ -19,6 +19,8 @@ import (
 	"github.com/99designs/gqlgen/graphql/handler"
 	"github.com/99designs/gqlgen/graphql/handler/transport"
 	"github.com/99designs/gqlgen/graphql/playground"
+	"github.com/aws/aws-sdk-go-v2/config"
+	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/gorilla/websocket"
 )
 
@@ -35,6 +37,11 @@ func main() {
 	if err != nil {
 		log.Fatalf("Failed to connect to MongoDB: %v", err)
 	}
+	awsCfg, err := config.LoadDefaultConfig(ctx)
+	if err != nil {
+		log.Fatalf("Failed to load AWS config for S3: %v", err)
+	}
+	s3Client := s3.NewFromConfig(awsCfg)
 	port := os.Getenv("PORT")
 	if port == "" {
 		port = defaultPort
@@ -108,7 +115,7 @@ func main() {
 			backoff = 2 * time.Second
 			fmt.Println("connected to F1 live timing")
 
-			err = livetiming.ProcessSessionDataAndInfo(connection, dbClient, ctx, resolver, hub)
+			err = livetiming.ProcessSessionDataAndInfo(connection, dbClient, s3Client, ctx, resolver, hub)
 			connection.Close()
 
 			if err != nil {

@@ -10,6 +10,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb/types"
+	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/gorilla/websocket"
 	"io"
 	"net/http"
@@ -144,7 +145,7 @@ func CreateOriginalSessionMessage() SubscribeMessage {
 	}
 }
 
-func ProcessSessionDataAndInfo(connection *websocket.Conn, dbClient *dynamodb.Client, ctx context.Context, resolver *graph.Resolver, hub *ws.Hub) error {
+func ProcessSessionDataAndInfo(connection *websocket.Conn, dbClient *dynamodb.Client, s3Client *s3.Client, ctx context.Context, resolver *graph.Resolver, hub *ws.Hub) error {
 	subscribeMessage := CreateOriginalSessionMessage()
 	err := connection.WriteJSON(subscribeMessage)
 	if err != nil {
@@ -168,6 +169,7 @@ func ProcessSessionDataAndInfo(connection *websocket.Conn, dbClient *dynamodb.Cl
 			}
 		}
 	}()
+	logger := NewS3Logger(s3Client, ctx)
 	var sessionKey int
 	for {
 		_, message, err := connection.ReadMessage()
@@ -184,17 +186,19 @@ func ProcessSessionDataAndInfo(connection *websocket.Conn, dbClient *dynamodb.Cl
 
 		if _, hasR := raw["R"]; hasR {
 			// Initial snapshot — dispatch to all initial parsers
-			sessionKey = processInitialSnapshot(message, sessionKey, dbClient, ctx, resolver, hub)
+			sessionKey = processInitialSnapshot(message, sessionKey, dbClient, ctx, resolver, hub, logger)
 		} else if _, hasM := raw["M"]; hasM {
 			// Update messages — dispatch by topic
-			sessionKey = processUpdateMessages(message, sessionKey, dbClient, ctx, resolver, hub)
+			sessionKey = processUpdateMessages(message, sessionKey, dbClient, ctx, resolver, hub, logger)
 		}
 	}
 }
 
-func processInitialSnapshot(msg []byte, sessionKey int, dbClient *dynamodb.Client, ctx context.Context, resolver *graph.Resolver, hub *ws.Hub) int {
+func processInitialSnapshot(msg []byte, sessionKey int, dbClient *dynamodb.Client, ctx context.Context, resolver *graph.Resolver, hub *ws.Hub, logger *S3Logger) int {
 	meetingData, err := BuildMeetingData(msg)
+	raceName := ""
 	if err == nil {
+		raceName = meetingData.Name
 		meetingDB := ConvertMeetingToDB(meetingData)
 		err = SaveMeeting(dbClient, &ctx, meetingDB)
 		if err != nil {
@@ -202,13 +206,19 @@ func processInitialSnapshot(msg []byte, sessionKey int, dbClient *dynamodb.Clien
 		}
 	}
 	sessionInfo, err := BuildSessionInfo(msg)
+	sessionName := ""
 	if err == nil && sessionInfo.Key != 0 {
 		sessionKey = sessionInfo.Key
+		sessionName = sessionInfo.Name
 		hub.SetSessionKey(sessionKey)
 		err = SaveSession(dbClient, &ctx, sessionInfo)
 		if err != nil {
 			fmt.Println("error saving session info:", err)
 		}
+	}
+	if raceName != "" && sessionName != "" {
+		logger.SetSession(raceName, sessionName)
+		logger.LogMessage("snapshot", msg)
 	}
 	drivers, err := BuildDriverList(msg)
 	if err == nil {
@@ -261,7 +271,7 @@ func processInitialSnapshot(msg []byte, sessionKey int, dbClient *dynamodb.Clien
 	return sessionKey
 }
 
-func processUpdateMessages(msg []byte, sessionKey int, dbClient *dynamodb.Client, ctx context.Context, resolver *graph.Resolver, hub *ws.Hub) int {
+func processUpdateMessages(msg []byte, sessionKey int, dbClient *dynamodb.Client, ctx context.Context, resolver *graph.Resolver, hub *ws.Hub, logger *S3Logger) int {
 	var updateData UpdateData
 	if err := json.Unmarshal(msg, &updateData); err != nil {
 		fmt.Println("error unmarshaling update data:", err)
@@ -274,6 +284,10 @@ func processUpdateMessages(msg []byte, sessionKey int, dbClient *dynamodb.Client
 		topic, ok := message.A[0].(string)
 		if !ok {
 			continue
+		}
+		// Log the topic's arguments to S3
+		if topicData, err := json.Marshal(message.A); err == nil {
+			logger.LogMessage(topic, topicData)
 		}
 		switch topic {
 		case "SessionInfo":

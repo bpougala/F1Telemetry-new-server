@@ -53,14 +53,6 @@ type ComplexityRoot struct {
 		Compressed func(childComplexity int) int
 	}
 
-	DriverLocation struct {
-		RacingNumber func(childComplexity int) int
-		Timestamp    func(childComplexity int) int
-		X            func(childComplexity int) int
-		Y            func(childComplexity int) int
-		Z            func(childComplexity int) int
-	}
-
 	Driver struct {
 		Abbreviation  func(childComplexity int) int
 		BroadcastName func(childComplexity int) int
@@ -72,6 +64,10 @@ type ComplexityRoot struct {
 		SessionKey    func(childComplexity int) int
 		TeamColour    func(childComplexity int) int
 		TeamName      func(childComplexity int) int
+	}
+
+	DriverLocation struct {
+		Compressed func(childComplexity int) int
 	}
 
 	Lap struct {
@@ -257,7 +253,7 @@ type SubscriptionResolver interface {
 	Sectors(ctx context.Context) (<-chan []*model.Sector, error)
 	TrackStatus(ctx context.Context) (<-chan []*model.TrackStatus, error)
 	Weather(ctx context.Context) (<-chan *model.Weather, error)
-	DriverLocations(ctx context.Context) (<-chan []*model.DriverLocation, error)
+	DriverLocations(ctx context.Context) (<-chan *model.DriverLocation, error)
 }
 
 type executableSchema struct {
@@ -285,41 +281,6 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.CarData.Compressed(childComplexity), true
-
-	case "DriverLocation.racing_number":
-		if e.complexity.DriverLocation.RacingNumber == nil {
-			break
-		}
-
-		return e.complexity.DriverLocation.RacingNumber(childComplexity), true
-
-	case "DriverLocation.timestamp":
-		if e.complexity.DriverLocation.Timestamp == nil {
-			break
-		}
-
-		return e.complexity.DriverLocation.Timestamp(childComplexity), true
-
-	case "DriverLocation.x":
-		if e.complexity.DriverLocation.X == nil {
-			break
-		}
-
-		return e.complexity.DriverLocation.X(childComplexity), true
-
-	case "DriverLocation.y":
-		if e.complexity.DriverLocation.Y == nil {
-			break
-		}
-
-		return e.complexity.DriverLocation.Y(childComplexity), true
-
-	case "DriverLocation.z":
-		if e.complexity.DriverLocation.Z == nil {
-			break
-		}
-
-		return e.complexity.DriverLocation.Z(childComplexity), true
 
 	case "Driver.abbreviation":
 		if e.complexity.Driver.Abbreviation == nil {
@@ -390,6 +351,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Driver.TeamName(childComplexity), true
+
+	case "DriverLocation.compressed":
+		if e.complexity.DriverLocation.Compressed == nil {
+			break
+		}
+
+		return e.complexity.DriverLocation.Compressed(childComplexity), true
 
 	case "Lap.date_start":
 		if e.complexity.Lap.DateStart == nil {
@@ -1010,19 +978,19 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Stint.TyresNotChanged(childComplexity), true
 
-	case "Subscription.driverLocations":
-		if e.complexity.Subscription.DriverLocations == nil {
-			break
-		}
-
-		return e.complexity.Subscription.DriverLocations(childComplexity), true
-
 	case "Subscription.carData":
 		if e.complexity.Subscription.CarData == nil {
 			break
 		}
 
 		return e.complexity.Subscription.CarData(childComplexity), true
+
+	case "Subscription.driverLocations":
+		if e.complexity.Subscription.DriverLocations == nil {
+			break
+		}
+
+		return e.complexity.Subscription.DriverLocations(childComplexity), true
 
 	case "Subscription.lapTimes":
 		if e.complexity.Subscription.LapTimes == nil {
@@ -2143,6 +2111,50 @@ func (ec *executionContext) _Driver_abbreviation(ctx context.Context, field grap
 func (ec *executionContext) fieldContext_Driver_abbreviation(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Driver",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _DriverLocation_compressed(ctx context.Context, field graphql.CollectedField, obj *model.DriverLocation) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_DriverLocation_compressed(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Compressed, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_DriverLocation_compressed(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "DriverLocation",
 		Field:      field,
 		IsMethod:   false,
 		IsResolver: false,
@@ -3613,226 +3625,6 @@ func (ec *executionContext) fieldContext_Meeting_circuit_key(_ context.Context, 
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			return nil, errors.New("field of type Int does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _DriverLocation_racing_number(ctx context.Context, field graphql.CollectedField, obj *model.DriverLocation) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_DriverLocation_racing_number(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.RacingNumber, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(int)
-	fc.Result = res
-	return ec.marshalNInt2int(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_DriverLocation_racing_number(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "DriverLocation",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type Int does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _DriverLocation_x(ctx context.Context, field graphql.CollectedField, obj *model.DriverLocation) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_DriverLocation_x(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.X, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(int)
-	fc.Result = res
-	return ec.marshalNInt2int(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_DriverLocation_x(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "DriverLocation",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type Int does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _DriverLocation_y(ctx context.Context, field graphql.CollectedField, obj *model.DriverLocation) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_DriverLocation_y(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.Y, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(int)
-	fc.Result = res
-	return ec.marshalNInt2int(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_DriverLocation_y(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "DriverLocation",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type Int does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _DriverLocation_z(ctx context.Context, field graphql.CollectedField, obj *model.DriverLocation) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_DriverLocation_z(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.Z, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(int)
-	fc.Result = res
-	return ec.marshalNInt2int(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_DriverLocation_z(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "DriverLocation",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type Int does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _DriverLocation_timestamp(ctx context.Context, field graphql.CollectedField, obj *model.DriverLocation) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_DriverLocation_timestamp(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.Timestamp, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(string)
-	fc.Result = res
-	return ec.marshalNString2string(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_DriverLocation_timestamp(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "DriverLocation",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type String does not have child fields")
 		},
 	}
 	return fc, nil
@@ -6850,76 +6642,6 @@ func (ec *executionContext) fieldContext_Subscription_trackStatus(_ context.Cont
 	return fc, nil
 }
 
-func (ec *executionContext) _Subscription_driverLocations(ctx context.Context, field graphql.CollectedField) (ret func(ctx context.Context) graphql.Marshaler) {
-	fc, err := ec.fieldContext_Subscription_driverLocations(ctx, field)
-	if err != nil {
-		return nil
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = nil
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Subscription().DriverLocations(rctx)
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return nil
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return nil
-	}
-	return func(ctx context.Context) graphql.Marshaler {
-		select {
-		case res, ok := <-resTmp.(<-chan []*model.DriverLocation):
-			if !ok {
-				return nil
-			}
-			return graphql.WriterFunc(func(w io.Writer) {
-				w.Write([]byte{'{'})
-				graphql.MarshalString(field.Alias).MarshalGQL(w)
-				w.Write([]byte{':'})
-				ec.marshalNDriverLocation2ᚕᚖF1TelemetryᚑnewᚑserverᚋgraphᚋmodelᚐDriverLocation(ctx, field.Selections, res).MarshalGQL(w)
-				w.Write([]byte{'}'})
-			})
-		case <-ctx.Done():
-			return nil
-		}
-	}
-}
-
-func (ec *executionContext) fieldContext_Subscription_driverLocations(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Subscription",
-		Field:      field,
-		IsMethod:   true,
-		IsResolver: true,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "racing_number":
-				return ec.fieldContext_DriverLocation_racing_number(ctx, field)
-			case "x":
-				return ec.fieldContext_DriverLocation_x(ctx, field)
-			case "y":
-				return ec.fieldContext_DriverLocation_y(ctx, field)
-			case "z":
-				return ec.fieldContext_DriverLocation_z(ctx, field)
-			case "timestamp":
-				return ec.fieldContext_DriverLocation_timestamp(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type DriverLocation", field.Name)
-		},
-	}
-	return fc, nil
-}
-
 func (ec *executionContext) _Subscription_weather(ctx context.Context, field graphql.CollectedField) (ret func(ctx context.Context) graphql.Marshaler) {
 	fc, err := ec.fieldContext_Subscription_weather(ctx, field)
 	if err != nil {
@@ -6993,6 +6715,68 @@ func (ec *executionContext) fieldContext_Subscription_weather(_ context.Context,
 				return ec.fieldContext_Weather_timestamp(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Weather", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Subscription_driverLocations(ctx context.Context, field graphql.CollectedField) (ret func(ctx context.Context) graphql.Marshaler) {
+	fc, err := ec.fieldContext_Subscription_driverLocations(ctx, field)
+	if err != nil {
+		return nil
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = nil
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Subscription().DriverLocations(rctx)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return nil
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return nil
+	}
+	return func(ctx context.Context) graphql.Marshaler {
+		select {
+		case res, ok := <-resTmp.(<-chan *model.DriverLocation):
+			if !ok {
+				return nil
+			}
+			return graphql.WriterFunc(func(w io.Writer) {
+				w.Write([]byte{'{'})
+				graphql.MarshalString(field.Alias).MarshalGQL(w)
+				w.Write([]byte{':'})
+				ec.marshalNDriverLocation2ᚖF1TelemetryᚑnewᚑserverᚋgraphᚋmodelᚐDriverLocation(ctx, field.Selections, res).MarshalGQL(w)
+				w.Write([]byte{'}'})
+			})
+		case <-ctx.Done():
+			return nil
+		}
+	}
+}
+
+func (ec *executionContext) fieldContext_Subscription_driverLocations(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Subscription",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "compressed":
+				return ec.fieldContext_DriverLocation_compressed(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type DriverLocation", field.Name)
 		},
 	}
 	return fc, nil
@@ -10116,6 +9900,45 @@ func (ec *executionContext) _Driver(ctx context.Context, sel ast.SelectionSet, o
 	return out
 }
 
+var driverLocationImplementors = []string{"DriverLocation"}
+
+func (ec *executionContext) _DriverLocation(ctx context.Context, sel ast.SelectionSet, obj *model.DriverLocation) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, driverLocationImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("DriverLocation")
+		case "compressed":
+			out.Values[i] = ec._DriverLocation_compressed(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.processDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
 var lapImplementors = []string{"Lap"}
 
 func (ec *executionContext) _Lap(ctx context.Context, sel ast.SelectionSet, obj *model.Lap) graphql.Marshaler {
@@ -11185,65 +11008,6 @@ func (ec *executionContext) _TrackStatus(ctx context.Context, sel ast.SelectionS
 	return out
 }
 
-var driverLocationImplementors = []string{"DriverLocation"}
-
-func (ec *executionContext) _DriverLocation(ctx context.Context, sel ast.SelectionSet, obj *model.DriverLocation) graphql.Marshaler {
-	fields := graphql.CollectFields(ec.OperationContext, sel, driverLocationImplementors)
-
-	out := graphql.NewFieldSet(fields)
-	deferred := make(map[string]*graphql.FieldSet)
-	for i, field := range fields {
-		switch field.Name {
-		case "__typename":
-			out.Values[i] = graphql.MarshalString("DriverLocation")
-		case "racing_number":
-			out.Values[i] = ec._DriverLocation_racing_number(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				out.Invalids++
-			}
-		case "x":
-			out.Values[i] = ec._DriverLocation_x(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				out.Invalids++
-			}
-		case "y":
-			out.Values[i] = ec._DriverLocation_y(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				out.Invalids++
-			}
-		case "z":
-			out.Values[i] = ec._DriverLocation_z(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				out.Invalids++
-			}
-		case "timestamp":
-			out.Values[i] = ec._DriverLocation_timestamp(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				out.Invalids++
-			}
-		default:
-			panic("unknown field " + strconv.Quote(field.Name))
-		}
-	}
-	out.Dispatch(ctx)
-	if out.Invalids > 0 {
-		return graphql.Null
-	}
-
-	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
-
-	for label, dfs := range deferred {
-		ec.processDeferredGroup(graphql.DeferredGroup{
-			Label:    label,
-			Path:     graphql.GetPath(ctx),
-			FieldSet: dfs,
-			Context:  ctx,
-		})
-	}
-
-	return out
-}
-
 var weatherImplementors = []string{"Weather"}
 
 func (ec *executionContext) _Weather(ctx context.Context, sel ast.SelectionSet, obj *model.Weather) graphql.Marshaler {
@@ -11714,6 +11478,20 @@ func (ec *executionContext) marshalNDriver2ᚕᚖF1Telemetryᚑnewᚑserverᚋgr
 	wg.Wait()
 
 	return ret
+}
+
+func (ec *executionContext) marshalNDriverLocation2F1TelemetryᚑnewᚑserverᚋgraphᚋmodelᚐDriverLocation(ctx context.Context, sel ast.SelectionSet, v model.DriverLocation) graphql.Marshaler {
+	return ec._DriverLocation(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNDriverLocation2ᚖF1TelemetryᚑnewᚑserverᚋgraphᚋmodelᚐDriverLocation(ctx context.Context, sel ast.SelectionSet, v *model.DriverLocation) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._DriverLocation(ctx, sel, v)
 }
 
 func (ec *executionContext) unmarshalNFloat2float64(ctx context.Context, v interface{}) (float64, error) {
@@ -12189,51 +11967,6 @@ func (ec *executionContext) marshalNWeather2ᚖF1Telemetryᚑnewᚑserverᚋgrap
 		return graphql.Null
 	}
 	return ec._Weather(ctx, sel, v)
-}
-
-func (ec *executionContext) marshalNDriverLocation2ᚕᚖF1TelemetryᚑnewᚑserverᚋgraphᚋmodelᚐDriverLocation(ctx context.Context, sel ast.SelectionSet, v []*model.DriverLocation) graphql.Marshaler {
-	ret := make(graphql.Array, len(v))
-	var wg sync.WaitGroup
-	isLen1 := len(v) == 1
-	if !isLen1 {
-		wg.Add(len(v))
-	}
-	for i := range v {
-		i := i
-		fc := &graphql.FieldContext{
-			Index:  &i,
-			Result: &v[i],
-		}
-		ctx := graphql.WithFieldContext(ctx, fc)
-		f := func(i int) {
-			defer func() {
-				if r := recover(); r != nil {
-					ec.Error(ctx, ec.Recover(ctx, r))
-					ret = nil
-				}
-			}()
-			if !isLen1 {
-				defer wg.Done()
-			}
-			ret[i] = ec.marshalODriverLocation2ᚖF1TelemetryᚑnewᚑserverᚋgraphᚋmodelᚐDriverLocation(ctx, sel, v[i])
-		}
-		if isLen1 {
-			f(i)
-		} else {
-			go f(i)
-		}
-
-	}
-	wg.Wait()
-
-	return ret
-}
-
-func (ec *executionContext) marshalODriverLocation2ᚖF1TelemetryᚑnewᚑserverᚋgraphᚋmodelᚐDriverLocation(ctx context.Context, sel ast.SelectionSet, v *model.DriverLocation) graphql.Marshaler {
-	if v == nil {
-		return graphql.Null
-	}
-	return ec._DriverLocation(ctx, sel, v)
 }
 
 func (ec *executionContext) marshalN__Directive2githubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐDirective(ctx context.Context, sel ast.SelectionSet, v introspection.Directive) graphql.Marshaler {

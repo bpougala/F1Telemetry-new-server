@@ -716,6 +716,38 @@ func buildRaceSectors(data []byte) ([]AllSectors, error) {
 	return sectors, nil
 }
 
+// ExtractPositionZCompressed extracts the raw compressed Position.z string without decompressing.
+func ExtractPositionZCompressed(data []byte) (string, error) {
+	var initialData InitialData
+	if err := json.Unmarshal(data, &initialData); err != nil {
+		return "", err
+	}
+	compressed := initialData.R.PositionZ
+	if compressed != "" {
+		return compressed, nil
+	}
+	// Try extracting from update messages
+	var updateData UpdateData
+	if err := json.Unmarshal(data, &updateData); err != nil {
+		return "", err
+	}
+	for _, message := range updateData.M {
+		elements := message.A
+		if len(elements) < 2 {
+			continue
+		}
+		if elements[0] != "Position.z" {
+			continue
+		}
+		compressedStr, ok := elements[1].(string)
+		if !ok {
+			continue
+		}
+		return compressedStr, nil
+	}
+	return "", fmt.Errorf("no position data found")
+}
+
 // BuildPositionZ parses Position.z data from the initial snapshot.
 func BuildPositionZ(data []byte) (PositionRoot, error) {
 	var posRoot PositionRoot

@@ -26,7 +26,7 @@ type Subscription {
   sectors: [Sector]!
   trackStatus: [TrackStatus]!
   weather: Weather!
-  driverLocations: [DriverLocation]!
+  driverLocations: DriverLocation!
 }
 
 type Session {
@@ -167,11 +167,7 @@ type Weather {
 }
 
 type DriverLocation {
-  racing_number: Int!
-  x: Int!
-  y: Int!
-  z: Int!
-  timestamp: String!
+  compressed: String!
 }
 
 type Timing {

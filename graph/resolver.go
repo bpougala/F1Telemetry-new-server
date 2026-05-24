@@ -18,7 +18,7 @@ type Resolver struct {
 	CurrentSectorTimes         []*model.Sector
 	CurrentTrackStatus         []*model.TrackStatus
 	CurrentWeather             *model.Weather
-	CurrentDriverLocations     []*model.DriverLocation
+	CurrentDriverLocations     *model.DriverLocation
 	LapTimeObservers           map[string]chan []*model.LapTime
 	PositionObservers          map[string]chan []*model.Position
 	CarDataObservers           map[string]chan *model.CarData
@@ -27,7 +27,7 @@ type Resolver struct {
 	SectorTimeObservers        map[string]chan []*model.Sector
 	TrackStatusObservers       map[string]chan []*model.TrackStatus
 	WeatherObservers           map[string]chan *model.Weather
-	DriverLocationObservers    map[string]chan []*model.DriverLocation
+	DriverLocationObservers    map[string]chan *model.DriverLocation
 	mu                         sync.Mutex
 }
 
@@ -48,7 +48,7 @@ func NewResolver() *Resolver {
 		SectorTimeObservers:        make(map[string]chan []*model.Sector),
 		TrackStatusObservers:       make(map[string]chan []*model.TrackStatus),
 		WeatherObservers:           make(map[string]chan *model.Weather),
-		DriverLocationObservers:    make(map[string]chan []*model.DriverLocation),
+		DriverLocationObservers:    make(map[string]chan *model.DriverLocation),
 	}
 }
 
@@ -124,16 +124,16 @@ func (r *Resolver) NotifyWeatherSubscribers(weather *model.Weather) {
 	}
 }
 
-func (r *Resolver) NotifyDriverLocationSubscribers(locations []*model.DriverLocation) {
+func (r *Resolver) NotifyDriverLocationSubscribers(location *model.DriverLocation) {
 	r.mu.Lock()
 	defer r.mu.Unlock()
-	r.CurrentDriverLocations = locations
+	r.CurrentDriverLocations = location
 	for _, observer := range r.DriverLocationObservers {
-		observer <- locations
+		observer <- location
 	}
 }
 
-func (r *Resolver) RegisterDriverLocationObserver(id string, ch chan []*model.DriverLocation) {
+func (r *Resolver) RegisterDriverLocationObserver(id string, ch chan *model.DriverLocation) {
 	r.mu.Lock()
 	defer r.mu.Unlock()
 	r.DriverLocationObservers[id] = ch

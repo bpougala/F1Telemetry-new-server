@@ -10,14 +10,6 @@ type CarData struct {
 	Compressed string `json:"compressed"`
 }
 
-type DriverLocation struct {
-	RacingNumber int    `json:"racing_number"`
-	X            int    `json:"x"`
-	Y            int    `json:"y"`
-	Z            int    `json:"z"`
-	Timestamp    string `json:"timestamp"`
-}
-
 type Driver struct {
 	SessionKey    int     `json:"session_key"`
 	BroadcastName string  `json:"broadcast_name"`
@@ -29,6 +21,10 @@ type Driver struct {
 	TeamColour    *string `json:"team_colour,omitempty"`
 	TeamName      *string `json:"team_name,omitempty"`
 	Abbreviation  *string `json:"abbreviation,omitempty"`
+}
+
+type DriverLocation struct {
+	Compressed string `json:"compressed"`
 }
 
 type Lap struct {

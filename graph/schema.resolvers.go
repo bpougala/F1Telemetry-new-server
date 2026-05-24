@@ -10,14 +10,8 @@ import (
 	"context"
 )
 
-var ctx = context.Background()
-var dbClient, err = dataingestor.GetDynamoClient(&ctx)
-
 // Meetings is the resolver for the meetings field.
 func (r *queryResolver) Meetings(ctx context.Context) ([]*model.Meeting, error) {
-	if err != nil {
-		return nil, err
-	}
 	meetings, err := dataingestor.FetchMeetings(dbClient, ctx)
 	if err != nil {
 		return nil, err
@@ -31,9 +25,6 @@ func (r *queryResolver) Meetings(ctx context.Context) ([]*model.Meeting, error) 
 
 // Sessions is the resolver for the sessions field.
 func (r *queryResolver) Sessions(ctx context.Context, meetingKeys []*int) ([]*model.Session, error) {
-	if err != nil {
-		return nil, err
-	}
 	var sessionsInt []*model.Session
 	for _, meetingKey := range meetingKeys {
 		sessions, err := dataingestor.FetchSessions(dbClient, ctx, *meetingKey)
@@ -49,9 +40,6 @@ func (r *queryResolver) Sessions(ctx context.Context, meetingKeys []*int) ([]*mo
 
 // Drivers is the resolver for the drivers field.
 func (r *queryResolver) Drivers(ctx context.Context, sessionKey int) ([]*model.Driver, error) {
-	if err != nil {
-		return nil, err
-	}
 	drivers, err := dataingestor.FetchDrivers(dbClient, ctx, sessionKey)
 	if err != nil {
 		return nil, err
@@ -65,9 +53,6 @@ func (r *queryResolver) Drivers(ctx context.Context, sessionKey int) ([]*model.D
 
 // Positions is the resolver for the positions field.
 func (r *queryResolver) Positions(ctx context.Context, sessionKey int) ([]*model.Position, error) {
-	if err != nil {
-		return nil, err
-	}
 	positions, err := dataingestor.FetchPositions(dbClient, ctx, sessionKey)
 	if err != nil {
 		return nil, err
@@ -81,9 +66,6 @@ func (r *queryResolver) Positions(ctx context.Context, sessionKey int) ([]*model
 
 // RaceControl is the resolver for the raceControl field.
 func (r *queryResolver) RaceControl(ctx context.Context, sessionKey int) ([]*model.RaceControl, error) {
-	if err != nil {
-		return nil, err
-	}
 	raceControl, err := dataingestor.FetchRaceControl(dbClient, ctx, sessionKey)
 	if err != nil {
 		return nil, err
@@ -97,9 +79,6 @@ func (r *queryResolver) RaceControl(ctx context.Context, sessionKey int) ([]*mod
 
 // LapTimes is the resolver for the lapTimes field.
 func (r *queryResolver) LapTimes(ctx context.Context, sessionKey int) ([]*model.Timing, error) {
-	if err != nil {
-		return nil, err
-	}
 	timings, err := dataingestor.FetchTimings(dbClient, ctx, sessionKey)
 	if err != nil {
 		return nil, err
@@ -113,9 +92,6 @@ func (r *queryResolver) LapTimes(ctx context.Context, sessionKey int) ([]*model.
 
 // Sectors is the resolver for the sectors field.
 func (r *queryResolver) Sectors(ctx context.Context, sessionKey int) ([]*model.Sector, error) {
-	if err != nil {
-		return nil, err
-	}
 	sectors, err := dataingestor.FetchSectors(dbClient, ctx, sessionKey)
 	if err != nil {
 		return nil, err
@@ -129,9 +105,6 @@ func (r *queryResolver) Sectors(ctx context.Context, sessionKey int) ([]*model.S
 
 // Stints is the resolver for the stints field.
 func (r *queryResolver) Stints(ctx context.Context, sessionKey int) ([]*model.Stint, error) {
-	if err != nil {
-		return nil, err
-	}
 	stints, err := dataingestor.FetchStints(dbClient, ctx, sessionKey)
 	if err != nil {
 		return nil, err
@@ -145,9 +118,6 @@ func (r *queryResolver) Stints(ctx context.Context, sessionKey int) ([]*model.St
 
 // TrackStatus is the resolver for the trackStatus field.
 func (r *queryResolver) TrackStatus(ctx context.Context, sessionKey int) ([]*model.TrackStatus, error) {
-	if err != nil {
-		return nil, err
-	}
 	trackStatus, err := dataingestor.FetchTrackStatus(dbClient, ctx, sessionKey)
 	if err != nil {
 		return nil, err
@@ -161,9 +131,6 @@ func (r *queryResolver) TrackStatus(ctx context.Context, sessionKey int) ([]*mod
 
 // Weather is the resolver for the weather field.
 func (r *queryResolver) Weather(ctx context.Context, sessionKey int) ([]*model.Weather, error) {
-	if err != nil {
-		return nil, err
-	}
 	weather, err := dataingestor.FetchWeather(dbClient, ctx, sessionKey)
 	if err != nil {
 		return nil, err
@@ -175,7 +142,7 @@ func (r *queryResolver) Weather(ctx context.Context, sessionKey int) ([]*model.W
 	return weatherInt, nil
 }
 
-// LapTimes is the resolver for the lapTimes field.
+// LapTimes is the resolver for the lapTimes subscription field.
 func (r *subscriptionResolver) LapTimes(ctx context.Context) (<-chan []*model.LapTime, error) {
 	id := dataingestor.GenerateRandomString(8)
 	lapTimes := make(chan []*model.LapTime, 1)
@@ -193,7 +160,7 @@ func (r *subscriptionResolver) LapTimes(ctx context.Context) (<-chan []*model.La
 	return lapTimes, nil
 }
 
-// Positions is the resolver for the positions field.
+// Positions is the resolver for the positions subscription field.
 func (r *subscriptionResolver) Positions(ctx context.Context) (<-chan []*model.Position, error) {
 	id := dataingestor.GenerateRandomString(8)
 	positions := make(chan []*model.Position, 1)
@@ -211,7 +178,7 @@ func (r *subscriptionResolver) Positions(ctx context.Context) (<-chan []*model.P
 	return positions, nil
 }
 
-// CarData is the resolver for the carData field.
+// CarData is the resolver for the carData subscription field.
 func (r *subscriptionResolver) CarData(ctx context.Context) (<-chan *model.CarData, error) {
 	id := dataingestor.GenerateRandomString(8)
 	carData := make(chan *model.CarData, 1)
@@ -229,7 +196,7 @@ func (r *subscriptionResolver) CarData(ctx context.Context) (<-chan *model.CarDa
 	return carData, nil
 }
 
-// RaceControl is the resolver for the raceControl field.
+// RaceControl is the resolver for the raceControl subscription field.
 func (r *subscriptionResolver) RaceControl(ctx context.Context) (<-chan []*model.RaceControl, error) {
 	id := dataingestor.GenerateRandomString(8)
 	raceControl := make(chan []*model.RaceControl, 1)
@@ -246,7 +213,7 @@ func (r *subscriptionResolver) RaceControl(ctx context.Context) (<-chan []*model
 	return raceControl, nil
 }
 
-// Stints is the resolver for the stints field.
+// Stints is the resolver for the stints subscription field.
 func (r *subscriptionResolver) Stints(ctx context.Context) (<-chan []*model.Stint, error) {
 	id := dataingestor.GenerateRandomString(8)
 	stints := make(chan []*model.Stint, 1)
@@ -263,7 +230,7 @@ func (r *subscriptionResolver) Stints(ctx context.Context) (<-chan []*model.Stin
 	return stints, nil
 }
 
-// Sectors is the resolver for the sectors field.
+// Sectors is the resolver for the sectors subscription field.
 func (r *subscriptionResolver) Sectors(ctx context.Context) (<-chan []*model.Sector, error) {
 	id := dataingestor.GenerateRandomString(8)
 	sectors := make(chan []*model.Sector, 1)
@@ -280,7 +247,7 @@ func (r *subscriptionResolver) Sectors(ctx context.Context) (<-chan []*model.Sec
 	return sectors, nil
 }
 
-// TrackStatus is the resolver for the trackStatus field.
+// TrackStatus is the resolver for the trackStatus subscription field.
 func (r *subscriptionResolver) TrackStatus(ctx context.Context) (<-chan []*model.TrackStatus, error) {
 	id := dataingestor.GenerateRandomString(8)
 	trackStatus := make(chan []*model.TrackStatus, 1)
@@ -319,9 +286,9 @@ func (r *subscriptionResolver) Weather(ctx context.Context) (<-chan *model.Weath
 }
 
 // DriverLocations is the resolver for the driverLocations subscription field.
-func (r *subscriptionResolver) DriverLocations(ctx context.Context) (<-chan []*model.DriverLocation, error) {
+func (r *subscriptionResolver) DriverLocations(ctx context.Context) (<-chan *model.DriverLocation, error) {
 	id := dataingestor.GenerateRandomString(8)
-	driverLocations := make(chan []*model.DriverLocation, 1)
+	driverLocations := make(chan *model.DriverLocation, 1)
 
 	go func() {
 		<-ctx.Done()
@@ -346,14 +313,3 @@ func (r *Resolver) Subscription() SubscriptionResolver { return &subscriptionRes
 
 type queryResolver struct{ *Resolver }
 type subscriptionResolver struct{ *Resolver }
-
-// !!! WARNING !!!
-// The code below was going to be deleted when updating resolvers. It has been copied here so you have
-// one last chance to move it out of harms way if you want. There are two reasons this happens:
-//  - When renaming or deleting a resolver the old code will be put in here. You can safely delete
-//    it when you're done.
-//  - You have helper methods in this file. Move them out to keep these resolver files clean.
-/*
-	var ctx = context.Background()
-var dbClient, err = dataingestor.GetDynamoClient(&ctx)
-*/

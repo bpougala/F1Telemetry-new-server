@@ -252,9 +252,9 @@ func processInitialSnapshot(msg []byte, sessionKey int, dbClient *dynamodb.Clien
 	if err == nil {
 		processWeather(weatherData, sessionKey, dbClient, ctx, resolver)
 	}
-	positionZ, err := BuildPositionZ(msg)
+	positionZCompressed, err := ExtractPositionZCompressed(msg)
 	if err == nil {
-		processDriverLocations(positionZ, resolver)
+		resolver.NotifyDriverLocationSubscribers(&model.DriverLocation{Compressed: positionZCompressed})
 	}
 	raceControlMessages, err := BuildRaceControl(msg)
 	if err == nil {
@@ -361,11 +361,11 @@ func processUpdateMessages(msg []byte, sessionKey int, dbClient *dynamodb.Client
 				resolver.NotifyCarDataSubscribers(&carDataModel)
 			}
 		case "Position.z":
-			positionZ, err := BuildPositionZ(msg)
+			positionZCompressed, err := ExtractPositionZCompressed(msg)
 			if err != nil {
-				fmt.Println("error parsing Position.z:", err)
+				fmt.Println("error extracting Position.z:", err)
 			} else {
-				processDriverLocations(positionZ, resolver)
+				resolver.NotifyDriverLocationSubscribers(&model.DriverLocation{Compressed: positionZCompressed})
 			}
 		case "TrackStatus":
 			trackStatus, err := BuildTrackStatusUpdate(msg)
@@ -390,29 +390,6 @@ func processUpdateMessages(msg []byte, sessionKey int, dbClient *dynamodb.Client
 		}
 	}
 	return sessionKey
-}
-
-func processDriverLocations(posRoot PositionRoot, resolver *graph.Resolver) {
-	var locations []*model.DriverLocation
-	for _, entry := range posRoot.Position {
-		timestamp := entry.Timestamp.Format(time.RFC3339)
-		for driverNum, carPos := range entry.Entries {
-			racingNumber, err := strconv.Atoi(driverNum)
-			if err != nil {
-				continue
-			}
-			locations = append(locations, &model.DriverLocation{
-				RacingNumber: racingNumber,
-				X:            carPos.X,
-				Y:            carPos.Y,
-				Z:            carPos.Z,
-				Timestamp:    timestamp,
-			})
-		}
-	}
-	if len(locations) > 0 {
-		resolver.NotifyDriverLocationSubscribers(locations)
-	}
 }
 
 func processPositions(positions []Position, sessionKey int, dbClient *dynamodb.Client, ctx context.Context, resolver *graph.Resolver) {

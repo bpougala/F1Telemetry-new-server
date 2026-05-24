@@ -16,6 +16,7 @@ type Resolver struct {
 	CurrentRaceControlMessages []*model.RaceControl
 	CurrentStints              []*model.Stint
 	CurrentSectorTimes         []*model.Sector
+	CurrentSegments            []*model.Segment
 	CurrentTrackStatus         []*model.TrackStatus
 	CurrentWeather             *model.Weather
 	CurrentDriverLocations     *model.DriverLocation
@@ -25,6 +26,7 @@ type Resolver struct {
 	RaceControlObservers       map[string]chan []*model.RaceControl
 	StintObservers             map[string]chan []*model.Stint
 	SectorTimeObservers        map[string]chan []*model.Sector
+	SegmentObservers           map[string]chan []*model.Segment
 	TrackStatusObservers       map[string]chan []*model.TrackStatus
 	WeatherObservers           map[string]chan *model.Weather
 	DriverLocationObservers    map[string]chan *model.DriverLocation
@@ -46,6 +48,7 @@ func NewResolver() *Resolver {
 		RaceControlObservers:       make(map[string]chan []*model.RaceControl),
 		StintObservers:             make(map[string]chan []*model.Stint),
 		SectorTimeObservers:        make(map[string]chan []*model.Sector),
+		SegmentObservers:           make(map[string]chan []*model.Segment),
 		TrackStatusObservers:       make(map[string]chan []*model.TrackStatus),
 		WeatherObservers:           make(map[string]chan *model.Weather),
 		DriverLocationObservers:    make(map[string]chan *model.DriverLocation),
@@ -103,6 +106,15 @@ func (r *Resolver) NotifySectorTimeSubscribers(sectorTimes []*model.Sector) {
 	r.CurrentSectorTimes = append(r.CurrentSectorTimes, sectorTimes...)
 	for _, observer := range r.SectorTimeObservers {
 		observer <- sectorTimes
+	}
+}
+
+func (r *Resolver) NotifySegmentSubscribers(segments []*model.Segment) {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	r.CurrentSegments = segments
+	for _, observer := range r.SegmentObservers {
+		observer <- segments
 	}
 }
 
@@ -179,6 +191,12 @@ func (r *Resolver) RegisterSectorTimeObserver(id string, ch chan []*model.Sector
 	r.mu.Lock()
 	defer r.mu.Unlock()
 	r.SectorTimeObservers[id] = ch
+}
+
+func (r *Resolver) RegisterSegmentObserver(id string, ch chan []*model.Segment) {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	r.SegmentObservers[id] = ch
 }
 
 func (r *Resolver) RegisterTrackStatusObserver(id string, ch chan []*model.TrackStatus) {

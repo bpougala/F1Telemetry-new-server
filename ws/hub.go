@@ -84,6 +84,10 @@ func (h *Hub) RegisterOnResolver(resolver *graph.Resolver) {
 	resolver.RegisterSectorTimeObserver("ws-hub", sectorsCh)
 	go h.forwardSectors(sectorsCh)
 
+	segmentsCh := make(chan []*model.Segment, 16)
+	resolver.RegisterSegmentObserver("ws-hub", segmentsCh)
+	go h.forwardSegments(segmentsCh)
+
 	trackStatusCh := make(chan []*model.TrackStatus, 16)
 	resolver.RegisterTrackStatusObserver("ws-hub", trackStatusCh)
 	go h.forwardTrackStatus(trackStatusCh)
@@ -122,6 +126,12 @@ func (h *Hub) forwardStints(ch <-chan []*model.Stint) {
 func (h *Hub) forwardSectors(ch <-chan []*model.Sector) {
 	for data := range ch {
 		h.broadcast("sectors", "data", data)
+	}
+}
+
+func (h *Hub) forwardSegments(ch <-chan []*model.Segment) {
+	for data := range ch {
+		h.broadcast("segments", "data", data)
 	}
 }
 

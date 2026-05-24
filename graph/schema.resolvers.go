@@ -247,6 +247,25 @@ func (r *subscriptionResolver) Sectors(ctx context.Context) (<-chan []*model.Sec
 	return sectors, nil
 }
 
+// Segments is the resolver for the segments subscription field.
+func (r *subscriptionResolver) Segments(ctx context.Context) (<-chan []*model.Segment, error) {
+	id := dataingestor.GenerateRandomString(8)
+	segments := make(chan []*model.Segment, 1)
+	go func() {
+		<-ctx.Done()
+		r.mu.Lock()
+		delete(r.SegmentObservers, id)
+		r.mu.Unlock()
+	}()
+	r.mu.Lock()
+	r.SegmentObservers[id] = segments
+	r.mu.Unlock()
+	if r.CurrentSegments != nil {
+		r.SegmentObservers[id] <- r.CurrentSegments
+	}
+	return segments, nil
+}
+
 // TrackStatus is the resolver for the trackStatus subscription field.
 func (r *subscriptionResolver) TrackStatus(ctx context.Context) (<-chan []*model.TrackStatus, error) {
 	id := dataingestor.GenerateRandomString(8)

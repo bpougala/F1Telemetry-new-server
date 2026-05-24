@@ -8,6 +8,7 @@ var ValidTopics = map[string]bool{
 	"raceControl": true,
 	"stints":      true,
 	"sectors":     true,
+	"segments":    true,
 	"trackStatus": true,
 }
 

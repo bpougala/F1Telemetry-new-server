@@ -268,6 +268,10 @@ func processInitialSnapshot(msg []byte, sessionKey int, dbClient *dynamodb.Clien
 	if err == nil {
 		processSectors(sectors, sessionKey, dbClient, ctx, resolver)
 	}
+	segments, err := BuildSegments(msg)
+	if err == nil {
+		processSegments(segments, resolver)
+	}
 	return sessionKey
 }
 
@@ -347,6 +351,10 @@ func processUpdateMessages(msg []byte, sessionKey int, dbClient *dynamodb.Client
 			sectors, err := BuildSectors(msg)
 			if err == nil {
 				processSectors(sectors, sessionKey, dbClient, ctx, resolver)
+			}
+			segments, err := BuildSegments(msg)
+			if err == nil {
+				processSegments(segments, resolver)
 			}
 		case "DriverList":
 			positions, err := BuildPositions(msg)
@@ -519,6 +527,21 @@ func processSectors(sectors []AllSectors, sessionKey int, dbClient *dynamodb.Cli
 	if err != nil {
 		fmt.Println("error saving sectors:", err)
 	}
+}
+
+func processSegments(segments []AllSegments, resolver *graph.Resolver) {
+	var segmentsModel []*model.Segment
+	for _, driverSegments := range segments {
+		for _, seg := range driverSegments.Segments {
+			segmentsModel = append(segmentsModel, &model.Segment{
+				RacingNumber:  driverSegments.RacingNumber,
+				SectorNumber:  seg.SectorNumber,
+				SegmentNumber: seg.SegmentNumber,
+				Status:        seg.Status,
+			})
+		}
+	}
+	resolver.NotifySegmentSubscribers(segmentsModel)
 }
 
 func processWeather(weather *Weather, sessionKey int, dbClient *dynamodb.Client, ctx context.Context, resolver *graph.Resolver) {

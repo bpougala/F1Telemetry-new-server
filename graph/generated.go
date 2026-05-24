@@ -156,6 +156,13 @@ type ComplexityRoot struct {
 		Value           func(childComplexity int) int
 	}
 
+	Segment struct {
+		RacingNumber  func(childComplexity int) int
+		SectorNumber  func(childComplexity int) int
+		SegmentNumber func(childComplexity int) int
+		Status        func(childComplexity int) int
+	}
+
 	Session struct {
 		DateEnd     func(childComplexity int) int
 		DateStart   func(childComplexity int) int
@@ -186,6 +193,7 @@ type ComplexityRoot struct {
 		Positions       func(childComplexity int) int
 		RaceControl     func(childComplexity int) int
 		Sectors         func(childComplexity int) int
+		Segments        func(childComplexity int) int
 		Stints          func(childComplexity int) int
 		TrackStatus     func(childComplexity int) int
 		Weather         func(childComplexity int) int
@@ -251,6 +259,7 @@ type SubscriptionResolver interface {
 	RaceControl(ctx context.Context) (<-chan []*model.RaceControl, error)
 	Stints(ctx context.Context) (<-chan []*model.Stint, error)
 	Sectors(ctx context.Context) (<-chan []*model.Sector, error)
+	Segments(ctx context.Context) (<-chan []*model.Segment, error)
 	TrackStatus(ctx context.Context) (<-chan []*model.TrackStatus, error)
 	Weather(ctx context.Context) (<-chan *model.Weather, error)
 	DriverLocations(ctx context.Context) (<-chan *model.DriverLocation, error)
@@ -859,6 +868,34 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Sector.Value(childComplexity), true
 
+	case "Segment.racing_number":
+		if e.complexity.Segment.RacingNumber == nil {
+			break
+		}
+
+		return e.complexity.Segment.RacingNumber(childComplexity), true
+
+	case "Segment.sector_number":
+		if e.complexity.Segment.SectorNumber == nil {
+			break
+		}
+
+		return e.complexity.Segment.SectorNumber(childComplexity), true
+
+	case "Segment.segment_number":
+		if e.complexity.Segment.SegmentNumber == nil {
+			break
+		}
+
+		return e.complexity.Segment.SegmentNumber(childComplexity), true
+
+	case "Segment.status":
+		if e.complexity.Segment.Status == nil {
+			break
+		}
+
+		return e.complexity.Segment.Status(childComplexity), true
+
 	case "Session.date_end":
 		if e.complexity.Session.DateEnd == nil {
 			break
@@ -1019,6 +1056,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Subscription.Sectors(childComplexity), true
+
+	case "Subscription.segments":
+		if e.complexity.Subscription.Segments == nil {
+			break
+		}
+
+		return e.complexity.Subscription.Segments(childComplexity), true
 
 	case "Subscription.stints":
 		if e.complexity.Subscription.Stints == nil {
@@ -5386,6 +5430,182 @@ func (ec *executionContext) fieldContext_Sector_lap_number(_ context.Context, fi
 	return fc, nil
 }
 
+func (ec *executionContext) _Segment_racing_number(ctx context.Context, field graphql.CollectedField, obj *model.Segment) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Segment_racing_number(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.RacingNumber, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(int)
+	fc.Result = res
+	return ec.marshalNInt2int(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Segment_racing_number(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Segment",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Segment_sector_number(ctx context.Context, field graphql.CollectedField, obj *model.Segment) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Segment_sector_number(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.SectorNumber, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(int)
+	fc.Result = res
+	return ec.marshalNInt2int(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Segment_sector_number(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Segment",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Segment_segment_number(ctx context.Context, field graphql.CollectedField, obj *model.Segment) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Segment_segment_number(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.SegmentNumber, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(int)
+	fc.Result = res
+	return ec.marshalNInt2int(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Segment_segment_number(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Segment",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Segment_status(ctx context.Context, field graphql.CollectedField, obj *model.Segment) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Segment_status(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Status, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(int)
+	fc.Result = res
+	return ec.marshalNInt2int(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Segment_status(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Segment",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Session_session_key(ctx context.Context, field graphql.CollectedField, obj *model.Session) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Session_session_key(ctx, field)
 	if err != nil {
@@ -6571,6 +6791,74 @@ func (ec *executionContext) fieldContext_Subscription_sectors(_ context.Context,
 				return ec.fieldContext_Sector_lap_number(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Sector", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Subscription_segments(ctx context.Context, field graphql.CollectedField) (ret func(ctx context.Context) graphql.Marshaler) {
+	fc, err := ec.fieldContext_Subscription_segments(ctx, field)
+	if err != nil {
+		return nil
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = nil
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Subscription().Segments(rctx)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return nil
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return nil
+	}
+	return func(ctx context.Context) graphql.Marshaler {
+		select {
+		case res, ok := <-resTmp.(<-chan []*model.Segment):
+			if !ok {
+				return nil
+			}
+			return graphql.WriterFunc(func(w io.Writer) {
+				w.Write([]byte{'{'})
+				graphql.MarshalString(field.Alias).MarshalGQL(w)
+				w.Write([]byte{':'})
+				ec.marshalNSegment2ᚕᚖF1TelemetryᚑnewᚑserverᚋgraphᚋmodelᚐSegment(ctx, field.Selections, res).MarshalGQL(w)
+				w.Write([]byte{'}'})
+			})
+		case <-ctx.Done():
+			return nil
+		}
+	}
+}
+
+func (ec *executionContext) fieldContext_Subscription_segments(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Subscription",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "racing_number":
+				return ec.fieldContext_Segment_racing_number(ctx, field)
+			case "sector_number":
+				return ec.fieldContext_Segment_sector_number(ctx, field)
+			case "segment_number":
+				return ec.fieldContext_Segment_segment_number(ctx, field)
+			case "status":
+				return ec.fieldContext_Segment_status(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Segment", field.Name)
 		},
 	}
 	return fc, nil
@@ -10631,6 +10919,60 @@ func (ec *executionContext) _Sector(ctx context.Context, sel ast.SelectionSet, o
 	return out
 }
 
+var segmentImplementors = []string{"Segment"}
+
+func (ec *executionContext) _Segment(ctx context.Context, sel ast.SelectionSet, obj *model.Segment) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, segmentImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("Segment")
+		case "racing_number":
+			out.Values[i] = ec._Segment_racing_number(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "sector_number":
+			out.Values[i] = ec._Segment_sector_number(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "segment_number":
+			out.Values[i] = ec._Segment_segment_number(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "status":
+			out.Values[i] = ec._Segment_status(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.processDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
 var sessionImplementors = []string{"Session"}
 
 func (ec *executionContext) _Session(ctx context.Context, sel ast.SelectionSet, obj *model.Session) graphql.Marshaler {
@@ -10809,6 +11151,8 @@ func (ec *executionContext) _Subscription(ctx context.Context, sel ast.Selection
 		return ec._Subscription_stints(ctx, fields[0])
 	case "sectors":
 		return ec._Subscription_sectors(ctx, fields[0])
+	case "segments":
+		return ec._Subscription_segments(ctx, fields[0])
 	case "trackStatus":
 		return ec._Subscription_trackStatus(ctx, fields[0])
 	case "weather":
@@ -11740,6 +12084,44 @@ func (ec *executionContext) marshalNSector2ᚕᚖF1Telemetryᚑnewᚑserverᚋgr
 	return ret
 }
 
+func (ec *executionContext) marshalNSegment2ᚕᚖF1TelemetryᚑnewᚑserverᚋgraphᚋmodelᚐSegment(ctx context.Context, sel ast.SelectionSet, v []*model.Segment) graphql.Marshaler {
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalOSegment2ᚖF1TelemetryᚑnewᚑserverᚋgraphᚋmodelᚐSegment(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+
+	return ret
+}
+
 func (ec *executionContext) marshalNSession2ᚕᚖF1TelemetryᚑnewᚑserverᚋgraphᚋmodelᚐSession(ctx context.Context, sel ast.SelectionSet, v []*model.Session) graphql.Marshaler {
 	ret := make(graphql.Array, len(v))
 	var wg sync.WaitGroup
@@ -12368,6 +12750,13 @@ func (ec *executionContext) marshalOSector2ᚖF1Telemetryᚑnewᚑserverᚋgraph
 		return graphql.Null
 	}
 	return ec._Sector(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalOSegment2ᚖF1TelemetryᚑnewᚑserverᚋgraphᚋmodelᚐSegment(ctx context.Context, sel ast.SelectionSet, v *model.Segment) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return ec._Segment(ctx, sel, v)
 }
 
 func (ec *executionContext) marshalOSession2ᚖF1TelemetryᚑnewᚑserverᚋgraphᚋmodelᚐSession(ctx context.Context, sel ast.SelectionSet, v *model.Session) graphql.Marshaler {

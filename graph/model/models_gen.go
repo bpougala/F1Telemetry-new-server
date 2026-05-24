@@ -103,6 +103,13 @@ type Sector struct {
 	LapNumber       int        `json:"lap_number"`
 }
 
+type Segment struct {
+	RacingNumber  int `json:"racing_number"`
+	SectorNumber  int `json:"sector_number"`
+	SegmentNumber int `json:"segment_number"`
+	Status        int `json:"status"`
+}
+
 type Session struct {
 	SessionKey  int    `json:"session_key"`
 	SessionName string `json:"session_name"`

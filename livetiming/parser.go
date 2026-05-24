@@ -716,6 +716,103 @@ func buildRaceSectors(data []byte) ([]AllSectors, error) {
 	return sectors, nil
 }
 
+func BuildSegments(data []byte) ([]AllSegments, error) {
+	var initialData InitialData
+	if err := json.Unmarshal(data, &initialData); err != nil {
+		return nil, err
+	}
+	if initialData.R.TimingData.Lines == nil {
+		return buildRaceSegments(data)
+	}
+	var allSegments []AllSegments
+	for key, value := range initialData.R.TimingData.Lines {
+		if value.Sectors == nil {
+			continue
+		}
+		var driverSegments AllSegments
+		driverSegments.RacingNumber, _ = strconv.Atoi(key)
+		for sectorIdx, sector := range value.Sectors {
+			for segIdx, seg := range sector.Segments {
+				driverSegments.Segments = append(driverSegments.Segments, SegmentStatus{
+					SectorNumber:  sectorIdx + 1,
+					SegmentNumber: segIdx + 1,
+					Status:        seg.Status,
+				})
+			}
+		}
+		if len(driverSegments.Segments) > 0 {
+			allSegments = append(allSegments, driverSegments)
+		}
+	}
+	if len(allSegments) == 0 {
+		return nil, fmt.Errorf("no segments found")
+	}
+	return allSegments, nil
+}
+
+func buildRaceSegments(data []byte) ([]AllSegments, error) {
+	var updateData UpdateData
+	if err := json.Unmarshal(data, &updateData); err != nil {
+		return nil, err
+	}
+	if updateData.M == nil {
+		return nil, fmt.Errorf("no segments found")
+	}
+	var allSegments []AllSegments
+	for _, message := range updateData.M {
+		elements := message.A
+		if len(elements) != 3 {
+			continue
+		}
+		if elements[0] != "TimingData" {
+			continue
+		}
+		timingDataMap := elements[1].(map[string]interface{})
+		timingDataMapBytes, err := json.Marshal(timingDataMap)
+		if err != nil {
+			continue
+		}
+		var timingData TimingData
+		if err := json.Unmarshal(timingDataMapBytes, &timingData); err != nil {
+			continue
+		}
+		for key, value := range timingData.Lines {
+			var sectorTimes UpdateSector
+			err = mapstructure.Decode(value, &sectorTimes)
+			if err != nil {
+				continue
+			}
+			if sectorTimes.Sectors == nil {
+				continue
+			}
+			var driverSegments AllSegments
+			driverSegments.RacingNumber, _ = strconv.Atoi(key)
+			driverSegments.Utc, _ = time.Parse(time.RFC3339, elements[2].(string))
+			for sectorNumber, sectorEntry := range sectorTimes.Sectors {
+				if sectorEntry.Segments == nil {
+					continue
+				}
+				sectorNum, _ := strconv.Atoi(sectorNumber)
+				for segNumber, segEntry := range sectorEntry.Segments {
+					segNum, _ := strconv.Atoi(segNumber)
+					driverSegments.Segments = append(driverSegments.Segments, SegmentStatus{
+						SectorNumber:  sectorNum,
+						SegmentNumber: segNum,
+						Status:        segEntry.Status,
+					})
+				}
+			}
+			if len(driverSegments.Segments) > 0 {
+				allSegments = append(allSegments, driverSegments)
+			}
+		}
+	}
+	if len(allSegments) == 0 {
+		return nil, fmt.Errorf("no segments found")
+	}
+	return allSegments, nil
+}
+
 // ExtractPositionZCompressed extracts the raw compressed Position.z string without decompressing.
 func ExtractPositionZCompressed(data []byte) (string, error) {
 	var initialData InitialData

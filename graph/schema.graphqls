@@ -24,6 +24,7 @@ type Subscription {
   raceControl: [RaceControl]!
   stints: [Stint]!
   sectors: [Sector]!
+  segments: [Segment]!
   trackStatus: [TrackStatus]!
   weather: Weather!
   driverLocations: DriverLocation!
@@ -152,6 +153,13 @@ type Sector {
   personal_fastest: Boolean!
   utc: Time
   lap_number: Int!
+}
+
+type Segment {
+  racing_number: Int!
+  sector_number: Int!
+  segment_number: Int!
+  status: Int!
 }
 
 type Weather {

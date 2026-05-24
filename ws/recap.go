@@ -30,7 +30,7 @@ func (h *Hub) sendRecap(client *Client, topic string) {
 		payload, err = dataingestor.FetchTrackStatus(h.dbClient, ctx, sessionKey)
 	case "raceControl":
 		payload, err = dataingestor.FetchRaceControl(h.dbClient, ctx, sessionKey)
-	case "carData":
+	case "carData", "segments":
 		return // streaming-only, no historical recap
 	default:
 		return

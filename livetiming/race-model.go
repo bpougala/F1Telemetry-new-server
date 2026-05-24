@@ -467,7 +467,31 @@ type CarPosition struct {
 }
 
 type UpdateSector struct {
-	Sectors map[string]Sector `json:"Sectors"`
+	Sectors map[string]UpdateSectorEntry `json:"Sectors"`
+}
+
+type UpdateSectorEntry struct {
+	Value           string                     `json:"Value"`
+	PersonalFastest bool                       `json:"PersonalFastest"`
+	OverallFastest  bool                       `json:"OverallFastest"`
+	LapNumber       int                        `json:"LapNumber"`
+	Segments        map[string]SegmentRawEntry `json:"Segments"`
+}
+
+type SegmentRawEntry struct {
+	Status int `json:"Status"`
+}
+
+type SegmentStatus struct {
+	SectorNumber  int
+	SegmentNumber int
+	Status        int
+}
+
+type AllSegments struct {
+	RacingNumber int
+	Segments     []SegmentStatus
+	Utc          time.Time
 }
 
 type Sector struct {

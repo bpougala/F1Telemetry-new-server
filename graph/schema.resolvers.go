@@ -155,8 +155,8 @@ func (r *subscriptionResolver) LapTimes(ctx context.Context) (<-chan []*model.La
 	}()
 	r.mu.Lock()
 	r.LapTimeObservers[id] = lapTimes
+	lapTimes <- r.CurrentLapTimes
 	r.mu.Unlock()
-	r.LapTimeObservers[id] <- r.CurrentLapTimes
 	return lapTimes, nil
 }
 
@@ -173,8 +173,8 @@ func (r *subscriptionResolver) Positions(ctx context.Context) (<-chan []*model.P
 	}()
 	r.mu.Lock()
 	r.PositionObservers[id] = positions
+	positions <- r.CurrentPositions
 	r.mu.Unlock()
-	r.PositionObservers[id] <- r.CurrentPositions
 	return positions, nil
 }
 
@@ -191,8 +191,10 @@ func (r *subscriptionResolver) CarData(ctx context.Context) (<-chan *model.CarDa
 	}()
 	r.mu.Lock()
 	r.CarDataObservers[id] = carData
+	if r.CurrentCarData != nil {
+		carData <- r.CurrentCarData
+	}
 	r.mu.Unlock()
-	r.CarDataObservers[id] <- r.CurrentCarData
 	return carData, nil
 }
 
@@ -208,8 +210,8 @@ func (r *subscriptionResolver) RaceControl(ctx context.Context) (<-chan []*model
 	}()
 	r.mu.Lock()
 	r.RaceControlObservers[id] = raceControl
+	raceControl <- r.CurrentRaceControlMessages
 	r.mu.Unlock()
-	r.RaceControlObservers[id] <- r.CurrentRaceControlMessages
 	return raceControl, nil
 }
 
@@ -225,8 +227,8 @@ func (r *subscriptionResolver) Stints(ctx context.Context) (<-chan []*model.Stin
 	}()
 	r.mu.Lock()
 	r.StintObservers[id] = stints
+	stints <- r.CurrentStints
 	r.mu.Unlock()
-	r.StintObservers[id] <- r.CurrentStints
 	return stints, nil
 }
 
@@ -242,8 +244,8 @@ func (r *subscriptionResolver) Sectors(ctx context.Context) (<-chan []*model.Sec
 	}()
 	r.mu.Lock()
 	r.SectorTimeObservers[id] = sectors
+	sectors <- r.CurrentSectorTimes
 	r.mu.Unlock()
-	r.SectorTimeObservers[id] <- r.CurrentSectorTimes
 	return sectors, nil
 }
 
@@ -259,10 +261,10 @@ func (r *subscriptionResolver) Segments(ctx context.Context) (<-chan []*model.Se
 	}()
 	r.mu.Lock()
 	r.SegmentObservers[id] = segments
-	r.mu.Unlock()
 	if r.CurrentSegments != nil {
-		r.SegmentObservers[id] <- r.CurrentSegments
+		segments <- r.CurrentSegments
 	}
+	r.mu.Unlock()
 	return segments, nil
 }
 
@@ -279,8 +281,8 @@ func (r *subscriptionResolver) TrackStatus(ctx context.Context) (<-chan []*model
 	}()
 	r.mu.Lock()
 	r.TrackStatusObservers[id] = trackStatus
+	trackStatus <- r.CurrentTrackStatus
 	r.mu.Unlock()
-	r.TrackStatusObservers[id] <- r.CurrentTrackStatus
 	return trackStatus, nil
 }
 
@@ -297,10 +299,10 @@ func (r *subscriptionResolver) Weather(ctx context.Context) (<-chan *model.Weath
 	}()
 	r.mu.Lock()
 	r.WeatherObservers[id] = weather
-	r.mu.Unlock()
 	if r.CurrentWeather != nil {
-		r.WeatherObservers[id] <- r.CurrentWeather
+		weather <- r.CurrentWeather
 	}
+	r.mu.Unlock()
 	return weather, nil
 }
 
@@ -317,10 +319,10 @@ func (r *subscriptionResolver) DriverLocations(ctx context.Context) (<-chan *mod
 	}()
 	r.mu.Lock()
 	r.DriverLocationObservers[id] = driverLocations
-	r.mu.Unlock()
 	if r.CurrentDriverLocations != nil {
-		r.DriverLocationObservers[id] <- r.CurrentDriverLocations
+		driverLocations <- r.CurrentDriverLocations
 	}
+	r.mu.Unlock()
 	return driverLocations, nil
 }
 

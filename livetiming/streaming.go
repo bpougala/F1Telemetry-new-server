@@ -437,8 +437,12 @@ func processTimingData(timingData []LapTimeMetric, sessionKey int, dbClient *dyn
 		lapTime.NumberOfLaps = timing.NumberOfLaps
 		lapTime.RacingNumber = timing.RacingNumber
 		lapTime.LastLapTime = t
-		lapTime.GapToLeader = &timing.GapToLeader
-		lapTime.IntervalToPositionAhead = &timing.IntervalToPositionAhead
+		if timing.GapToLeader != "" {
+			lapTime.GapToLeader = &timing.GapToLeader
+		}
+		if timing.IntervalToPositionAhead.Value != "" {
+			lapTime.IntervalToPositionAhead = &timing.IntervalToPositionAhead
+		}
 		lapTime.InPit = timing.InPit
 		lapTime.PitOut = timing.PitOut
 		lapTime.Retired = timing.Stopped

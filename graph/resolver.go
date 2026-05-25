@@ -60,7 +60,10 @@ func (r *Resolver) NotifyLapTimeSubscribers(lapTimes []*model.LapTime) {
 	defer r.mu.Unlock()
 	r.CurrentLapTimes = append(r.CurrentLapTimes, lapTimes...)
 	for _, observer := range r.LapTimeObservers {
-		observer <- lapTimes
+		select {
+		case observer <- lapTimes:
+		default:
+		}
 	}
 }
 
@@ -69,7 +72,10 @@ func (r *Resolver) NotifyPositionSubscribers(positions []*model.Position) {
 	defer r.mu.Unlock()
 	r.CurrentPositions = append(r.CurrentPositions, positions...)
 	for _, observer := range r.PositionObservers {
-		observer <- positions
+		select {
+		case observer <- positions:
+		default:
+		}
 	}
 }
 
@@ -78,7 +84,10 @@ func (r *Resolver) NotifyCarDataSubscribers(carData *model.CarData) {
 	defer r.mu.Unlock()
 	r.CurrentCarData = carData
 	for _, observer := range r.CarDataObservers {
-		observer <- carData
+		select {
+		case observer <- carData:
+		default:
+		}
 	}
 }
 
@@ -87,7 +96,10 @@ func (r *Resolver) NotifyRaceControlSubscribers(raceControlMessages []*model.Rac
 	defer r.mu.Unlock()
 	r.CurrentRaceControlMessages = append(r.CurrentRaceControlMessages, raceControlMessages...)
 	for _, observer := range r.RaceControlObservers {
-		observer <- raceControlMessages
+		select {
+		case observer <- raceControlMessages:
+		default:
+		}
 	}
 }
 
@@ -96,7 +108,10 @@ func (r *Resolver) NotifyStintSubscribers(stints []*model.Stint) {
 	defer r.mu.Unlock()
 	r.CurrentStints = append(r.CurrentStints, stints...)
 	for _, observer := range r.StintObservers {
-		observer <- stints
+		select {
+		case observer <- stints:
+		default:
+		}
 	}
 }
 
@@ -105,7 +120,10 @@ func (r *Resolver) NotifySectorTimeSubscribers(sectorTimes []*model.Sector) {
 	defer r.mu.Unlock()
 	r.CurrentSectorTimes = append(r.CurrentSectorTimes, sectorTimes...)
 	for _, observer := range r.SectorTimeObservers {
-		observer <- sectorTimes
+		select {
+		case observer <- sectorTimes:
+		default:
+		}
 	}
 }
 
@@ -114,7 +132,10 @@ func (r *Resolver) NotifySegmentSubscribers(segments []*model.Segment) {
 	defer r.mu.Unlock()
 	r.CurrentSegments = segments
 	for _, observer := range r.SegmentObservers {
-		observer <- segments
+		select {
+		case observer <- segments:
+		default:
+		}
 	}
 }
 
@@ -123,7 +144,10 @@ func (r *Resolver) NotifyTrackStatusSubscribers(trackStatuses []*model.TrackStat
 	defer r.mu.Unlock()
 	r.CurrentTrackStatus = append(r.CurrentTrackStatus, trackStatuses...)
 	for _, observer := range r.TrackStatusObservers {
-		observer <- trackStatuses
+		select {
+		case observer <- trackStatuses:
+		default:
+		}
 	}
 }
 
@@ -132,7 +156,10 @@ func (r *Resolver) NotifyWeatherSubscribers(weather *model.Weather) {
 	defer r.mu.Unlock()
 	r.CurrentWeather = weather
 	for _, observer := range r.WeatherObservers {
-		observer <- weather
+		select {
+		case observer <- weather:
+		default:
+		}
 	}
 }
 
@@ -141,7 +168,10 @@ func (r *Resolver) NotifyDriverLocationSubscribers(location *model.DriverLocatio
 	defer r.mu.Unlock()
 	r.CurrentDriverLocations = location
 	for _, observer := range r.DriverLocationObservers {
-		observer <- location
+		select {
+		case observer <- location:
+		default:
+		}
 	}
 }
 

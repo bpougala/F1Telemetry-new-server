@@ -76,6 +76,9 @@ func main() {
 
 	fmt.Println("connected to websocket")
 
+	fmt.Println("REPLAY_POSITION_Z enabled — replaying archived Position.z data")
+	go livetiming.ReplayPositionZ(resolver)
+
 	go func() {
 		backoff := 2 * time.Second
 		maxBackoff := 60 * time.Second

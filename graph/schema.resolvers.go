@@ -307,9 +307,9 @@ func (r *subscriptionResolver) Weather(ctx context.Context) (<-chan *model.Weath
 }
 
 // DriverLocations is the resolver for the driverLocations subscription field.
-func (r *subscriptionResolver) DriverLocations(ctx context.Context) (<-chan *model.DriverLocation, error) {
+func (r *subscriptionResolver) DriverLocations(ctx context.Context) (<-chan []*model.DriverPosition, error) {
 	id := dataingestor.GenerateRandomString(8)
-	driverLocations := make(chan *model.DriverLocation, 1)
+	driverLocations := make(chan []*model.DriverPosition, 1)
 
 	go func() {
 		<-ctx.Done()

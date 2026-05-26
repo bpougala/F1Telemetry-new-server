@@ -23,8 +23,10 @@ type Driver struct {
 	Abbreviation  *string `json:"abbreviation,omitempty"`
 }
 
-type DriverLocation struct {
-	Compressed string `json:"compressed"`
+type DriverPosition struct {
+	RacingNumber int `json:"racing_number"`
+	X            int `json:"x"`
+	Y            int `json:"y"`
 }
 
 type Lap struct {

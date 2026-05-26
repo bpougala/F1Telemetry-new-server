@@ -254,7 +254,10 @@ func processInitialSnapshot(msg []byte, sessionKey int, dbClient *dynamodb.Clien
 	}
 	positionZCompressed, err := ExtractPositionZCompressed(msg)
 	if err == nil {
-		resolver.NotifyDriverLocationSubscribers(&model.DriverLocation{Compressed: positionZCompressed})
+		posRoot, err := DecompressPositionData(positionZCompressed)
+		if err == nil {
+			resolver.NotifyDriverLocationSubscribers(positionRootToDriverPositions(posRoot))
+		}
 	}
 	raceControlMessages, err := BuildRaceControl(msg)
 	if err == nil {
@@ -373,7 +376,12 @@ func processUpdateMessages(msg []byte, sessionKey int, dbClient *dynamodb.Client
 			if err != nil {
 				fmt.Println("error extracting Position.z:", err)
 			} else {
-				resolver.NotifyDriverLocationSubscribers(&model.DriverLocation{Compressed: positionZCompressed})
+				posRoot, err := DecompressPositionData(positionZCompressed)
+				if err != nil {
+					fmt.Println("error decompressing Position.z:", err)
+				} else {
+					resolver.NotifyDriverLocationSubscribers(positionRootToDriverPositions(posRoot))
+				}
 			}
 		case "TrackStatus":
 			trackStatus, err := BuildTrackStatusUpdate(msg)
@@ -573,6 +581,26 @@ func processWeather(weather *Weather, sessionKey int, dbClient *dynamodb.Client,
 	if err != nil {
 		fmt.Println("error saving weather:", err)
 	}
+}
+
+func positionRootToDriverPositions(posRoot PositionRoot) []*model.DriverPosition {
+	var positions []*model.DriverPosition
+	if len(posRoot.Position) == 0 {
+		return positions
+	}
+	latest := posRoot.Position[len(posRoot.Position)-1]
+	for numStr, car := range latest.Entries {
+		num, err := strconv.Atoi(numStr)
+		if err != nil {
+			continue
+		}
+		positions = append(positions, &model.DriverPosition{
+			RacingNumber: num,
+			X:            car.X,
+			Y:            car.Y,
+		})
+	}
+	return positions
 }
 
 func ConvertMeetingToDB(meeting MeetingData) MeetingDataDB {

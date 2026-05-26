@@ -19,7 +19,7 @@ type Resolver struct {
 	CurrentSegments            []*model.Segment
 	CurrentTrackStatus         []*model.TrackStatus
 	CurrentWeather             *model.Weather
-	CurrentDriverLocations     *model.DriverLocation
+	CurrentDriverLocations     []*model.DriverPosition
 	LapTimeObservers           map[string]chan []*model.LapTime
 	PositionObservers          map[string]chan []*model.Position
 	CarDataObservers           map[string]chan *model.CarData
@@ -29,7 +29,7 @@ type Resolver struct {
 	SegmentObservers           map[string]chan []*model.Segment
 	TrackStatusObservers       map[string]chan []*model.TrackStatus
 	WeatherObservers           map[string]chan *model.Weather
-	DriverLocationObservers    map[string]chan *model.DriverLocation
+	DriverLocationObservers    map[string]chan []*model.DriverPosition
 	mu                         sync.Mutex
 }
 
@@ -51,7 +51,7 @@ func NewResolver() *Resolver {
 		SegmentObservers:           make(map[string]chan []*model.Segment),
 		TrackStatusObservers:       make(map[string]chan []*model.TrackStatus),
 		WeatherObservers:           make(map[string]chan *model.Weather),
-		DriverLocationObservers:    make(map[string]chan *model.DriverLocation),
+		DriverLocationObservers:    make(map[string]chan []*model.DriverPosition),
 	}
 }
 
@@ -163,19 +163,19 @@ func (r *Resolver) NotifyWeatherSubscribers(weather *model.Weather) {
 	}
 }
 
-func (r *Resolver) NotifyDriverLocationSubscribers(location *model.DriverLocation) {
+func (r *Resolver) NotifyDriverLocationSubscribers(positions []*model.DriverPosition) {
 	r.mu.Lock()
 	defer r.mu.Unlock()
-	r.CurrentDriverLocations = location
+	r.CurrentDriverLocations = positions
 	for _, observer := range r.DriverLocationObservers {
 		select {
-		case observer <- location:
+		case observer <- positions:
 		default:
 		}
 	}
 }
 
-func (r *Resolver) RegisterDriverLocationObserver(id string, ch chan *model.DriverLocation) {
+func (r *Resolver) RegisterDriverLocationObserver(id string, ch chan []*model.DriverPosition) {
 	r.mu.Lock()
 	defer r.mu.Unlock()
 	r.DriverLocationObservers[id] = ch

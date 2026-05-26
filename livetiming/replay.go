@@ -2,7 +2,6 @@ package livetiming
 
 import (
 	"F1Telemetry-new-server/graph"
-	"F1Telemetry-new-server/graph/model"
 	"bytes"
 	"fmt"
 	"io"
@@ -33,9 +32,12 @@ func ReplayPositionZ(resolver *graph.Resolver) {
 
 	for {
 		for _, compressed := range lines {
-			resolver.NotifyDriverLocationSubscribers(&model.DriverLocation{
-				Compressed: compressed,
-			})
+			posRoot, err := DecompressPositionData(compressed)
+			if err != nil {
+				fmt.Printf("replay: decompress error: %v\n", err)
+				continue
+			}
+			resolver.NotifyDriverLocationSubscribers(positionRootToDriverPositions(posRoot))
 			time.Sleep(250 * time.Millisecond)
 		}
 		fmt.Println("replay: loop complete, restarting")

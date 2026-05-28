@@ -58,7 +58,9 @@ func main() {
 	}
 
 	server := handler.NewDefaultServer(graph.NewExecutableSchema(graph.Config{Resolvers: resolver}))
-	server.AddTransport(&transport.Websocket{})
+	server.AddTransport(&transport.Websocket{
+		InitFunc: auth.WebsocketInitFunc(valkeyClient),
+	})
 
 	http.Handle("/", playground.Handler("GraphQL playground", "/query"))
 	http.Handle("/query", auth.Middleware(valkeyClient, server))

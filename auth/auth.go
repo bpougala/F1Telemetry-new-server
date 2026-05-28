@@ -8,6 +8,7 @@ import (
 	"os"
 	"strings"
 
+	"github.com/99designs/gqlgen/graphql/handler/transport"
 	"github.com/redis/go-redis/v9"
 )
 
@@ -60,6 +61,29 @@ func Middleware(valkeyClient *redis.Client, next http.Handler) http.Handler {
 
 func isWebSocketUpgrade(r *http.Request) bool {
 	return strings.EqualFold(r.Header.Get("Upgrade"), "websocket")
+}
+
+// WebsocketInitFunc validates the auth token sent in the connection_init payload.
+// iOS URLSessionWebSocketTask cannot set HTTP headers on the handshake, so the
+// client sends {"Authorization": "Bearer <token>"} in the connection_init payload.
+func WebsocketInitFunc(valkeyClient *redis.Client) transport.WebsocketInitFunc {
+	return func(ctx context.Context, initPayload transport.InitPayload) (context.Context, *transport.InitPayload, error) {
+		token := initPayload.Authorization()
+		if token == "" {
+			return ctx, nil, fmt.Errorf("missing or invalid Authorization in connection_init payload")
+		}
+
+		keyId, err := valkeyClient.Get(ctx, "session:"+token).Result()
+		if err == redis.Nil {
+			return ctx, nil, fmt.Errorf("invalid or expired session token")
+		}
+		if err != nil {
+			return ctx, nil, fmt.Errorf("internal server error")
+		}
+
+		ctx = context.WithValue(ctx, KeyIDContextKey, keyId)
+		return ctx, nil, nil
+	}
 }
 
 func ValidateToken(ctx context.Context, valkeyClient *redis.Client, r *http.Request) (string, error) {

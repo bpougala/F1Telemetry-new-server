@@ -181,7 +181,7 @@ func (r *subscriptionResolver) Positions(ctx context.Context) (<-chan []*model.P
 // CarData is the resolver for the carData subscription field.
 func (r *subscriptionResolver) CarData(ctx context.Context) (<-chan *model.CarData, error) {
 	id := dataingestor.GenerateRandomString(8)
-	carData := make(chan *model.CarData, 1)
+	carData := make(chan *model.CarData, 64)
 
 	go func() {
 		<-ctx.Done()
@@ -192,7 +192,10 @@ func (r *subscriptionResolver) CarData(ctx context.Context) (<-chan *model.CarDa
 	r.mu.Lock()
 	r.CarDataObservers[id] = carData
 	if r.CurrentCarData != nil {
-		carData <- r.CurrentCarData
+		select {
+		case carData <- r.CurrentCarData:
+		default:
+		}
 	}
 	r.mu.Unlock()
 	return carData, nil
@@ -309,7 +312,7 @@ func (r *subscriptionResolver) Weather(ctx context.Context) (<-chan *model.Weath
 // DriverLocations is the resolver for the driverLocations subscription field.
 func (r *subscriptionResolver) DriverLocations(ctx context.Context) (<-chan []*model.DriverPosition, error) {
 	id := dataingestor.GenerateRandomString(8)
-	driverLocations := make(chan []*model.DriverPosition, 1)
+	driverLocations := make(chan []*model.DriverPosition, 64)
 
 	go func() {
 		<-ctx.Done()
@@ -320,7 +323,10 @@ func (r *subscriptionResolver) DriverLocations(ctx context.Context) (<-chan []*m
 	r.mu.Lock()
 	r.DriverLocationObservers[id] = driverLocations
 	if r.CurrentDriverLocations != nil {
-		driverLocations <- r.CurrentDriverLocations
+		select {
+		case driverLocations <- r.CurrentDriverLocations:
+		default:
+		}
 	}
 	r.mu.Unlock()
 	return driverLocations, nil

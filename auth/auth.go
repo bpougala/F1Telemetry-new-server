@@ -29,6 +29,13 @@ func NewValkeyClient() *redis.Client {
 
 func Middleware(valkeyClient *redis.Client, next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		// Skip auth for WebSocket upgrade requests (iOS URLSessionWebSocketTask
+		// cannot set custom headers on the handshake request)
+		if isWebSocketUpgrade(r) {
+			next.ServeHTTP(w, r)
+			return
+		}
+
 		authHeader := r.Header.Get("Authorization")
 		if !strings.HasPrefix(authHeader, "Bearer ") {
 			http.Error(w, `{"error":"missing or invalid Authorization header"}`, http.StatusUnauthorized)
@@ -49,6 +56,10 @@ func Middleware(valkeyClient *redis.Client, next http.Handler) http.Handler {
 		ctx := context.WithValue(r.Context(), KeyIDContextKey, keyId)
 		next.ServeHTTP(w, r.WithContext(ctx))
 	})
+}
+
+func isWebSocketUpgrade(r *http.Request) bool {
+	return strings.EqualFold(r.Header.Get("Upgrade"), "websocket")
 }
 
 func ValidateToken(ctx context.Context, valkeyClient *redis.Client, r *http.Request) (string, error) {

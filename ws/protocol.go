@@ -2,14 +2,15 @@ package ws
 
 // ValidTopics defines the set of topics clients can subscribe to.
 var ValidTopics = map[string]bool{
-	"lapTimes":    true,
-	"positions":   true,
-	"carData":     true,
-	"raceControl": true,
-	"stints":      true,
-	"sectors":     true,
-	"segments":    true,
-	"trackStatus": true,
+	"lapTimes":       true,
+	"positions":      true,
+	"carData":        true,
+	"raceControl":    true,
+	"stints":         true,
+	"sectors":        true,
+	"segments":       true,
+	"trackStatus":    true,
+	"qualifyingData": true,
 }
 
 // InboundMessage represents a message from the client.

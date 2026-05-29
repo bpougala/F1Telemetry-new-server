@@ -28,6 +28,7 @@ type Subscription {
   trackStatus: [TrackStatus]!
   weather: Weather!
   driverLocations: [DriverPosition!]!
+  qualifyingData: QualifyingData!
 }
 
 type Session {
@@ -121,6 +122,10 @@ type LapTime {
   retired: Boolean!
   in_pit: Boolean!
   pit_out: Boolean!
+  knocked_out: Boolean
+  cutoff: Boolean
+  best_lap_times: [QualifyingLapTime!]
+  qualifying_stats: [QualifyingStats!]
 }
 
 type TimeRef {
@@ -194,4 +199,27 @@ type Timing {
   in_pit: Boolean!
   gap_to_leader: String!
   best_lap_time: Any
+}
+
+type QualifyingLapTime {
+  value: String!
+  lap: Int!
+}
+
+type QualifyingStats {
+  time_diff_to_fastest: String!
+  time_diff_to_position_ahead: String!
+}
+
+type QualifyingPart {
+  part: Int!
+  utc: String!
+}
+
+type QualifyingData {
+  session_part: Int!
+  no_entries: [Int!]!
+  cut_off_time: String!
+  cut_off_percentage: String!
+  parts: [QualifyingPart!]
 }

@@ -332,6 +332,29 @@ func (r *subscriptionResolver) DriverLocations(ctx context.Context) (<-chan []*m
 	return driverLocations, nil
 }
 
+// QualifyingData is the resolver for the qualifyingData field.
+func (r *subscriptionResolver) QualifyingData(ctx context.Context) (<-chan *model.QualifyingData, error) {
+	id := dataingestor.GenerateRandomString(8)
+	qualifyingData := make(chan *model.QualifyingData, 1)
+
+	go func() {
+		<-ctx.Done()
+		r.mu.Lock()
+		delete(r.QualifyingDataObservers, id)
+		r.mu.Unlock()
+	}()
+	r.mu.Lock()
+	r.QualifyingDataObservers[id] = qualifyingData
+	if r.CurrentQualifyingData != nil {
+		select {
+		case qualifyingData <- r.CurrentQualifyingData:
+		default:
+		}
+	}
+	r.mu.Unlock()
+	return qualifyingData, nil
+}
+
 // Query returns QueryResolver implementation.
 func (r *Resolver) Query() QueryResolver { return &queryResolver{r} }
 

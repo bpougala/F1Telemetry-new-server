@@ -146,7 +146,11 @@ type Message struct {
 }
 
 type TimingData struct {
-	Lines map[string]interface{} `json:"Lines"`
+	Lines            map[string]interface{} `json:"Lines"`
+	SessionPart      int                    `json:"SessionPart"`
+	NoEntries        []int                  `json:"NoEntries"`
+	CutOffTime       string                 `json:"CutOffTime"`
+	CutOffPercentage string                 `json:"CutOffPercentage"`
 }
 
 type StatusSeries struct {
@@ -370,6 +374,28 @@ type DriverDocument struct {
 	Driver `bson:",inline"`
 }
 
+type QualifyingState struct {
+	SessionPart      int    `json:"SessionPart"`
+	NoEntries        []int  `json:"NoEntries"`
+	CutOffTime       string `json:"CutOffTime"`
+	CutOffPercentage string `json:"CutOffPercentage"`
+}
+
+type QualifyingLapTime struct {
+	Value string `json:"Value"`
+	Lap   int    `json:"Lap"`
+}
+
+type QualifyingStats struct {
+	TimeDiffToFastest       string `json:"TimeDiffToFastest"`
+	TimeDifftoPositionAhead string `json:"TimeDifftoPositionAhead"`
+}
+
+type QualifyingPart struct {
+	Utc            string `json:"Utc"`
+	QualifyingPart int    `json:"QualifyingPart"`
+}
+
 type LapTimeMetric struct {
 	SessionKey              int    `json:"SessionKey"`
 	RacingNumber            string `json:"RacingNumber"`
@@ -391,6 +417,10 @@ type LapTimeMetric struct {
 		OverallFastest  bool   `json:"OverallFastest"`
 		PersonalFastest bool   `json:"PersonalFastest"`
 	} `json:"LastLapTime"`
+	KnockedOut         bool                `json:"KnockedOut"`
+	Cutoff             bool                `json:"Cutoff"`
+	QualifyingBestLaps []QualifyingLapTime `json:"-" mapstructure:"-"`
+	QualifyingStats    []QualifyingStats   `json:"-" mapstructure:"-"`
 }
 
 type SectorTime struct {

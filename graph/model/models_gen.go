@@ -49,16 +49,20 @@ type Lap struct {
 }
 
 type LapTime struct {
-	SessionKey              int      `json:"session_key"`
-	RacingNumber            string   `json:"racing_number"`
-	NumberOfLaps            int      `json:"number_of_laps"`
-	BestLapTime             any      `json:"best_lap_time,omitempty"`
-	LastLapTime             *TimeRef `json:"last_lap_time"`
-	GapToLeader             *string  `json:"gap_to_leader,omitempty"`
-	IntervalToPositionAhead any      `json:"interval_to_position_ahead,omitempty"`
-	Retired                 bool     `json:"retired"`
-	InPit                   bool     `json:"in_pit"`
-	PitOut                  bool     `json:"pit_out"`
+	SessionKey              int                  `json:"session_key"`
+	RacingNumber            string               `json:"racing_number"`
+	NumberOfLaps            int                  `json:"number_of_laps"`
+	BestLapTime             any                  `json:"best_lap_time,omitempty"`
+	LastLapTime             *TimeRef             `json:"last_lap_time"`
+	GapToLeader             *string              `json:"gap_to_leader,omitempty"`
+	IntervalToPositionAhead any                  `json:"interval_to_position_ahead,omitempty"`
+	Retired                 bool                 `json:"retired"`
+	InPit                   bool                 `json:"in_pit"`
+	PitOut                  bool                 `json:"pit_out"`
+	KnockedOut              *bool                `json:"knocked_out,omitempty"`
+	Cutoff                  *bool                `json:"cutoff,omitempty"`
+	BestLapTimes            []*QualifyingLapTime `json:"best_lap_times,omitempty"`
+	QualifyingStats         []*QualifyingStats   `json:"qualifying_stats,omitempty"`
 }
 
 type Meeting struct {
@@ -81,6 +85,29 @@ type Position struct {
 	PitOut       bool `json:"pit_out"`
 	Stopped      bool `json:"stopped"`
 	Status       int  `json:"status"`
+}
+
+type QualifyingData struct {
+	SessionPart      int               `json:"session_part"`
+	NoEntries        []int             `json:"no_entries"`
+	CutOffTime       string            `json:"cut_off_time"`
+	CutOffPercentage string            `json:"cut_off_percentage"`
+	Parts            []*QualifyingPart `json:"parts,omitempty"`
+}
+
+type QualifyingLapTime struct {
+	Value string `json:"value"`
+	Lap   int    `json:"lap"`
+}
+
+type QualifyingPart struct {
+	Part int    `json:"part"`
+	Utc  string `json:"utc"`
+}
+
+type QualifyingStats struct {
+	TimeDiffToFastest       string `json:"time_diff_to_fastest"`
+	TimeDiffToPositionAhead string `json:"time_diff_to_position_ahead"`
 }
 
 type Query struct {

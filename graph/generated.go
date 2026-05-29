@@ -93,12 +93,16 @@ type ComplexityRoot struct {
 
 	LapTime struct {
 		BestLapTime             func(childComplexity int) int
+		BestLapTimes            func(childComplexity int) int
+		Cutoff                  func(childComplexity int) int
 		GapToLeader             func(childComplexity int) int
 		InPit                   func(childComplexity int) int
 		IntervalToPositionAhead func(childComplexity int) int
+		KnockedOut              func(childComplexity int) int
 		LastLapTime             func(childComplexity int) int
 		NumberOfLaps            func(childComplexity int) int
 		PitOut                  func(childComplexity int) int
+		QualifyingStats         func(childComplexity int) int
 		RacingNumber            func(childComplexity int) int
 		Retired                 func(childComplexity int) int
 		SessionKey              func(childComplexity int) int
@@ -124,6 +128,29 @@ type ComplexityRoot struct {
 		SessionKey   func(childComplexity int) int
 		Status       func(childComplexity int) int
 		Stopped      func(childComplexity int) int
+	}
+
+	QualifyingData struct {
+		CutOffPercentage func(childComplexity int) int
+		CutOffTime       func(childComplexity int) int
+		NoEntries        func(childComplexity int) int
+		Parts            func(childComplexity int) int
+		SessionPart      func(childComplexity int) int
+	}
+
+	QualifyingLapTime struct {
+		Lap   func(childComplexity int) int
+		Value func(childComplexity int) int
+	}
+
+	QualifyingPart struct {
+		Part func(childComplexity int) int
+		Utc  func(childComplexity int) int
+	}
+
+	QualifyingStats struct {
+		TimeDiffToFastest       func(childComplexity int) int
+		TimeDiffToPositionAhead func(childComplexity int) int
 	}
 
 	Query struct {
@@ -193,6 +220,7 @@ type ComplexityRoot struct {
 		DriverLocations func(childComplexity int) int
 		LapTimes        func(childComplexity int) int
 		Positions       func(childComplexity int) int
+		QualifyingData  func(childComplexity int) int
 		RaceControl     func(childComplexity int) int
 		Sectors         func(childComplexity int) int
 		Segments        func(childComplexity int) int
@@ -265,6 +293,7 @@ type SubscriptionResolver interface {
 	TrackStatus(ctx context.Context) (<-chan []*model.TrackStatus, error)
 	Weather(ctx context.Context) (<-chan *model.Weather, error)
 	DriverLocations(ctx context.Context) (<-chan []*model.DriverPosition, error)
+	QualifyingData(ctx context.Context) (<-chan *model.QualifyingData, error)
 }
 
 type executableSchema struct {
@@ -503,6 +532,20 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.LapTime.BestLapTime(childComplexity), true
 
+	case "LapTime.best_lap_times":
+		if e.complexity.LapTime.BestLapTimes == nil {
+			break
+		}
+
+		return e.complexity.LapTime.BestLapTimes(childComplexity), true
+
+	case "LapTime.cutoff":
+		if e.complexity.LapTime.Cutoff == nil {
+			break
+		}
+
+		return e.complexity.LapTime.Cutoff(childComplexity), true
+
 	case "LapTime.gap_to_leader":
 		if e.complexity.LapTime.GapToLeader == nil {
 			break
@@ -524,6 +567,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.LapTime.IntervalToPositionAhead(childComplexity), true
 
+	case "LapTime.knocked_out":
+		if e.complexity.LapTime.KnockedOut == nil {
+			break
+		}
+
+		return e.complexity.LapTime.KnockedOut(childComplexity), true
+
 	case "LapTime.last_lap_time":
 		if e.complexity.LapTime.LastLapTime == nil {
 			break
@@ -544,6 +594,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.LapTime.PitOut(childComplexity), true
+
+	case "LapTime.qualifying_stats":
+		if e.complexity.LapTime.QualifyingStats == nil {
+			break
+		}
+
+		return e.complexity.LapTime.QualifyingStats(childComplexity), true
 
 	case "LapTime.racing_number":
 		if e.complexity.LapTime.RacingNumber == nil {
@@ -677,6 +734,83 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Position.Stopped(childComplexity), true
+
+	case "QualifyingData.cut_off_percentage":
+		if e.complexity.QualifyingData.CutOffPercentage == nil {
+			break
+		}
+
+		return e.complexity.QualifyingData.CutOffPercentage(childComplexity), true
+
+	case "QualifyingData.cut_off_time":
+		if e.complexity.QualifyingData.CutOffTime == nil {
+			break
+		}
+
+		return e.complexity.QualifyingData.CutOffTime(childComplexity), true
+
+	case "QualifyingData.no_entries":
+		if e.complexity.QualifyingData.NoEntries == nil {
+			break
+		}
+
+		return e.complexity.QualifyingData.NoEntries(childComplexity), true
+
+	case "QualifyingData.parts":
+		if e.complexity.QualifyingData.Parts == nil {
+			break
+		}
+
+		return e.complexity.QualifyingData.Parts(childComplexity), true
+
+	case "QualifyingData.session_part":
+		if e.complexity.QualifyingData.SessionPart == nil {
+			break
+		}
+
+		return e.complexity.QualifyingData.SessionPart(childComplexity), true
+
+	case "QualifyingLapTime.lap":
+		if e.complexity.QualifyingLapTime.Lap == nil {
+			break
+		}
+
+		return e.complexity.QualifyingLapTime.Lap(childComplexity), true
+
+	case "QualifyingLapTime.value":
+		if e.complexity.QualifyingLapTime.Value == nil {
+			break
+		}
+
+		return e.complexity.QualifyingLapTime.Value(childComplexity), true
+
+	case "QualifyingPart.part":
+		if e.complexity.QualifyingPart.Part == nil {
+			break
+		}
+
+		return e.complexity.QualifyingPart.Part(childComplexity), true
+
+	case "QualifyingPart.utc":
+		if e.complexity.QualifyingPart.Utc == nil {
+			break
+		}
+
+		return e.complexity.QualifyingPart.Utc(childComplexity), true
+
+	case "QualifyingStats.time_diff_to_fastest":
+		if e.complexity.QualifyingStats.TimeDiffToFastest == nil {
+			break
+		}
+
+		return e.complexity.QualifyingStats.TimeDiffToFastest(childComplexity), true
+
+	case "QualifyingStats.time_diff_to_position_ahead":
+		if e.complexity.QualifyingStats.TimeDiffToPositionAhead == nil {
+			break
+		}
+
+		return e.complexity.QualifyingStats.TimeDiffToPositionAhead(childComplexity), true
 
 	case "Query.drivers":
 		if e.complexity.Query.Drivers == nil {
@@ -1058,6 +1192,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Subscription.Positions(childComplexity), true
+
+	case "Subscription.qualifyingData":
+		if e.complexity.Subscription.QualifyingData == nil {
+			break
+		}
+
+		return e.complexity.Subscription.QualifyingData(childComplexity), true
 
 	case "Subscription.raceControl":
 		if e.complexity.Subscription.RaceControl == nil {
@@ -3426,6 +3567,182 @@ func (ec *executionContext) fieldContext_LapTime_pit_out(_ context.Context, fiel
 	return fc, nil
 }
 
+func (ec *executionContext) _LapTime_knocked_out(ctx context.Context, field graphql.CollectedField, obj *model.LapTime) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_LapTime_knocked_out(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.KnockedOut, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*bool)
+	fc.Result = res
+	return ec.marshalOBoolean2ᚖbool(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_LapTime_knocked_out(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "LapTime",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _LapTime_cutoff(ctx context.Context, field graphql.CollectedField, obj *model.LapTime) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_LapTime_cutoff(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Cutoff, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*bool)
+	fc.Result = res
+	return ec.marshalOBoolean2ᚖbool(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_LapTime_cutoff(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "LapTime",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _LapTime_best_lap_times(ctx context.Context, field graphql.CollectedField, obj *model.LapTime) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_LapTime_best_lap_times(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.BestLapTimes, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.([]*model.QualifyingLapTime)
+	fc.Result = res
+	return ec.marshalOQualifyingLapTime2ᚕᚖF1TelemetryᚑnewᚑserverᚋgraphᚋmodelᚐQualifyingLapTimeᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_LapTime_best_lap_times(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "LapTime",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "value":
+				return ec.fieldContext_QualifyingLapTime_value(ctx, field)
+			case "lap":
+				return ec.fieldContext_QualifyingLapTime_lap(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type QualifyingLapTime", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _LapTime_qualifying_stats(ctx context.Context, field graphql.CollectedField, obj *model.LapTime) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_LapTime_qualifying_stats(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.QualifyingStats, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.([]*model.QualifyingStats)
+	fc.Result = res
+	return ec.marshalOQualifyingStats2ᚕᚖF1TelemetryᚑnewᚑserverᚋgraphᚋmodelᚐQualifyingStatsᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_LapTime_qualifying_stats(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "LapTime",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "time_diff_to_fastest":
+				return ec.fieldContext_QualifyingStats_time_diff_to_fastest(ctx, field)
+			case "time_diff_to_position_ahead":
+				return ec.fieldContext_QualifyingStats_time_diff_to_position_ahead(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type QualifyingStats", field.Name)
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Meeting_meeting_name(ctx context.Context, field graphql.CollectedField, obj *model.Meeting) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Meeting_meeting_name(ctx, field)
 	if err != nil {
@@ -4122,6 +4439,493 @@ func (ec *executionContext) fieldContext_Position_status(_ context.Context, fiel
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			return nil, errors.New("field of type Int does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _QualifyingData_session_part(ctx context.Context, field graphql.CollectedField, obj *model.QualifyingData) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_QualifyingData_session_part(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.SessionPart, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(int)
+	fc.Result = res
+	return ec.marshalNInt2int(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_QualifyingData_session_part(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "QualifyingData",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _QualifyingData_no_entries(ctx context.Context, field graphql.CollectedField, obj *model.QualifyingData) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_QualifyingData_no_entries(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.NoEntries, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]int)
+	fc.Result = res
+	return ec.marshalNInt2ᚕintᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_QualifyingData_no_entries(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "QualifyingData",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _QualifyingData_cut_off_time(ctx context.Context, field graphql.CollectedField, obj *model.QualifyingData) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_QualifyingData_cut_off_time(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.CutOffTime, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_QualifyingData_cut_off_time(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "QualifyingData",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _QualifyingData_cut_off_percentage(ctx context.Context, field graphql.CollectedField, obj *model.QualifyingData) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_QualifyingData_cut_off_percentage(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.CutOffPercentage, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_QualifyingData_cut_off_percentage(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "QualifyingData",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _QualifyingData_parts(ctx context.Context, field graphql.CollectedField, obj *model.QualifyingData) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_QualifyingData_parts(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Parts, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.([]*model.QualifyingPart)
+	fc.Result = res
+	return ec.marshalOQualifyingPart2ᚕᚖF1TelemetryᚑnewᚑserverᚋgraphᚋmodelᚐQualifyingPartᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_QualifyingData_parts(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "QualifyingData",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "part":
+				return ec.fieldContext_QualifyingPart_part(ctx, field)
+			case "utc":
+				return ec.fieldContext_QualifyingPart_utc(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type QualifyingPart", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _QualifyingLapTime_value(ctx context.Context, field graphql.CollectedField, obj *model.QualifyingLapTime) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_QualifyingLapTime_value(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Value, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_QualifyingLapTime_value(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "QualifyingLapTime",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _QualifyingLapTime_lap(ctx context.Context, field graphql.CollectedField, obj *model.QualifyingLapTime) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_QualifyingLapTime_lap(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Lap, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(int)
+	fc.Result = res
+	return ec.marshalNInt2int(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_QualifyingLapTime_lap(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "QualifyingLapTime",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _QualifyingPart_part(ctx context.Context, field graphql.CollectedField, obj *model.QualifyingPart) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_QualifyingPart_part(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Part, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(int)
+	fc.Result = res
+	return ec.marshalNInt2int(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_QualifyingPart_part(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "QualifyingPart",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _QualifyingPart_utc(ctx context.Context, field graphql.CollectedField, obj *model.QualifyingPart) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_QualifyingPart_utc(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Utc, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_QualifyingPart_utc(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "QualifyingPart",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _QualifyingStats_time_diff_to_fastest(ctx context.Context, field graphql.CollectedField, obj *model.QualifyingStats) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_QualifyingStats_time_diff_to_fastest(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.TimeDiffToFastest, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_QualifyingStats_time_diff_to_fastest(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "QualifyingStats",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _QualifyingStats_time_diff_to_position_ahead(ctx context.Context, field graphql.CollectedField, obj *model.QualifyingStats) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_QualifyingStats_time_diff_to_position_ahead(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.TimeDiffToPositionAhead, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_QualifyingStats_time_diff_to_position_ahead(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "QualifyingStats",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
 		},
 	}
 	return fc, nil
@@ -6531,6 +7335,14 @@ func (ec *executionContext) fieldContext_Subscription_lapTimes(_ context.Context
 				return ec.fieldContext_LapTime_in_pit(ctx, field)
 			case "pit_out":
 				return ec.fieldContext_LapTime_pit_out(ctx, field)
+			case "knocked_out":
+				return ec.fieldContext_LapTime_knocked_out(ctx, field)
+			case "cutoff":
+				return ec.fieldContext_LapTime_cutoff(ctx, field)
+			case "best_lap_times":
+				return ec.fieldContext_LapTime_best_lap_times(ctx, field)
+			case "qualifying_stats":
+				return ec.fieldContext_LapTime_qualifying_stats(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type LapTime", field.Name)
 		},
@@ -7173,6 +7985,76 @@ func (ec *executionContext) fieldContext_Subscription_driverLocations(_ context.
 				return ec.fieldContext_DriverPosition_y(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type DriverPosition", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Subscription_qualifyingData(ctx context.Context, field graphql.CollectedField) (ret func(ctx context.Context) graphql.Marshaler) {
+	fc, err := ec.fieldContext_Subscription_qualifyingData(ctx, field)
+	if err != nil {
+		return nil
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = nil
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Subscription().QualifyingData(rctx)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return nil
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return nil
+	}
+	return func(ctx context.Context) graphql.Marshaler {
+		select {
+		case res, ok := <-resTmp.(<-chan *model.QualifyingData):
+			if !ok {
+				return nil
+			}
+			return graphql.WriterFunc(func(w io.Writer) {
+				w.Write([]byte{'{'})
+				graphql.MarshalString(field.Alias).MarshalGQL(w)
+				w.Write([]byte{':'})
+				ec.marshalNQualifyingData2ᚖF1TelemetryᚑnewᚑserverᚋgraphᚋmodelᚐQualifyingData(ctx, field.Selections, res).MarshalGQL(w)
+				w.Write([]byte{'}'})
+			})
+		case <-ctx.Done():
+			return nil
+		}
+	}
+}
+
+func (ec *executionContext) fieldContext_Subscription_qualifyingData(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Subscription",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "session_part":
+				return ec.fieldContext_QualifyingData_session_part(ctx, field)
+			case "no_entries":
+				return ec.fieldContext_QualifyingData_no_entries(ctx, field)
+			case "cut_off_time":
+				return ec.fieldContext_QualifyingData_cut_off_time(ctx, field)
+			case "cut_off_percentage":
+				return ec.fieldContext_QualifyingData_cut_off_percentage(ctx, field)
+			case "parts":
+				return ec.fieldContext_QualifyingData_parts(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type QualifyingData", field.Name)
 		},
 	}
 	return fc, nil
@@ -10481,6 +11363,14 @@ func (ec *executionContext) _LapTime(ctx context.Context, sel ast.SelectionSet, 
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
+		case "knocked_out":
+			out.Values[i] = ec._LapTime_knocked_out(ctx, field, obj)
+		case "cutoff":
+			out.Values[i] = ec._LapTime_cutoff(ctx, field, obj)
+		case "best_lap_times":
+			out.Values[i] = ec._LapTime_best_lap_times(ctx, field, obj)
+		case "qualifying_stats":
+			out.Values[i] = ec._LapTime_qualifying_stats(ctx, field, obj)
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -10623,6 +11513,194 @@ func (ec *executionContext) _Position(ctx context.Context, sel ast.SelectionSet,
 			}
 		case "status":
 			out.Values[i] = ec._Position_status(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.processDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
+var qualifyingDataImplementors = []string{"QualifyingData"}
+
+func (ec *executionContext) _QualifyingData(ctx context.Context, sel ast.SelectionSet, obj *model.QualifyingData) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, qualifyingDataImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("QualifyingData")
+		case "session_part":
+			out.Values[i] = ec._QualifyingData_session_part(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "no_entries":
+			out.Values[i] = ec._QualifyingData_no_entries(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "cut_off_time":
+			out.Values[i] = ec._QualifyingData_cut_off_time(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "cut_off_percentage":
+			out.Values[i] = ec._QualifyingData_cut_off_percentage(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "parts":
+			out.Values[i] = ec._QualifyingData_parts(ctx, field, obj)
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.processDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
+var qualifyingLapTimeImplementors = []string{"QualifyingLapTime"}
+
+func (ec *executionContext) _QualifyingLapTime(ctx context.Context, sel ast.SelectionSet, obj *model.QualifyingLapTime) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, qualifyingLapTimeImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("QualifyingLapTime")
+		case "value":
+			out.Values[i] = ec._QualifyingLapTime_value(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "lap":
+			out.Values[i] = ec._QualifyingLapTime_lap(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.processDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
+var qualifyingPartImplementors = []string{"QualifyingPart"}
+
+func (ec *executionContext) _QualifyingPart(ctx context.Context, sel ast.SelectionSet, obj *model.QualifyingPart) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, qualifyingPartImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("QualifyingPart")
+		case "part":
+			out.Values[i] = ec._QualifyingPart_part(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "utc":
+			out.Values[i] = ec._QualifyingPart_utc(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.processDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
+var qualifyingStatsImplementors = []string{"QualifyingStats"}
+
+func (ec *executionContext) _QualifyingStats(ctx context.Context, sel ast.SelectionSet, obj *model.QualifyingStats) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, qualifyingStatsImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("QualifyingStats")
+		case "time_diff_to_fastest":
+			out.Values[i] = ec._QualifyingStats_time_diff_to_fastest(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "time_diff_to_position_ahead":
+			out.Values[i] = ec._QualifyingStats_time_diff_to_position_ahead(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
@@ -11277,6 +12355,8 @@ func (ec *executionContext) _Subscription(ctx context.Context, sel ast.Selection
 		return ec._Subscription_weather(ctx, fields[0])
 	case "driverLocations":
 		return ec._Subscription_driverLocations(ctx, fields[0])
+	case "qualifyingData":
+		return ec._Subscription_qualifyingData(ctx, fields[0])
 	default:
 		panic("unknown field " + strconv.Quote(fields[0].Name))
 	}
@@ -12026,6 +13106,38 @@ func (ec *executionContext) marshalNInt2int(ctx context.Context, sel ast.Selecti
 	return res
 }
 
+func (ec *executionContext) unmarshalNInt2ᚕintᚄ(ctx context.Context, v interface{}) ([]int, error) {
+	var vSlice []interface{}
+	if v != nil {
+		vSlice = graphql.CoerceList(v)
+	}
+	var err error
+	res := make([]int, len(vSlice))
+	for i := range vSlice {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithIndex(i))
+		res[i], err = ec.unmarshalNInt2int(ctx, vSlice[i])
+		if err != nil {
+			return nil, err
+		}
+	}
+	return res, nil
+}
+
+func (ec *executionContext) marshalNInt2ᚕintᚄ(ctx context.Context, sel ast.SelectionSet, v []int) graphql.Marshaler {
+	ret := make(graphql.Array, len(v))
+	for i := range v {
+		ret[i] = ec.marshalNInt2int(ctx, sel, v[i])
+	}
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
+	return ret
+}
+
 func (ec *executionContext) unmarshalNInt2ᚕᚖint(ctx context.Context, v interface{}) ([]*int, error) {
 	var vSlice []interface{}
 	if v != nil {
@@ -12164,6 +13276,50 @@ func (ec *executionContext) marshalNPosition2ᚕᚖF1Telemetryᚑnewᚑserverᚋ
 	wg.Wait()
 
 	return ret
+}
+
+func (ec *executionContext) marshalNQualifyingData2F1TelemetryᚑnewᚑserverᚋgraphᚋmodelᚐQualifyingData(ctx context.Context, sel ast.SelectionSet, v model.QualifyingData) graphql.Marshaler {
+	return ec._QualifyingData(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNQualifyingData2ᚖF1TelemetryᚑnewᚑserverᚋgraphᚋmodelᚐQualifyingData(ctx context.Context, sel ast.SelectionSet, v *model.QualifyingData) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._QualifyingData(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalNQualifyingLapTime2ᚖF1TelemetryᚑnewᚑserverᚋgraphᚋmodelᚐQualifyingLapTime(ctx context.Context, sel ast.SelectionSet, v *model.QualifyingLapTime) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._QualifyingLapTime(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalNQualifyingPart2ᚖF1TelemetryᚑnewᚑserverᚋgraphᚋmodelᚐQualifyingPart(ctx context.Context, sel ast.SelectionSet, v *model.QualifyingPart) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._QualifyingPart(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalNQualifyingStats2ᚖF1TelemetryᚑnewᚑserverᚋgraphᚋmodelᚐQualifyingStats(ctx context.Context, sel ast.SelectionSet, v *model.QualifyingStats) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._QualifyingStats(ctx, sel, v)
 }
 
 func (ec *executionContext) marshalNRaceControl2ᚕᚖF1TelemetryᚑnewᚑserverᚋgraphᚋmodelᚐRaceControl(ctx context.Context, sel ast.SelectionSet, v []*model.RaceControl) graphql.Marshaler {
@@ -12894,6 +14050,147 @@ func (ec *executionContext) marshalOPosition2ᚖF1Telemetryᚑnewᚑserverᚋgra
 		return graphql.Null
 	}
 	return ec._Position(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalOQualifyingLapTime2ᚕᚖF1TelemetryᚑnewᚑserverᚋgraphᚋmodelᚐQualifyingLapTimeᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.QualifyingLapTime) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalNQualifyingLapTime2ᚖF1TelemetryᚑnewᚑserverᚋgraphᚋmodelᚐQualifyingLapTime(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
+	return ret
+}
+
+func (ec *executionContext) marshalOQualifyingPart2ᚕᚖF1TelemetryᚑnewᚑserverᚋgraphᚋmodelᚐQualifyingPartᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.QualifyingPart) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalNQualifyingPart2ᚖF1TelemetryᚑnewᚑserverᚋgraphᚋmodelᚐQualifyingPart(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
+	return ret
+}
+
+func (ec *executionContext) marshalOQualifyingStats2ᚕᚖF1TelemetryᚑnewᚑserverᚋgraphᚋmodelᚐQualifyingStatsᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.QualifyingStats) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalNQualifyingStats2ᚖF1TelemetryᚑnewᚑserverᚋgraphᚋmodelᚐQualifyingStats(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
+	return ret
 }
 
 func (ec *executionContext) marshalORaceControl2ᚖF1TelemetryᚑnewᚑserverᚋgraphᚋmodelᚐRaceControl(ctx context.Context, sel ast.SelectionSet, v *model.RaceControl) graphql.Marshaler {

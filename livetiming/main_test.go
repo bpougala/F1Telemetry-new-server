@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"os"
+	"reflect"
 	"slices"
 	"sort"
 	"strconv"
@@ -811,7 +812,7 @@ func TestShouldCreateLapTimeWhenFirstSubscribing(t *testing.T) {
 		racingNumberJ, _ := strconv.Atoi(timingData[j].RacingNumber)
 		return racingNumberI < racingNumberJ
 	})
-	if timingData[0] != expectedTimingData {
+	if !reflect.DeepEqual(timingData[0], expectedTimingData) {
 		t.Fatalf("Expected timing data: %v, got: %v", expectedTimingData, timingData[0])
 	}
 }
@@ -837,6 +838,14 @@ func TestShouldCreateLapTimeWhenReceivingUpdate(t *testing.T) {
 			OverallFastest:  false,
 			PersonalFastest: true,
 		},
+		QualifyingBestLaps: []QualifyingLapTime{
+			{Value: "", Lap: 0},
+			{Value: "1:23.805", Lap: 6},
+		},
+		QualifyingStats: []QualifyingStats{
+			{TimeDiffToFastest: "", TimeDifftoPositionAhead: ""},
+			{TimeDiffToFastest: "+0.807", TimeDifftoPositionAhead: "+0.807"},
+		},
 	}
 	server := httptest.NewServer(http.HandlerFunc(serverSendingTimingDataUpdate))
 	url := "ws" + strings.TrimPrefix(server.URL, "http")
@@ -860,7 +869,7 @@ func TestShouldCreateLapTimeWhenReceivingUpdate(t *testing.T) {
 	if len(timingData) != 1 {
 		t.Fatalf("Expected 1 timing data, got: %d", len(timingData))
 	}
-	if timingData[0] != expectedTimingData {
+	if !reflect.DeepEqual(timingData[0], expectedTimingData) {
 		t.Fatalf("Expected timing data: %v, got: %v", expectedTimingData, timingData)
 	}
 }
@@ -1403,5 +1412,86 @@ func TestTimingDataShouldIncludePartialBestLapTime(t *testing.T) {
 	}
 	if timingData[0].BestLapTime.Value != "1:30.000" {
 		t.Fatalf("Expected BestLapTime.Value=1:30.000, got %s", timingData[0].BestLapTime.Value)
+	}
+}
+
+func TestBuildQualifyingStateFromInitialSnapshot(t *testing.T) {
+	data, err := os.ReadFile("test/timing-data-qualifying.json")
+	if err != nil {
+		t.Fatalf("Could not read qualifying test data: %v", err)
+	}
+	state, err := BuildQualifyingState(data)
+	if err != nil {
+		t.Fatalf("BuildQualifyingState failed: %v", err)
+	}
+	if state == nil {
+		t.Fatal("Expected qualifying state, got nil")
+	}
+	if state.SessionPart != 1 {
+		t.Fatalf("Expected SessionPart=1, got %d", state.SessionPart)
+	}
+	if len(state.NoEntries) != 3 || state.NoEntries[0] != 20 || state.NoEntries[1] != 15 || state.NoEntries[2] != 10 {
+		t.Fatalf("Expected NoEntries=[20,15,10], got %v", state.NoEntries)
+	}
+}
+
+func TestBuildTimingDataWithKnockedOutFromInitialSnapshot(t *testing.T) {
+	data, err := os.ReadFile("test/miami.json")
+	if err != nil {
+		t.Fatalf("Could not read miami test data: %v", err)
+	}
+	timingData, err := BuildTimingData(data)
+	if err != nil {
+		t.Fatalf("BuildTimingData failed: %v", err)
+	}
+	if len(timingData) == 0 {
+		t.Fatal("Expected timing data, got none")
+	}
+	// Find a driver and check qualifying fields are populated
+	var foundWithBestLaps bool
+	for _, td := range timingData {
+		if len(td.QualifyingBestLaps) == 3 && td.QualifyingBestLaps[0].Value != "" {
+			foundWithBestLaps = true
+			break
+		}
+	}
+	if !foundWithBestLaps {
+		t.Fatal("Expected at least one driver with 3 qualifying best lap times populated")
+	}
+}
+
+func TestBuildQualifyingPartsFromMiami(t *testing.T) {
+	data, err := os.ReadFile("test/miami.json")
+	if err != nil {
+		t.Fatalf("Could not read miami test data: %v", err)
+	}
+	parts, err := BuildQualifyingParts(data)
+	if err != nil {
+		t.Fatalf("BuildQualifyingParts failed: %v", err)
+	}
+	if len(parts) != 3 {
+		t.Fatalf("Expected 3 qualifying parts, got %d", len(parts))
+	}
+	for _, p := range parts {
+		if p.QualifyingPart < 1 || p.QualifyingPart > 3 {
+			t.Fatalf("Expected QualifyingPart in [1,3], got %d", p.QualifyingPart)
+		}
+		if p.Utc == "" {
+			t.Fatal("Expected non-empty Utc for qualifying part")
+		}
+	}
+}
+
+func TestBuildQualifyingStateReturnsNilForRaceData(t *testing.T) {
+	data, err := os.ReadFile("test/timing-data-race.json")
+	if err != nil {
+		t.Fatalf("Could not read race test data: %v", err)
+	}
+	state, err := BuildQualifyingState(data)
+	if err != nil {
+		t.Fatalf("BuildQualifyingState failed: %v", err)
+	}
+	if state != nil {
+		t.Fatalf("Expected nil qualifying state for race data, got %+v", state)
 	}
 }

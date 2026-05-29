@@ -241,6 +241,11 @@ func processInitialSnapshot(msg []byte, sessionKey int, dbClient *dynamodb.Clien
 	if err == nil {
 		processTimingData(timingData, sessionKey, dbClient, ctx, resolver)
 	}
+	qualifyingState, _ := BuildQualifyingState(msg)
+	qualifyingParts, _ := BuildQualifyingParts(msg)
+	if qualifyingState != nil {
+		processQualifyingData(qualifyingState, qualifyingParts, resolver)
+	}
 	carData, err := BuildCarData(msg)
 	if err == nil {
 		var carDataModel model.CarData
@@ -345,6 +350,10 @@ func processUpdateMessages(msg []byte, sessionKey int, dbClient *dynamodb.Client
 					}
 				}
 			}
+			qualifyingParts, _ := BuildQualifyingParts(msg)
+			if qualifyingParts != nil {
+				processQualifyingData(nil, qualifyingParts, resolver)
+			}
 		case "TimingData":
 			positions, err := BuildPositions(msg)
 			if err == nil {
@@ -353,6 +362,10 @@ func processUpdateMessages(msg []byte, sessionKey int, dbClient *dynamodb.Client
 			timingData, err := BuildTimingData(msg)
 			if err == nil {
 				processTimingData(timingData, sessionKey, dbClient, ctx, resolver)
+			}
+			qualifyingState, _ := BuildQualifyingState(msg)
+			if qualifyingState != nil {
+				processQualifyingData(qualifyingState, nil, resolver)
 			}
 			sectors, err := BuildSectors(msg)
 			if err == nil {
@@ -457,6 +470,29 @@ func processTimingData(timingData []LapTimeMetric, sessionKey int, dbClient *dyn
 		lapTime.InPit = timing.InPit
 		lapTime.PitOut = timing.PitOut
 		lapTime.Retired = timing.Stopped
+
+		// Qualifying-specific fields
+		knockedOut := timing.KnockedOut
+		lapTime.KnockedOut = &knockedOut
+		cutoff := timing.Cutoff
+		lapTime.Cutoff = &cutoff
+		if len(timing.QualifyingBestLaps) > 0 {
+			for _, qlt := range timing.QualifyingBestLaps {
+				lapTime.BestLapTimes = append(lapTime.BestLapTimes, &model.QualifyingLapTime{
+					Value: qlt.Value,
+					Lap:   qlt.Lap,
+				})
+			}
+		}
+		if len(timing.QualifyingStats) > 0 {
+			for _, qs := range timing.QualifyingStats {
+				lapTime.QualifyingStats = append(lapTime.QualifyingStats, &model.QualifyingStats{
+					TimeDiffToFastest:       qs.TimeDiffToFastest,
+					TimeDiffToPositionAhead: qs.TimeDifftoPositionAhead,
+				})
+			}
+		}
+
 		timing.SessionKey = sessionKey
 		err := SaveLapTime(dbClient, &ctx, timing)
 		if err != nil {
@@ -465,6 +501,35 @@ func processTimingData(timingData []LapTimeMetric, sessionKey int, dbClient *dyn
 		laptimes = append(laptimes, &lapTime)
 	}
 	resolver.NotifyLapTimeSubscribers(laptimes)
+}
+
+func processQualifyingData(state *QualifyingState, parts []QualifyingPart, resolver *graph.Resolver) {
+	qd := &model.QualifyingData{}
+
+	// Merge with current state if we only have partial data
+	if current := resolver.CurrentQualifyingData; current != nil {
+		*qd = *current
+	}
+
+	if state != nil {
+		qd.SessionPart = state.SessionPart
+		qd.NoEntries = state.NoEntries
+		qd.CutOffTime = state.CutOffTime
+		qd.CutOffPercentage = state.CutOffPercentage
+	}
+
+	if parts != nil {
+		var modelParts []*model.QualifyingPart
+		for _, p := range parts {
+			modelParts = append(modelParts, &model.QualifyingPart{
+				Part: p.QualifyingPart,
+				Utc:  p.Utc,
+			})
+		}
+		qd.Parts = modelParts
+	}
+
+	resolver.NotifyQualifyingDataSubscribers(qd)
 }
 
 func processTrackStatus(trackStatus []TrackStatus, sessionKey int, dbClient *dynamodb.Client, ctx context.Context, resolver *graph.Resolver) {

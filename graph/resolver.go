@@ -20,6 +20,7 @@ type Resolver struct {
 	CurrentTrackStatus         []*model.TrackStatus
 	CurrentWeather             *model.Weather
 	CurrentDriverLocations     []*model.DriverPosition
+	CurrentQualifyingData      *model.QualifyingData
 	LapTimeObservers           map[string]chan []*model.LapTime
 	PositionObservers          map[string]chan []*model.Position
 	CarDataObservers           map[string]chan *model.CarData
@@ -30,6 +31,7 @@ type Resolver struct {
 	TrackStatusObservers       map[string]chan []*model.TrackStatus
 	WeatherObservers           map[string]chan *model.Weather
 	DriverLocationObservers    map[string]chan []*model.DriverPosition
+	QualifyingDataObservers    map[string]chan *model.QualifyingData
 	mu                         sync.Mutex
 }
 
@@ -52,6 +54,7 @@ func NewResolver() *Resolver {
 		TrackStatusObservers:       make(map[string]chan []*model.TrackStatus),
 		WeatherObservers:           make(map[string]chan *model.Weather),
 		DriverLocationObservers:    make(map[string]chan []*model.DriverPosition),
+		QualifyingDataObservers:    make(map[string]chan *model.QualifyingData),
 	}
 }
 
@@ -233,4 +236,22 @@ func (r *Resolver) RegisterTrackStatusObserver(id string, ch chan []*model.Track
 	r.mu.Lock()
 	defer r.mu.Unlock()
 	r.TrackStatusObservers[id] = ch
+}
+
+func (r *Resolver) NotifyQualifyingDataSubscribers(qualifyingData *model.QualifyingData) {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	r.CurrentQualifyingData = qualifyingData
+	for _, observer := range r.QualifyingDataObservers {
+		select {
+		case observer <- qualifyingData:
+		default:
+		}
+	}
+}
+
+func (r *Resolver) RegisterQualifyingDataObserver(id string, ch chan *model.QualifyingData) {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	r.QualifyingDataObservers[id] = ch
 }

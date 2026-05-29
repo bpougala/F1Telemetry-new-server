@@ -91,6 +91,10 @@ func (h *Hub) RegisterOnResolver(resolver *graph.Resolver) {
 	trackStatusCh := make(chan []*model.TrackStatus, 16)
 	resolver.RegisterTrackStatusObserver("ws-hub", trackStatusCh)
 	go h.forwardTrackStatus(trackStatusCh)
+
+	qualifyingDataCh := make(chan *model.QualifyingData, 16)
+	resolver.RegisterQualifyingDataObserver("ws-hub", qualifyingDataCh)
+	go h.forwardQualifyingData(qualifyingDataCh)
 }
 
 func (h *Hub) forwardLapTimes(ch <-chan []*model.LapTime) {
@@ -138,6 +142,12 @@ func (h *Hub) forwardSegments(ch <-chan []*model.Segment) {
 func (h *Hub) forwardTrackStatus(ch <-chan []*model.TrackStatus) {
 	for data := range ch {
 		h.broadcast("trackStatus", "data", data)
+	}
+}
+
+func (h *Hub) forwardQualifyingData(ch <-chan *model.QualifyingData) {
+	for data := range ch {
+		h.broadcast("qualifyingData", "data", data)
 	}
 }
 

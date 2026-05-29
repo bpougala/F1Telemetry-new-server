@@ -222,15 +222,22 @@ func buildRacePositions(data []byte) ([]Position, error) {
 }
 
 func buildRaceTimingData(data []byte) ([]LapTimeMetric, error) {
-	var initialData InitialData
+	// Parse as raw map to preserve qualifying fields (BestLapTimes, Stats, KnockedOut, Cutoff)
+	var rawData struct {
+		R struct {
+			TimingData struct {
+				Lines map[string]interface{} `json:"Lines"`
+			} `json:"TimingData"`
+		} `json:"R"`
+	}
 	var lapTimeMetrics []LapTimeMetric
-	if err := json.Unmarshal(data, &initialData); err != nil {
+	if err := json.Unmarshal(data, &rawData); err != nil {
 		return lapTimeMetrics, err
 	}
-	if initialData.R.TimingData.Lines == nil {
+	if rawData.R.TimingData.Lines == nil {
 		return lapTimeMetrics, fmt.Errorf("No timing data found")
 	}
-	for key, value := range initialData.R.TimingData.Lines {
+	for key, value := range rawData.R.TimingData.Lines {
 		if key == "_kf" {
 			continue
 		}
@@ -242,6 +249,7 @@ func buildRaceTimingData(data []byte) ([]LapTimeMetric, error) {
 		if timing.BestLapTime.Lap == 0 && timing.BestLapTime.Value == "" {
 			continue
 		}
+		parseQualifyingFields(value, &timing)
 		timing.RacingNumber = key
 		lapTimeMetrics = append(lapTimeMetrics, timing)
 	}
@@ -432,6 +440,7 @@ func BuildTimingData(data []byte) ([]LapTimeMetric, error) {
 			if timing.BestLapTime.Lap == 0 && timing.BestLapTime.Value == "" {
 				continue
 			}
+			parseQualifyingFields(value, &timing)
 			timing.RacingNumber = key
 			lapTimeMetrics = append(lapTimeMetrics, timing)
 		}
@@ -442,6 +451,251 @@ func BuildTimingData(data []byte) ([]LapTimeMetric, error) {
 	}
 
 	return lapTimeMetrics, nil
+}
+
+// parseQualifyingFields extracts BestLapTimes and Stats from the raw timing data map.
+// These fields can be either arrays (initial snapshot) or maps keyed by index (updates).
+func parseQualifyingFields(raw interface{}, timing *LapTimeMetric) {
+	rawMap, ok := raw.(map[string]interface{})
+	if !ok {
+		return
+	}
+
+	// Parse BestLapTimes (can be array or indexed map)
+	if bestLapTimes, ok := rawMap["BestLapTimes"]; ok {
+		timing.QualifyingBestLaps = decodeQualifyingLapTimes(bestLapTimes)
+	}
+
+	// Parse Stats (can be array or indexed map)
+	if stats, ok := rawMap["Stats"]; ok {
+		timing.QualifyingStats = decodeQualifyingStats(stats)
+	}
+}
+
+func decodeQualifyingLapTimes(raw interface{}) []QualifyingLapTime {
+	switch v := raw.(type) {
+	case []interface{}:
+		result := make([]QualifyingLapTime, len(v))
+		for i, item := range v {
+			if m, ok := item.(map[string]interface{}); ok {
+				if val, ok := m["Value"].(string); ok {
+					result[i].Value = val
+				}
+				if lap, ok := m["Lap"].(float64); ok {
+					result[i].Lap = int(lap)
+				}
+			}
+		}
+		return result
+	case map[string]interface{}:
+		// Indexed map format from updates (e.g. {"0": {...}, "1": {...}})
+		maxIdx := -1
+		for k := range v {
+			idx, err := strconv.Atoi(k)
+			if err == nil && idx > maxIdx {
+				maxIdx = idx
+			}
+		}
+		if maxIdx < 0 {
+			return nil
+		}
+		result := make([]QualifyingLapTime, maxIdx+1)
+		for k, item := range v {
+			idx, err := strconv.Atoi(k)
+			if err != nil {
+				continue
+			}
+			if m, ok := item.(map[string]interface{}); ok {
+				if val, ok := m["Value"].(string); ok {
+					result[idx].Value = val
+				}
+				if lap, ok := m["Lap"].(float64); ok {
+					result[idx].Lap = int(lap)
+				}
+			}
+		}
+		return result
+	}
+	return nil
+}
+
+func decodeQualifyingStats(raw interface{}) []QualifyingStats {
+	switch v := raw.(type) {
+	case []interface{}:
+		result := make([]QualifyingStats, len(v))
+		for i, item := range v {
+			if m, ok := item.(map[string]interface{}); ok {
+				if val, ok := m["TimeDiffToFastest"].(string); ok {
+					result[i].TimeDiffToFastest = val
+				}
+				if val, ok := m["TimeDifftoPositionAhead"].(string); ok {
+					result[i].TimeDifftoPositionAhead = val
+				}
+			}
+		}
+		return result
+	case map[string]interface{}:
+		maxIdx := -1
+		for k := range v {
+			idx, err := strconv.Atoi(k)
+			if err == nil && idx > maxIdx {
+				maxIdx = idx
+			}
+		}
+		if maxIdx < 0 {
+			return nil
+		}
+		result := make([]QualifyingStats, maxIdx+1)
+		for k, item := range v {
+			idx, err := strconv.Atoi(k)
+			if err != nil {
+				continue
+			}
+			if m, ok := item.(map[string]interface{}); ok {
+				if val, ok := m["TimeDiffToFastest"].(string); ok {
+					result[idx].TimeDiffToFastest = val
+				}
+				if val, ok := m["TimeDifftoPositionAhead"].(string); ok {
+					result[idx].TimeDifftoPositionAhead = val
+				}
+			}
+		}
+		return result
+	}
+	return nil
+}
+
+// BuildQualifyingState extracts session-level qualifying metadata from TimingData.
+// Returns nil when the data does not contain qualifying fields (e.g. race sessions).
+func BuildQualifyingState(data []byte) (*QualifyingState, error) {
+	// Try initial snapshot format
+	var initialData struct {
+		R struct {
+			TimingData TimingData `json:"TimingData"`
+		} `json:"R"`
+	}
+	if err := json.Unmarshal(data, &initialData); err == nil && initialData.R.TimingData.SessionPart > 0 {
+		return &QualifyingState{
+			SessionPart:      initialData.R.TimingData.SessionPart,
+			NoEntries:        initialData.R.TimingData.NoEntries,
+			CutOffTime:       initialData.R.TimingData.CutOffTime,
+			CutOffPercentage: initialData.R.TimingData.CutOffPercentage,
+		}, nil
+	}
+
+	// Try update message format
+	var updateData UpdateData
+	if err := json.Unmarshal(data, &updateData); err != nil {
+		return nil, nil
+	}
+	for _, message := range updateData.M {
+		elements := message.A
+		if len(elements) < 2 {
+			continue
+		}
+		if elements[0] != "TimingData" {
+			continue
+		}
+		timingDataMap, ok := elements[1].(map[string]interface{})
+		if !ok {
+			continue
+		}
+		var td TimingData
+		tdBytes, err := json.Marshal(timingDataMap)
+		if err != nil {
+			continue
+		}
+		if err := json.Unmarshal(tdBytes, &td); err != nil {
+			continue
+		}
+		if td.SessionPart > 0 {
+			return &QualifyingState{
+				SessionPart:      td.SessionPart,
+				NoEntries:        td.NoEntries,
+				CutOffTime:       td.CutOffTime,
+				CutOffPercentage: td.CutOffPercentage,
+			}, nil
+		}
+	}
+	return nil, nil
+}
+
+// BuildQualifyingParts extracts qualifying phase transition timestamps from SessionData.Series.
+func BuildQualifyingParts(data []byte) ([]QualifyingPart, error) {
+	// Try initial snapshot format (miami.json style)
+	var initial struct {
+		R struct {
+			SessionData struct {
+				Series []QualifyingPart `json:"Series"`
+			} `json:"SessionData"`
+		} `json:"R"`
+	}
+	if err := json.Unmarshal(data, &initial); err == nil && len(initial.R.SessionData.Series) > 0 {
+		var parts []QualifyingPart
+		for _, s := range initial.R.SessionData.Series {
+			if s.QualifyingPart > 0 {
+				parts = append(parts, s)
+			}
+		}
+		if len(parts) > 0 {
+			return parts, nil
+		}
+	}
+
+	// Try update message format
+	var updateData UpdateData
+	if err := json.Unmarshal(data, &updateData); err != nil {
+		return nil, nil
+	}
+	for _, message := range updateData.M {
+		elements := message.A
+		if len(elements) < 2 {
+			continue
+		}
+		if elements[0] != "SessionData" {
+			continue
+		}
+		sessionDataMap, ok := elements[1].(map[string]interface{})
+		if !ok {
+			continue
+		}
+		seriesRaw, ok := sessionDataMap["Series"]
+		if !ok {
+			continue
+		}
+		seriesBytes, err := json.Marshal(seriesRaw)
+		if err != nil {
+			continue
+		}
+		var seriesMap map[string]QualifyingPart
+		if err := json.Unmarshal(seriesBytes, &seriesMap); err != nil {
+			// Try array format
+			var seriesArr []QualifyingPart
+			if err := json.Unmarshal(seriesBytes, &seriesArr); err != nil {
+				continue
+			}
+			var parts []QualifyingPart
+			for _, s := range seriesArr {
+				if s.QualifyingPart > 0 {
+					parts = append(parts, s)
+				}
+			}
+			if len(parts) > 0 {
+				return parts, nil
+			}
+			continue
+		}
+		var parts []QualifyingPart
+		for _, s := range seriesMap {
+			if s.QualifyingPart > 0 {
+				parts = append(parts, s)
+			}
+		}
+		if len(parts) > 0 {
+			return parts, nil
+		}
+	}
+	return nil, nil
 }
 
 func BuildCarData(data []byte) (CarData, error) {

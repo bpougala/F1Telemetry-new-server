@@ -164,6 +164,20 @@ func SaveLapTime(dbClient *dynamodb.Client, ctx *context.Context, lapTime LapTim
 		"InPit":                   &types.AttributeValueMemberBOOL{Value: lapTime.InPit},
 		"PitOut":                  &types.AttributeValueMemberBOOL{Value: lapTime.PitOut},
 		"Stopped":                 &types.AttributeValueMemberBOOL{Value: lapTime.Stopped},
+		"KnockedOut":              &types.AttributeValueMemberBOOL{Value: lapTime.KnockedOut},
+		"Cutoff":                  &types.AttributeValueMemberBOOL{Value: lapTime.Cutoff},
+	}
+	if len(lapTime.QualifyingBestLaps) > 0 {
+		bestLapsJSON, err := json.Marshal(lapTime.QualifyingBestLaps)
+		if err == nil {
+			item["QualifyingBestLaps"] = &types.AttributeValueMemberS{Value: string(bestLapsJSON)}
+		}
+	}
+	if len(lapTime.QualifyingStats) > 0 {
+		statsJSON, err := json.Marshal(lapTime.QualifyingStats)
+		if err == nil {
+			item["QualifyingStats"] = &types.AttributeValueMemberS{Value: string(statsJSON)}
+		}
 	}
 	_, err = dbClient.PutItem(*ctx, &dynamodb.PutItemInput{
 		TableName: aws.String("timings"),

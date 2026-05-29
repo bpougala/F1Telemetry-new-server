@@ -186,7 +186,7 @@ func ProcessSessionDataAndInfo(connection *websocket.Conn, dbClient *dynamodb.Cl
 
 		if _, hasR := raw["R"]; hasR {
 			// Initial snapshot — dispatch to all initial parsers
-			sessionKey = processInitialSnapshot(message, sessionKey, dbClient, ctx, resolver, hub, logger)
+			sessionKey = processInitialSnapshot(message, sessionKey, dbClient, s3Client, ctx, resolver, hub, logger)
 		} else if _, hasM := raw["M"]; hasM {
 			// Update messages — dispatch by topic
 			sessionKey = processUpdateMessages(message, sessionKey, dbClient, ctx, resolver, hub, logger)
@@ -194,7 +194,7 @@ func ProcessSessionDataAndInfo(connection *websocket.Conn, dbClient *dynamodb.Cl
 	}
 }
 
-func processInitialSnapshot(msg []byte, sessionKey int, dbClient *dynamodb.Client, ctx context.Context, resolver *graph.Resolver, hub *ws.Hub, logger *S3Logger) int {
+func processInitialSnapshot(msg []byte, sessionKey int, dbClient *dynamodb.Client, s3Client *s3.Client, ctx context.Context, resolver *graph.Resolver, hub *ws.Hub, logger *S3Logger) int {
 	meetingData, err := BuildMeetingData(msg)
 	raceName := ""
 	if err == nil {
@@ -203,6 +203,9 @@ func processInitialSnapshot(msg []byte, sessionKey int, dbClient *dynamodb.Clien
 		err = SaveMeeting(dbClient, &ctx, meetingDB)
 		if err != nil {
 			fmt.Println("error saving meeting data:", err)
+		}
+		if meetingData.Circuit.Key != 0 {
+			DownloadAndStoreCircuit(s3Client, ctx, meetingData.Circuit.Key, time.Now().Year())
 		}
 	}
 	sessionInfo, err := BuildSessionInfo(msg)

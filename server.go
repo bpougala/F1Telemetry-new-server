@@ -31,6 +31,10 @@ func main() {
 		backfill.Run()
 		return
 	}
+	if len(os.Args) > 1 && os.Args[1] == "backfill-circuits" {
+		backfill.RunCircuits()
+		return
+	}
 
 	ctx := context.Background()
 	dbClient, err := dataingestor.GetDynamoClient(&ctx)

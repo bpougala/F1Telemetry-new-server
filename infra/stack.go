@@ -141,6 +141,13 @@ func NewF1TelemetryStack(scope constructs.Construct, id string, props *awscdk.St
 	})
 	bucket.GrantReadWrite(role, nil)
 
+	// --- S3 Bucket for circuit geometry data ---
+	circuitBucket := awss3.NewBucket(stack, jsii.String("CircuitDataBucket"), &awss3.BucketProps{
+		BucketName:    jsii.String("f1-circuit-data"),
+		RemovalPolicy: awscdk.RemovalPolicy_RETAIN,
+	})
+	circuitBucket.GrantReadWrite(role, nil)
+
 	// --- ElastiCache Valkey Serverless ---
 	publicSubnets := vpc.SelectSubnets(&awsec2.SubnetSelection{
 		SubnetType: awsec2.SubnetType_PUBLIC,
@@ -221,6 +228,26 @@ func NewF1TelemetryStack(scope constructs.Construct, id string, props *awscdk.St
 	})
 
 	verifyFnUrl := verifyFn.AddFunctionUrl(&awslambda.FunctionUrlOptions{
+		AuthType: awslambda.FunctionUrlAuthType_NONE,
+	})
+
+	// --- Circuit Data Lambda ---
+	circuitFn := awslambdanodejs.NewNodejsFunction(stack, jsii.String("CircuitFn"), &awslambdanodejs.NodejsFunctionProps{
+		Entry:            jsii.String("lambda/circuits/index.ts"),
+		Handler:          jsii.String("handler"),
+		Runtime:          awslambda.Runtime_NODEJS_22_X(),
+		Timeout:          awscdk.Duration_Seconds(jsii.Number(10)),
+		DepsLockFilePath: jsii.String("lambda/circuits/package-lock.json"),
+		Environment: &map[string]*string{
+			"CIRCUIT_BUCKET": circuitBucket.BucketName(),
+		},
+		Bundling: &awslambdanodejs.BundlingOptions{
+			Minify: jsii.Bool(true),
+		},
+	})
+	circuitBucket.GrantRead(circuitFn, nil)
+
+	circuitFnUrl := circuitFn.AddFunctionUrl(&awslambda.FunctionUrlOptions{
 		AuthType: awslambda.FunctionUrlAuthType_NONE,
 	})
 
@@ -322,6 +349,10 @@ UNIT`),
 	awscdk.NewCfnOutput(stack, jsii.String("ValkeyEndpoint"), &awscdk.CfnOutputProps{
 		Value:       valkeyCache.AttrEndpointAddress(),
 		Description: jsii.String("ElastiCache Valkey endpoint"),
+	})
+	awscdk.NewCfnOutput(stack, jsii.String("CircuitURL"), &awscdk.CfnOutputProps{
+		Value:       circuitFnUrl.Url(),
+		Description: jsii.String("Circuit Data Lambda Function URL"),
 	})
 
 	return stack

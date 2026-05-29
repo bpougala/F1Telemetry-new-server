@@ -163,18 +163,21 @@ func BuildTrackStatus(data []byte) ([]TrackStatus, error) {
 	return trackStatus, nil
 }
 func BuildPositions(data []byte) ([]Position, error) {
-	var positions []Position
-	var obj map[string]interface{}
-	if err := json.Unmarshal(data, &obj); err != nil {
-		return positions, err
-	}
-	var rawDriverList DriverList
-	if err := json.Unmarshal(data, &rawDriverList); err != nil {
+	// Try TimingData first — it has full status fields (Retired, Stopped, etc.)
+	positions, err := buildRacePositions(data)
+	if err == nil && len(positions) > 0 {
 		return positions, nil
 	}
-	if rawDriverList.R.DriverList == nil {
-		return buildRacePositions(data)
+
+	// Fall back to DriverList (position-only data)
+	var rawDriverList DriverList
+	if err := json.Unmarshal(data, &rawDriverList); err != nil {
+		return nil, nil
 	}
+	if rawDriverList.R.DriverList == nil {
+		return nil, fmt.Errorf("no position data found")
+	}
+	var driverListPositions []Position
 	for key, value := range rawDriverList.R.DriverList {
 		if key == "_kf" {
 			continue
@@ -182,9 +185,10 @@ func BuildPositions(data []byte) ([]Position, error) {
 		var position Position
 		position.RacingNumber, _ = strconv.Atoi(key)
 		position.Position = &value.Line
-		positions = append(positions, position)
+		position.PositionOnly = true
+		driverListPositions = append(driverListPositions, position)
 	}
-	return positions, nil
+	return driverListPositions, nil
 }
 
 func buildRacePositions(data []byte) ([]Position, error) {
@@ -396,6 +400,7 @@ func buildUpdatedPositions(data []byte) ([]Position, error) {
 			var position Position
 			position.RacingNumber, _ = strconv.Atoi(key)
 			position.Position = &value.Line
+			position.PositionOnly = true
 			positions = append(positions, position)
 		}
 	}

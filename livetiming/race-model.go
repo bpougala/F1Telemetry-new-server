@@ -85,6 +85,7 @@ type Position struct {
 	PitOut       bool `json:"PitOut"`
 	Stopped      bool `json:"Stopped"`
 	Status       int  `json:"Status"`
+	PositionOnly bool `json:"-"` // true when only positional data is available (DriverList)
 }
 
 type RawPosition struct {

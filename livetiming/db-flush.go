@@ -5,11 +5,12 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"time"
+
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb/types"
 	"github.com/google/uuid"
-	"time"
 )
 
 func SaveMeeting(dbClient *dynamodb.Client, ctx *context.Context, meeting MeetingDataDB) error {
@@ -77,6 +78,28 @@ func SaveDrivers(dbClient *dynamodb.Client, ctx *context.Context, drivers []Driv
 func SavePositions(dbClient *dynamodb.Client, ctx *context.Context, positions []Position) error {
 
 	for _, position := range positions {
+		if position.PositionOnly {
+			// DriverList updates only carry positional data — use UpdateItem
+			// to avoid overwriting Retired/Stopped with false.
+			_, err := dbClient.UpdateItem(*ctx, &dynamodb.UpdateItemInput{
+				TableName: aws.String("positions"),
+				Key: map[string]types.AttributeValue{
+					"SessionKey":   &types.AttributeValueMemberN{Value: fmt.Sprintf("%d", position.SessionKey)},
+					"RacingNumber": &types.AttributeValueMemberN{Value: fmt.Sprintf("%d", position.RacingNumber)},
+				},
+				UpdateExpression: aws.String("SET #pos = :pos"),
+				ExpressionAttributeNames: map[string]string{
+					"#pos": "Position",
+				},
+				ExpressionAttributeValues: map[string]types.AttributeValue{
+					":pos": &types.AttributeValueMemberN{Value: fmt.Sprintf("%d", *position.Position)},
+				},
+			})
+			if err != nil {
+				return err
+			}
+			continue
+		}
 		item := map[string]types.AttributeValue{
 			"SessionKey":   &types.AttributeValueMemberN{Value: fmt.Sprintf("%d", position.SessionKey)},
 			"RacingNumber": &types.AttributeValueMemberN{Value: fmt.Sprintf("%d", position.RacingNumber)},

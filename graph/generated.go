@@ -154,16 +154,17 @@ type ComplexityRoot struct {
 	}
 
 	Query struct {
-		Drivers     func(childComplexity int, sessionKey int) int
-		LapTimes    func(childComplexity int, sessionKey int) int
-		Meetings    func(childComplexity int) int
-		Positions   func(childComplexity int, sessionKey int) int
-		RaceControl func(childComplexity int, sessionKey int) int
-		Sectors     func(childComplexity int, sessionKey int) int
-		Sessions    func(childComplexity int, meetingKeys []*int) int
-		Stints      func(childComplexity int, sessionKey int) int
-		TrackStatus func(childComplexity int, sessionKey int) int
-		Weather     func(childComplexity int, sessionKey int) int
+		Drivers       func(childComplexity int, sessionKey int) int
+		LapTimes      func(childComplexity int, sessionKey int) int
+		Meetings      func(childComplexity int) int
+		Positions     func(childComplexity int, sessionKey int) int
+		RaceControl   func(childComplexity int, sessionKey int) int
+		Sectors       func(childComplexity int, sessionKey int) int
+		SegmentCounts func(childComplexity int) int
+		Sessions      func(childComplexity int, meetingKeys []*int) int
+		Stints        func(childComplexity int, sessionKey int) int
+		TrackStatus   func(childComplexity int, sessionKey int) int
+		Weather       func(childComplexity int, sessionKey int) int
 	}
 
 	RaceControl struct {
@@ -190,6 +191,12 @@ type ComplexityRoot struct {
 		SectorNumber  func(childComplexity int) int
 		SegmentNumber func(childComplexity int) int
 		Status        func(childComplexity int) int
+	}
+
+	SegmentCounts struct {
+		Sector1 func(childComplexity int) int
+		Sector2 func(childComplexity int) int
+		Sector3 func(childComplexity int) int
 	}
 
 	Session struct {
@@ -281,6 +288,7 @@ type QueryResolver interface {
 	Stints(ctx context.Context, sessionKey int) ([]*model.Stint, error)
 	TrackStatus(ctx context.Context, sessionKey int) ([]*model.TrackStatus, error)
 	Weather(ctx context.Context, sessionKey int) ([]*model.Weather, error)
+	SegmentCounts(ctx context.Context) (*model.SegmentCounts, error)
 }
 type SubscriptionResolver interface {
 	LapTimes(ctx context.Context) (<-chan []*model.LapTime, error)
@@ -879,6 +887,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Query.Sectors(childComplexity, args["session_key"].(int)), true
 
+	case "Query.segmentCounts":
+		if e.complexity.Query.SegmentCounts == nil {
+			break
+		}
+
+		return e.complexity.Query.SegmentCounts(childComplexity), true
+
 	case "Query.sessions":
 		if e.complexity.Query.Sessions == nil {
 			break
@@ -1045,6 +1060,27 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Segment.Status(childComplexity), true
+
+	case "SegmentCounts.sector_1":
+		if e.complexity.SegmentCounts.Sector1 == nil {
+			break
+		}
+
+		return e.complexity.SegmentCounts.Sector1(childComplexity), true
+
+	case "SegmentCounts.sector_2":
+		if e.complexity.SegmentCounts.Sector2 == nil {
+			break
+		}
+
+		return e.complexity.SegmentCounts.Sector2(childComplexity), true
+
+	case "SegmentCounts.sector_3":
+		if e.complexity.SegmentCounts.Sector3 == nil {
+			break
+		}
+
+		return e.complexity.SegmentCounts.Sector3(childComplexity), true
 
 	case "Session.date_end":
 		if e.complexity.Session.DateEnd == nil {
@@ -5652,6 +5688,55 @@ func (ec *executionContext) fieldContext_Query_weather(ctx context.Context, fiel
 	return fc, nil
 }
 
+func (ec *executionContext) _Query_segmentCounts(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Query_segmentCounts(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Query().SegmentCounts(rctx)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*model.SegmentCounts)
+	fc.Result = res
+	return ec.marshalOSegmentCounts2ᚖF1TelemetryᚑnewᚑserverᚋgraphᚋmodelᚐSegmentCounts(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Query_segmentCounts(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "sector_1":
+				return ec.fieldContext_SegmentCounts_sector_1(ctx, field)
+			case "sector_2":
+				return ec.fieldContext_SegmentCounts_sector_2(ctx, field)
+			case "sector_3":
+				return ec.fieldContext_SegmentCounts_sector_3(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type SegmentCounts", field.Name)
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Query___type(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Query___type(ctx, field)
 	if err != nil {
@@ -6504,6 +6589,138 @@ func (ec *executionContext) _Segment_status(ctx context.Context, field graphql.C
 func (ec *executionContext) fieldContext_Segment_status(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Segment",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _SegmentCounts_sector_1(ctx context.Context, field graphql.CollectedField, obj *model.SegmentCounts) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_SegmentCounts_sector_1(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Sector1, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(int)
+	fc.Result = res
+	return ec.marshalNInt2int(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_SegmentCounts_sector_1(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "SegmentCounts",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _SegmentCounts_sector_2(ctx context.Context, field graphql.CollectedField, obj *model.SegmentCounts) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_SegmentCounts_sector_2(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Sector2, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(int)
+	fc.Result = res
+	return ec.marshalNInt2int(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_SegmentCounts_sector_2(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "SegmentCounts",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _SegmentCounts_sector_3(ctx context.Context, field graphql.CollectedField, obj *model.SegmentCounts) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_SegmentCounts_sector_3(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Sector3, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(int)
+	fc.Result = res
+	return ec.marshalNInt2int(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_SegmentCounts_sector_3(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "SegmentCounts",
 		Field:      field,
 		IsMethod:   false,
 		IsResolver: false,
@@ -11966,6 +12183,25 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 			}
 
 			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
+		case "segmentCounts":
+			field := field
+
+			innerFunc := func(ctx context.Context, _ *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_segmentCounts(ctx, field)
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx,
+					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
 		case "__type":
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Query___type(ctx, field)
@@ -12143,6 +12379,55 @@ func (ec *executionContext) _Segment(ctx context.Context, sel ast.SelectionSet, 
 			}
 		case "status":
 			out.Values[i] = ec._Segment_status(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.processDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
+var segmentCountsImplementors = []string{"SegmentCounts"}
+
+func (ec *executionContext) _SegmentCounts(ctx context.Context, sel ast.SelectionSet, obj *model.SegmentCounts) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, segmentCountsImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("SegmentCounts")
+		case "sector_1":
+			out.Values[i] = ec._SegmentCounts_sector_1(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "sector_2":
+			out.Values[i] = ec._SegmentCounts_sector_2(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "sector_3":
+			out.Values[i] = ec._SegmentCounts_sector_3(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
@@ -14212,6 +14497,13 @@ func (ec *executionContext) marshalOSegment2ᚖF1Telemetryᚑnewᚑserverᚋgrap
 		return graphql.Null
 	}
 	return ec._Segment(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalOSegmentCounts2ᚖF1TelemetryᚑnewᚑserverᚋgraphᚋmodelᚐSegmentCounts(ctx context.Context, sel ast.SelectionSet, v *model.SegmentCounts) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return ec._SegmentCounts(ctx, sel, v)
 }
 
 func (ec *executionContext) marshalOSession2ᚖF1TelemetryᚑnewᚑserverᚋgraphᚋmodelᚐSession(ctx context.Context, sel ast.SelectionSet, v *model.Session) graphql.Marshaler {

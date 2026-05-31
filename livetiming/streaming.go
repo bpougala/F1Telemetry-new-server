@@ -214,6 +214,7 @@ func processInitialSnapshot(msg []byte, sessionKey int, dbClient *dynamodb.Clien
 		sessionKey = sessionInfo.Key
 		sessionName = sessionInfo.Name
 		hub.SetSessionKey(sessionKey)
+		resolver.ResetSegmentCounts()
 		err = SaveSession(dbClient, &ctx, sessionInfo)
 		if err != nil {
 			fmt.Println("error saving session info:", err)
@@ -281,7 +282,7 @@ func processInitialSnapshot(msg []byte, sessionKey int, dbClient *dynamodb.Clien
 	}
 	segments, err := BuildSegments(msg)
 	if err == nil {
-		processSegments(segments, resolver, hub)
+		processSegments(segments, resolver)
 	}
 	return sessionKey
 }
@@ -325,6 +326,7 @@ func processUpdateMessages(msg []byte, sessionKey int, dbClient *dynamodb.Client
 				} else {
 					sessionKey = sessionInfo.Key
 					hub.SetSessionKey(sessionKey)
+					resolver.ResetSegmentCounts()
 					err = SaveSession(dbClient, &ctx, sessionInfo)
 					if err != nil {
 						fmt.Println("error saving session info:", err)
@@ -373,7 +375,7 @@ func processUpdateMessages(msg []byte, sessionKey int, dbClient *dynamodb.Client
 			}
 			segments, err := BuildSegments(msg)
 			if err == nil {
-				processSegments(segments, resolver, hub)
+				processSegments(segments, resolver)
 			}
 		case "DriverList":
 			positions, err := BuildPositions(msg)
@@ -609,7 +611,7 @@ func processSectors(sectors []AllSectors, sessionKey int, dbClient *dynamodb.Cli
 	}
 }
 
-func processSegments(segments []AllSegments, resolver *graph.Resolver, hub *ws.Hub) {
+func processSegments(segments []AllSegments, resolver *graph.Resolver) {
 	var segmentsModel []*model.Segment
 	for _, driverSegments := range segments {
 		for _, seg := range driverSegments.Segments {
@@ -621,7 +623,7 @@ func processSegments(segments []AllSegments, resolver *graph.Resolver, hub *ws.H
 			})
 		}
 	}
-	hub.UpdateSegmentCounts(segmentsModel)
+	resolver.UpdateSegmentCounts(segmentsModel)
 	resolver.NotifySegmentSubscribers(segmentsModel)
 }
 

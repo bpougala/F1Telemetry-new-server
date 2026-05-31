@@ -142,6 +142,19 @@ func (r *queryResolver) Weather(ctx context.Context, sessionKey int) ([]*model.W
 	return weatherInt, nil
 }
 
+// SegmentCounts is the resolver for the segmentCounts field.
+func (r *queryResolver) SegmentCounts(ctx context.Context) (*model.SegmentCounts, error) {
+	counts := r.GetSegmentCounts()
+	if counts == [3]int{} {
+		return nil, nil
+	}
+	return &model.SegmentCounts{
+		Sector1: counts[0],
+		Sector2: counts[1],
+		Sector3: counts[2],
+	}, nil
+}
+
 // LapTimes is the resolver for the lapTimes subscription field.
 func (r *subscriptionResolver) LapTimes(ctx context.Context) (<-chan []*model.LapTime, error) {
 	id := dataingestor.GenerateRandomString(8)

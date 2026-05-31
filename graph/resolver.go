@@ -21,6 +21,7 @@ type Resolver struct {
 	CurrentWeather             *model.Weather
 	CurrentDriverLocations     []*model.DriverPosition
 	CurrentQualifyingData      *model.QualifyingData
+	CurrentSegmentCounts       [3]int
 	LapTimeObservers           map[string]chan []*model.LapTime
 	PositionObservers          map[string]chan []*model.Position
 	CarDataObservers           map[string]chan *model.CarData
@@ -254,4 +255,27 @@ func (r *Resolver) RegisterQualifyingDataObserver(id string, ch chan *model.Qual
 	r.mu.Lock()
 	defer r.mu.Unlock()
 	r.QualifyingDataObservers[id] = ch
+}
+
+func (r *Resolver) UpdateSegmentCounts(segments []*model.Segment) {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	for _, seg := range segments {
+		idx := seg.SectorNumber - 1
+		if idx >= 0 && idx < 3 && seg.SegmentNumber > r.CurrentSegmentCounts[idx] {
+			r.CurrentSegmentCounts[idx] = seg.SegmentNumber
+		}
+	}
+}
+
+func (r *Resolver) GetSegmentCounts() [3]int {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	return r.CurrentSegmentCounts
+}
+
+func (r *Resolver) ResetSegmentCounts() {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	r.CurrentSegmentCounts = [3]int{}
 }

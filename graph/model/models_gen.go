@@ -139,6 +139,12 @@ type Segment struct {
 	Status        int `json:"status"`
 }
 
+type SegmentCounts struct {
+	Sector1 int `json:"sector_1"`
+	Sector2 int `json:"sector_2"`
+	Sector3 int `json:"sector_3"`
+}
+
 type Session struct {
 	SessionKey  int    `json:"session_key"`
 	SessionName string `json:"session_name"`

@@ -15,6 +15,7 @@ type Query {
   stints(session_key: Int!): [Stint]!
   trackStatus(session_key: Int!): [TrackStatus]!
   weather(session_key: Int!): [Weather]!
+  segmentCounts: SegmentCounts
 }
 
 type Subscription {
@@ -222,4 +223,10 @@ type QualifyingData {
   cut_off_time: String!
   cut_off_percentage: String!
   parts: [QualifyingPart!]
+}
+
+type SegmentCounts {
+  sector_1: Int!
+  sector_2: Int!
+  sector_3: Int!
 }

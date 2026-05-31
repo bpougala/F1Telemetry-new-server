@@ -20,9 +20,6 @@ type Hub struct {
 	sessionKey int
 	sessionMu  sync.RWMutex
 
-	segmentCounts   [3]int
-	segmentCountsMu sync.RWMutex
-
 	dbClient *dynamodb.Client
 }
 
@@ -184,11 +181,6 @@ func (h *Hub) SetSessionKey(key int) {
 	h.sessionMu.Unlock()
 
 	if oldKey != key && key != 0 {
-		// Reset segment counts for the new session/circuit
-		h.segmentCountsMu.Lock()
-		h.segmentCounts = [3]int{}
-		h.segmentCountsMu.Unlock()
-
 		msg := OutboundMessage{
 			Type:       "session_changed",
 			SessionKey: key,
@@ -206,57 +198,6 @@ func (h *Hub) SetSessionKey(key int) {
 		}
 		h.mu.RUnlock()
 	}
-}
-
-func (h *Hub) UpdateSegmentCounts(segments []*model.Segment) {
-	h.segmentCountsMu.Lock()
-	wasZero := h.segmentCounts == [3]int{}
-	for _, seg := range segments {
-		idx := seg.SectorNumber - 1
-		if idx >= 0 && idx < 3 && seg.SegmentNumber > h.segmentCounts[idx] {
-			h.segmentCounts[idx] = seg.SegmentNumber
-		}
-	}
-	counts := h.segmentCounts
-	h.segmentCountsMu.Unlock()
-
-	// Broadcast updated session_changed when counts are first populated
-	if wasZero && counts != [3]int{} {
-		h.broadcastSessionChanged()
-	}
-}
-
-func (h *Hub) GetSegmentCounts() [3]int {
-	h.segmentCountsMu.RLock()
-	defer h.segmentCountsMu.RUnlock()
-	return h.segmentCounts
-}
-
-func (h *Hub) broadcastSessionChanged() {
-	key := h.GetSessionKey()
-	if key == 0 {
-		return
-	}
-	counts := h.GetSegmentCounts()
-	msg := OutboundMessage{
-		Type:       "session_changed",
-		SessionKey: key,
-	}
-	if counts != [3]int{} {
-		msg.SegmentCounts = counts[:]
-	}
-	jsonBytes, err := json.Marshal(msg)
-	if err != nil {
-		return
-	}
-	h.mu.RLock()
-	for client := range h.clients {
-		select {
-		case client.send <- jsonBytes:
-		default:
-		}
-	}
-	h.mu.RUnlock()
 }
 
 func (h *Hub) GetSessionKey() int {
@@ -308,28 +249,6 @@ func (h *Hub) Subscribe(client *Client, topics []string) {
 	// Send recap for newly subscribed topics
 	for _, topic := range newTopics {
 		go h.sendRecap(client, topic)
-	}
-
-	// Send current session info with segment counts to newly connected client
-	if len(newTopics) > 0 {
-		key := h.GetSessionKey()
-		counts := h.GetSegmentCounts()
-		if key != 0 {
-			msg := OutboundMessage{
-				Type:       "session_changed",
-				SessionKey: key,
-			}
-			if counts != [3]int{} {
-				msg.SegmentCounts = counts[:]
-			}
-			jsonBytes, err := json.Marshal(msg)
-			if err == nil {
-				select {
-				case client.send <- jsonBytes:
-				default:
-				}
-			}
-		}
 	}
 }
 

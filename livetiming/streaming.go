@@ -281,7 +281,7 @@ func processInitialSnapshot(msg []byte, sessionKey int, dbClient *dynamodb.Clien
 	}
 	segments, err := BuildSegments(msg)
 	if err == nil {
-		processSegments(segments, resolver)
+		processSegments(segments, resolver, hub)
 	}
 	return sessionKey
 }
@@ -373,7 +373,7 @@ func processUpdateMessages(msg []byte, sessionKey int, dbClient *dynamodb.Client
 			}
 			segments, err := BuildSegments(msg)
 			if err == nil {
-				processSegments(segments, resolver)
+				processSegments(segments, resolver, hub)
 			}
 		case "DriverList":
 			positions, err := BuildPositions(msg)
@@ -609,7 +609,7 @@ func processSectors(sectors []AllSectors, sessionKey int, dbClient *dynamodb.Cli
 	}
 }
 
-func processSegments(segments []AllSegments, resolver *graph.Resolver) {
+func processSegments(segments []AllSegments, resolver *graph.Resolver, hub *ws.Hub) {
 	var segmentsModel []*model.Segment
 	for _, driverSegments := range segments {
 		for _, seg := range driverSegments.Segments {
@@ -621,6 +621,7 @@ func processSegments(segments []AllSegments, resolver *graph.Resolver) {
 			})
 		}
 	}
+	hub.UpdateSegmentCounts(segmentsModel)
 	resolver.NotifySegmentSubscribers(segmentsModel)
 }
 

@@ -28,6 +28,7 @@ func NewF1TelemetryStack(scope constructs.Construct, id string, props *awscdk.St
 
 	// --- VPC ---
 	vpc := awsec2.NewVpc(stack, jsii.String("Vpc"), &awsec2.VpcProps{
+		IpProtocol:  awsec2.IpProtocol_DUAL_STACK,
 		MaxAzs:      jsii.Number(2),
 		NatGateways: jsii.Number(0),
 		SubnetConfiguration: &[]*awsec2.SubnetConfiguration{
@@ -47,6 +48,9 @@ func NewF1TelemetryStack(scope constructs.Construct, id string, props *awscdk.St
 	sg.AddIngressRule(awsec2.Peer_AnyIpv4(), awsec2.Port_Tcp(jsii.Number(80)), jsii.String("HTTP"), nil)
 	sg.AddIngressRule(awsec2.Peer_AnyIpv4(), awsec2.Port_Tcp(jsii.Number(443)), jsii.String("HTTPS"), nil)
 	sg.AddIngressRule(awsec2.Peer_AnyIpv4(), awsec2.Port_Tcp(jsii.Number(22)), jsii.String("SSH"), nil)
+	sg.AddIngressRule(awsec2.Peer_AnyIpv6(), awsec2.Port_Tcp(jsii.Number(80)), jsii.String("HTTP IPv6"), nil)
+	sg.AddIngressRule(awsec2.Peer_AnyIpv6(), awsec2.Port_Tcp(jsii.Number(443)), jsii.String("HTTPS IPv6"), nil)
+	sg.AddIngressRule(awsec2.Peer_AnyIpv6(), awsec2.Port_Tcp(jsii.Number(22)), jsii.String("SSH IPv6"), nil)
 
 	// --- Valkey Security Group ---
 	valkeySG := awsec2.NewSecurityGroup(stack, jsii.String("ValkeySG"), &awsec2.SecurityGroupProps{
@@ -111,6 +115,15 @@ func NewF1TelemetryStack(scope constructs.Construct, id string, props *awscdk.St
 		},
 		Resources: &[]*string{jsii.String("*")},
 	}))
+
+	// --- Grafana Cloud Role ---
+	grafanaRole := awsiam.NewRole(stack, jsii.String("GrafanaCloudWatchRole"), &awsiam.RoleProps{
+		AssumedBy:   awsiam.NewAccountPrincipal(jsii.String("008923505280")),
+		ExternalIds: &[]*string{jsii.String("1096463")},
+		ManagedPolicies: &[]awsiam.IManagedPolicy{
+			awsiam.ManagedPolicy_FromAwsManagedPolicyName(jsii.String("CloudWatchReadOnlyAccess")),
+		},
+	})
 
 	var ddbTables []awsdynamodb.Table
 	for _, t := range tables {
@@ -353,6 +366,10 @@ UNIT`),
 	awscdk.NewCfnOutput(stack, jsii.String("CircuitURL"), &awscdk.CfnOutputProps{
 		Value:       circuitFnUrl.Url(),
 		Description: jsii.String("Circuit Data Lambda Function URL"),
+	})
+	awscdk.NewCfnOutput(stack, jsii.String("GrafanaRoleARN"), &awscdk.CfnOutputProps{
+		Value:       grafanaRole.RoleArn(),
+		Description: jsii.String("IAM Role ARN for Grafana Cloud — paste into Assume Role ARN field"),
 	})
 
 	return stack

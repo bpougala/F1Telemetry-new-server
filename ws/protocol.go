@@ -21,10 +21,11 @@ type InboundMessage struct {
 
 // OutboundMessage represents a message sent to the client.
 type OutboundMessage struct {
-	Type       string      `json:"type"`
-	Topic      string      `json:"topic,omitempty"`
-	Payload    interface{} `json:"payload,omitempty"`
-	Message    string      `json:"message,omitempty"`
-	SessionKey int         `json:"sessionKey,omitempty"`
-	Topics     []string    `json:"topics,omitempty"`
+	Type          string      `json:"type"`
+	Topic         string      `json:"topic,omitempty"`
+	Payload       interface{} `json:"payload,omitempty"`
+	Message       string      `json:"message,omitempty"`
+	SessionKey    int         `json:"sessionKey,omitempty"`
+	Topics        []string    `json:"topics,omitempty"`
+	SegmentCounts []int       `json:"segmentCounts,omitempty"`
 }

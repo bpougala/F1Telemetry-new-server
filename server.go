@@ -112,7 +112,6 @@ func main() {
 				retries--
 				time.Sleep(time.Second)
 			}
-
 			if err != nil {
 				fmt.Println("websocket setup failed:", err)
 				time.Sleep(backoff)
@@ -124,7 +123,7 @@ func main() {
 			backoff = 2 * time.Second
 			fmt.Println("connected to F1 live timing")
 
-			err = livetiming.ProcessSessionDataAndInfo(connection, dbClient, s3Client, ctx, resolver, hub)
+			err = livetiming.ProcessSessionDataAndInfo(connection, dbClient, s3Client, ctx, resolver, hub, connObject.KeepAliveTimeout)
 			connection.Close()
 
 			if err != nil {

@@ -11,8 +11,6 @@ import (
 	"net/http"
 	"net/http/cookiejar"
 	"net/url"
-	"os"
-	"os/signal"
 	"strconv"
 	"time"
 
@@ -94,8 +92,6 @@ type SubscribeMessage struct {
 }
 
 func SetWebSocket(connectionToken string, cookies []*http.Cookie) (*websocket.Conn, *http.Response, error) {
-	interrupt := make(chan os.Signal, 1)
-	signal.Notify(interrupt, os.Interrupt)
 	connectionDataObj := ConnectionData{Name: "Streaming"}
 	connectionDataList := []ConnectionData{connectionDataObj}
 	connectionData, err := json.Marshal(connectionDataList)
@@ -146,18 +142,27 @@ func CreateOriginalSessionMessage() SubscribeMessage {
 	}
 }
 
-func ProcessSessionDataAndInfo(connection *websocket.Conn, dbClient *dynamodb.Client, s3Client *s3.Client, ctx context.Context, resolver *graph.Resolver, hub *ws.Hub) error {
+func ProcessSessionDataAndInfo(connection *websocket.Conn, dbClient *dynamodb.Client, s3Client *s3.Client, ctx context.Context, resolver *graph.Resolver, hub *ws.Hub, keepAliveTimeout float32) error {
 	subscribeMessage := CreateOriginalSessionMessage()
 	err := connection.WriteJSON(subscribeMessage)
 	if err != nil {
 		return err
 	}
-	connection.SetPongHandler(func(appData string) error {
-		return nil
+
+	keepAlive := time.Duration(keepAliveTimeout * float32(time.Second))
+	if keepAlive <= 0 {
+		keepAlive = 20 * time.Second // SignalR default fallback if negotiate omits it
+	}
+	pingPeriod := keepAlive   // ping at the server's keepalive cadence
+	pongWait := keepAlive * 2 // tolerate one missed keepalive before declaring dead
+
+	connection.SetReadDeadline(time.Now().Add(pongWait))
+	connection.SetPongHandler(func(string) error {
+		return connection.SetReadDeadline(time.Now().Add(pongWait))
 	})
 
 	go func() {
-		ticker := time.NewTicker(30 * time.Second)
+		ticker := time.NewTicker(pingPeriod)
 		defer ticker.Stop()
 		for {
 			select {
@@ -165,6 +170,7 @@ func ProcessSessionDataAndInfo(connection *websocket.Conn, dbClient *dynamodb.Cl
 				err := connection.WriteControl(websocket.PingMessage, []byte{}, time.Now().Add(10*time.Second))
 				if err != nil {
 					fmt.Println("error sending ping:", err)
+					connection.Close()
 					return
 				}
 			}
@@ -177,6 +183,7 @@ func ProcessSessionDataAndInfo(connection *websocket.Conn, dbClient *dynamodb.Cl
 		if err != nil {
 			return err
 		}
+		connection.SetReadDeadline(time.Now().Add(pongWait))
 
 		// Determine message type by checking for "R" (initial snapshot) or "M" (updates) key
 		var raw map[string]json.RawMessage

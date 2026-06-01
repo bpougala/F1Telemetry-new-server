@@ -1141,6 +1141,53 @@ func buildUpdatePositionZ(data []byte) (PositionRoot, error) {
 	return posRoot, fmt.Errorf("no position data found")
 }
 
+// BuildLapCount parses LapCount from the initial snapshot.
+func BuildLapCount(data []byte) (*LapCountData, error) {
+	var initialData InitialData
+	if err := json.Unmarshal(data, &initialData); err != nil {
+		return nil, err
+	}
+	lc := initialData.R.LapCount
+	if lc.TotalLaps == 0 && lc.CurrentLap == 0 {
+		return nil, fmt.Errorf("no lap count data found")
+	}
+	return &LapCountData{
+		CurrentLap: lc.CurrentLap,
+		TotalLaps:  lc.TotalLaps,
+	}, nil
+}
+
+// BuildLapCountUpdate parses LapCount from update messages.
+func BuildLapCountUpdate(data []byte) (*LapCountData, error) {
+	var updateData UpdateData
+	if err := json.Unmarshal(data, &updateData); err != nil {
+		return nil, err
+	}
+	for _, message := range updateData.M {
+		elements := message.A
+		if len(elements) < 2 {
+			continue
+		}
+		if elements[0] != "LapCount" {
+			continue
+		}
+		lcMap, ok := elements[1].(map[string]interface{})
+		if !ok {
+			continue
+		}
+		lcBytes, err := json.Marshal(lcMap)
+		if err != nil {
+			continue
+		}
+		var lc LapCountData
+		if err := json.Unmarshal(lcBytes, &lc); err != nil {
+			continue
+		}
+		return &lc, nil
+	}
+	return nil, fmt.Errorf("no lap count data found")
+}
+
 // BuildWeatherData parses WeatherData from the initial snapshot.
 func BuildWeatherData(data []byte) (*Weather, error) {
 	var initialData InitialData

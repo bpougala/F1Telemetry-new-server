@@ -71,6 +71,7 @@ func FetchSessions(dbClient *dynamodb.Client, ctx context.Context, meetingKey in
 
 	var sessions []model.Session
 	for _, item := range result.Items {
+		totalLaps := getIntAttr(item, "TotalLaps")
 		session := model.Session{
 			SessionKey:  getIntAttr(item, "SessionKey"),
 			MeetingKey:  getIntAttr(item, "MeetingKey"),
@@ -80,6 +81,9 @@ func FetchSessions(dbClient *dynamodb.Client, ctx context.Context, meetingKey in
 			SessionType: getStringAttr(item, "Type"),
 			GmtOffset:   getStringAttr(item, "GmtOffset"),
 			Status:      getStringAttr(item, "ArchiveStatus"),
+		}
+		if totalLaps > 0 {
+			session.TotalLaps = &totalLaps
 		}
 		sessions = append(sessions, session)
 	}

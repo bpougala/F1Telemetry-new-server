@@ -368,6 +368,29 @@ func (r *subscriptionResolver) QualifyingData(ctx context.Context) (<-chan *mode
 	return qualifyingData, nil
 }
 
+// LapCount is the resolver for the lapCount subscription field.
+func (r *subscriptionResolver) LapCount(ctx context.Context) (<-chan *model.LapCount, error) {
+	id := dataingestor.GenerateRandomString(8)
+	lapCount := make(chan *model.LapCount, 1)
+
+	go func() {
+		<-ctx.Done()
+		r.mu.Lock()
+		delete(r.LapCountObservers, id)
+		r.mu.Unlock()
+	}()
+	r.mu.Lock()
+	r.LapCountObservers[id] = lapCount
+	if r.CurrentLapCount != nil {
+		select {
+		case lapCount <- r.CurrentLapCount:
+		default:
+		}
+	}
+	r.mu.Unlock()
+	return lapCount, nil
+}
+
 // Query returns QueryResolver implementation.
 func (r *Resolver) Query() QueryResolver { return &queryResolver{r} }
 

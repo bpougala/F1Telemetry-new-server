@@ -7,11 +7,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
-	"github.com/aws/aws-sdk-go-v2/service/dynamodb/types"
-	"github.com/aws/aws-sdk-go-v2/service/s3"
-	"github.com/gorilla/websocket"
 	"io"
 	"net/http"
 	"net/http/cookiejar"
@@ -20,6 +15,12 @@ import (
 	"os/signal"
 	"strconv"
 	"time"
+
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
+	"github.com/aws/aws-sdk-go-v2/service/dynamodb/types"
+	"github.com/aws/aws-sdk-go-v2/service/s3"
+	"github.com/gorilla/websocket"
 )
 
 type Connection struct {
@@ -215,6 +216,10 @@ func processInitialSnapshot(msg []byte, sessionKey int, dbClient *dynamodb.Clien
 		sessionName = sessionInfo.Name
 		hub.SetSessionKey(sessionKey)
 		resolver.ResetSegmentCounts()
+		lapCount, lcErr := BuildLapCount(msg)
+		if lcErr == nil {
+			sessionInfo.TotalLaps = lapCount.TotalLaps
+		}
 		err = SaveSession(dbClient, &ctx, sessionInfo)
 		if err != nil {
 			fmt.Println("error saving session info:", err)
@@ -260,6 +265,13 @@ func processInitialSnapshot(msg []byte, sessionKey int, dbClient *dynamodb.Clien
 	weatherData, err := BuildWeatherData(msg)
 	if err == nil {
 		processWeather(weatherData, sessionKey, dbClient, ctx, resolver)
+	}
+	lapCount, err := BuildLapCount(msg)
+	if err == nil {
+		resolver.NotifyLapCountSubscribers(&model.LapCount{
+			CurrentLap: lapCount.CurrentLap,
+			TotalLaps:  lapCount.TotalLaps,
+		})
 	}
 	positionZCompressed, err := ExtractPositionZCompressed(msg)
 	if err == nil {
@@ -421,6 +433,14 @@ func processUpdateMessages(msg []byte, sessionKey int, dbClient *dynamodb.Client
 			if err == nil {
 				processWeather(weatherData, sessionKey, dbClient, ctx, resolver)
 			}
+		case "LapCount":
+			lapCount, err := BuildLapCountUpdate(msg)
+			if err == nil {
+				resolver.NotifyLapCountSubscribers(&model.LapCount{
+					CurrentLap: lapCount.CurrentLap,
+					TotalLaps:  lapCount.TotalLaps,
+				})
+			}
 		}
 	}
 	return sessionKey
@@ -558,6 +578,9 @@ func processRaceControl(raceControlMessages []RaceControl, sessionKey int, dbCli
 		raceControl.Category = &message.Category
 		raceControl.Date = message.Utc
 		raceControl.Flag = &message.Flag
+		lapNumber := message.LapNumber
+		raceControl.LapNumber = &lapNumber
+		raceControl.Scope = &message.Scope
 		raceControlModel = append(raceControlModel, &raceControl)
 	}
 	resolver.NotifyRaceControlSubscribers(raceControlModel)

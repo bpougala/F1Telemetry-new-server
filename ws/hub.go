@@ -95,6 +95,10 @@ func (h *Hub) RegisterOnResolver(resolver *graph.Resolver) {
 	qualifyingDataCh := make(chan *model.QualifyingData, 16)
 	resolver.RegisterQualifyingDataObserver("ws-hub", qualifyingDataCh)
 	go h.forwardQualifyingData(qualifyingDataCh)
+
+	lapCountCh := make(chan *model.LapCount, 16)
+	resolver.RegisterLapCountObserver("ws-hub", lapCountCh)
+	go h.forwardLapCount(lapCountCh)
 }
 
 func (h *Hub) forwardLapTimes(ch <-chan []*model.LapTime) {
@@ -148,6 +152,12 @@ func (h *Hub) forwardTrackStatus(ch <-chan []*model.TrackStatus) {
 func (h *Hub) forwardQualifyingData(ch <-chan *model.QualifyingData) {
 	for data := range ch {
 		h.broadcast("qualifyingData", "data", data)
+	}
+}
+
+func (h *Hub) forwardLapCount(ch <-chan *model.LapCount) {
+	for data := range ch {
+		h.broadcast("lapCount", "data", data)
 	}
 }
 

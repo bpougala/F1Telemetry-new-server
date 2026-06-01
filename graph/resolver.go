@@ -21,6 +21,7 @@ type Resolver struct {
 	CurrentWeather             *model.Weather
 	CurrentDriverLocations     []*model.DriverPosition
 	CurrentQualifyingData      *model.QualifyingData
+	CurrentLapCount            *model.LapCount
 	CurrentSegmentCounts       [3]int
 	LapTimeObservers           map[string]chan []*model.LapTime
 	PositionObservers          map[string]chan []*model.Position
@@ -33,6 +34,7 @@ type Resolver struct {
 	WeatherObservers           map[string]chan *model.Weather
 	DriverLocationObservers    map[string]chan []*model.DriverPosition
 	QualifyingDataObservers    map[string]chan *model.QualifyingData
+	LapCountObservers          map[string]chan *model.LapCount
 	mu                         sync.Mutex
 }
 
@@ -56,6 +58,7 @@ func NewResolver() *Resolver {
 		WeatherObservers:           make(map[string]chan *model.Weather),
 		DriverLocationObservers:    make(map[string]chan []*model.DriverPosition),
 		QualifyingDataObservers:    make(map[string]chan *model.QualifyingData),
+		LapCountObservers:          make(map[string]chan *model.LapCount),
 	}
 }
 
@@ -255,6 +258,24 @@ func (r *Resolver) RegisterQualifyingDataObserver(id string, ch chan *model.Qual
 	r.mu.Lock()
 	defer r.mu.Unlock()
 	r.QualifyingDataObservers[id] = ch
+}
+
+func (r *Resolver) NotifyLapCountSubscribers(lapCount *model.LapCount) {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	r.CurrentLapCount = lapCount
+	for _, observer := range r.LapCountObservers {
+		select {
+		case observer <- lapCount:
+		default:
+		}
+	}
+}
+
+func (r *Resolver) RegisterLapCountObserver(id string, ch chan *model.LapCount) {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	r.LapCountObservers[id] = ch
 }
 
 func (r *Resolver) UpdateSegmentCounts(segments []*model.Segment) {

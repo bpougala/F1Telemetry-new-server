@@ -345,6 +345,11 @@ type InitialData struct {
 	I string `json:"I"`
 }
 
+type LapCountData struct {
+	CurrentLap int `json:"CurrentLap"`
+	TotalLaps  int `json:"TotalLaps"`
+}
+
 type DriverList struct {
 	R struct {
 		DriverList map[string]DriverData `json:"DriverList"`
@@ -456,7 +461,7 @@ type RaceControl struct {
 	Flag       string `json:"Flag"`
 	Scope      string `json:"Scope"`
 	Message    string `json:"Message"`
-	LapNumber  *int   `json:"LapNumber"`
+	LapNumber  int    `json:"Lap" mapstructure:"Lap"`
 }
 
 type RawRaceControl struct {

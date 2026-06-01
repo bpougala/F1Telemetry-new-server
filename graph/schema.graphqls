@@ -30,6 +30,7 @@ type Subscription {
   weather: Weather!
   driverLocations: [DriverPosition!]!
   qualifyingData: QualifyingData!
+  lapCount: LapCount!
 }
 
 type Session {
@@ -41,6 +42,7 @@ type Session {
   session_type: String!
   meeting_key: Int!
   status: String!
+  total_laps: Int
 }
 
 type Meeting {
@@ -229,4 +231,9 @@ type SegmentCounts {
   sector_1: Int!
   sector_2: Int!
   sector_3: Int!
+}
+
+type LapCount {
+  current_lap: Int!
+  total_laps: Int!
 }

@@ -42,6 +42,7 @@ func SaveSession(dbClient *dynamodb.Client, ctx *context.Context, session Sessio
 		"MeetingKey":    &types.AttributeValueMemberN{Value: fmt.Sprintf("%d", session.MeetingKey)},
 		"Name":          &types.AttributeValueMemberS{Value: session.Name},
 		"Path":          &types.AttributeValueMemberS{Value: session.Path},
+		"TotalLaps":     &types.AttributeValueMemberN{Value: fmt.Sprintf("%d", session.TotalLaps)},
 	}
 	_, err := dbClient.PutItem(*ctx, &dynamodb.PutItemInput{
 		TableName: aws.String("sessions"),
@@ -274,6 +275,7 @@ func SaveRaceControlMessages(dbClient *dynamodb.Client, ctx *context.Context, se
 			"Utc":        &types.AttributeValueMemberN{Value: fmt.Sprintf("%d", timeStamp)},
 			"Flag":       &types.AttributeValueMemberS{Value: dereferenceString(flag)},
 			"Scope":      &types.AttributeValueMemberS{Value: dereferenceString(scope)},
+			"LapNumber":  &types.AttributeValueMemberN{Value: fmt.Sprintf("%d", dereferenceInt(raceControlMessage.LapNumber))},
 		}
 		_, err = dbClient.PutItem(*ctx, &dynamodb.PutItemInput{
 			TableName: aws.String("racecontrol"),
@@ -289,6 +291,13 @@ func SaveRaceControlMessages(dbClient *dynamodb.Client, ctx *context.Context, se
 func dereferenceString(value *string) string {
 	if value == nil {
 		return ""
+	}
+	return *value
+}
+
+func dereferenceInt(value *int) int {
+	if value == nil {
+		return 0
 	}
 	return *value
 }

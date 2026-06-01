@@ -91,6 +91,11 @@ type ComplexityRoot struct {
 		StSpeed         func(childComplexity int) int
 	}
 
+	LapCount struct {
+		CurrentLap func(childComplexity int) int
+		TotalLaps  func(childComplexity int) int
+	}
+
 	LapTime struct {
 		BestLapTime             func(childComplexity int) int
 		BestLapTimes            func(childComplexity int) int
@@ -208,6 +213,7 @@ type ComplexityRoot struct {
 		SessionName func(childComplexity int) int
 		SessionType func(childComplexity int) int
 		Status      func(childComplexity int) int
+		TotalLaps   func(childComplexity int) int
 	}
 
 	Stint struct {
@@ -225,6 +231,7 @@ type ComplexityRoot struct {
 	Subscription struct {
 		CarData         func(childComplexity int) int
 		DriverLocations func(childComplexity int) int
+		LapCount        func(childComplexity int) int
 		LapTimes        func(childComplexity int) int
 		Positions       func(childComplexity int) int
 		QualifyingData  func(childComplexity int) int
@@ -302,6 +309,7 @@ type SubscriptionResolver interface {
 	Weather(ctx context.Context) (<-chan *model.Weather, error)
 	DriverLocations(ctx context.Context) (<-chan []*model.DriverPosition, error)
 	QualifyingData(ctx context.Context) (<-chan *model.QualifyingData, error)
+	LapCount(ctx context.Context) (<-chan *model.LapCount, error)
 }
 
 type executableSchema struct {
@@ -532,6 +540,20 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Lap.StSpeed(childComplexity), true
+
+	case "LapCount.current_lap":
+		if e.complexity.LapCount.CurrentLap == nil {
+			break
+		}
+
+		return e.complexity.LapCount.CurrentLap(childComplexity), true
+
+	case "LapCount.total_laps":
+		if e.complexity.LapCount.TotalLaps == nil {
+			break
+		}
+
+		return e.complexity.LapCount.TotalLaps(childComplexity), true
 
 	case "LapTime.best_lap_time":
 		if e.complexity.LapTime.BestLapTime == nil {
@@ -1138,6 +1160,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Session.Status(childComplexity), true
 
+	case "Session.total_laps":
+		if e.complexity.Session.TotalLaps == nil {
+			break
+		}
+
+		return e.complexity.Session.TotalLaps(childComplexity), true
+
 	case "Stint.compound":
 		if e.complexity.Stint.Compound == nil {
 			break
@@ -1214,6 +1243,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Subscription.DriverLocations(childComplexity), true
+
+	case "Subscription.lapCount":
+		if e.complexity.Subscription.LapCount == nil {
+			break
+		}
+
+		return e.complexity.Subscription.LapCount(childComplexity), true
 
 	case "Subscription.lapTimes":
 		if e.complexity.Subscription.LapTimes == nil {
@@ -3164,6 +3200,94 @@ func (ec *executionContext) fieldContext_Lap_lap_number(_ context.Context, field
 	return fc, nil
 }
 
+func (ec *executionContext) _LapCount_current_lap(ctx context.Context, field graphql.CollectedField, obj *model.LapCount) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_LapCount_current_lap(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.CurrentLap, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(int)
+	fc.Result = res
+	return ec.marshalNInt2int(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_LapCount_current_lap(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "LapCount",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _LapCount_total_laps(ctx context.Context, field graphql.CollectedField, obj *model.LapCount) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_LapCount_total_laps(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.TotalLaps, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(int)
+	fc.Result = res
+	return ec.marshalNInt2int(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_LapCount_total_laps(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "LapCount",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _LapTime_session_key(ctx context.Context, field graphql.CollectedField, obj *model.LapTime) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_LapTime_session_key(ctx, field)
 	if err != nil {
@@ -5084,6 +5208,8 @@ func (ec *executionContext) fieldContext_Query_sessions(ctx context.Context, fie
 				return ec.fieldContext_Session_meeting_key(ctx, field)
 			case "status":
 				return ec.fieldContext_Session_status(ctx, field)
+			case "total_laps":
+				return ec.fieldContext_Session_total_laps(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Session", field.Name)
 		},
@@ -7083,6 +7209,47 @@ func (ec *executionContext) fieldContext_Session_status(_ context.Context, field
 	return fc, nil
 }
 
+func (ec *executionContext) _Session_total_laps(ctx context.Context, field graphql.CollectedField, obj *model.Session) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Session_total_laps(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.TotalLaps, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*int)
+	fc.Result = res
+	return ec.marshalOInt2ᚖint(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Session_total_laps(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Session",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Stint_racing_number(ctx context.Context, field graphql.CollectedField, obj *model.Stint) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Stint_racing_number(ctx, field)
 	if err != nil {
@@ -8272,6 +8439,70 @@ func (ec *executionContext) fieldContext_Subscription_qualifyingData(_ context.C
 				return ec.fieldContext_QualifyingData_parts(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type QualifyingData", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Subscription_lapCount(ctx context.Context, field graphql.CollectedField) (ret func(ctx context.Context) graphql.Marshaler) {
+	fc, err := ec.fieldContext_Subscription_lapCount(ctx, field)
+	if err != nil {
+		return nil
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = nil
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Subscription().LapCount(rctx)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return nil
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return nil
+	}
+	return func(ctx context.Context) graphql.Marshaler {
+		select {
+		case res, ok := <-resTmp.(<-chan *model.LapCount):
+			if !ok {
+				return nil
+			}
+			return graphql.WriterFunc(func(w io.Writer) {
+				w.Write([]byte{'{'})
+				graphql.MarshalString(field.Alias).MarshalGQL(w)
+				w.Write([]byte{':'})
+				ec.marshalNLapCount2ᚖF1TelemetryᚑnewᚑserverᚋgraphᚋmodelᚐLapCount(ctx, field.Selections, res).MarshalGQL(w)
+				w.Write([]byte{'}'})
+			})
+		case <-ctx.Done():
+			return nil
+		}
+	}
+}
+
+func (ec *executionContext) fieldContext_Subscription_lapCount(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Subscription",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "current_lap":
+				return ec.fieldContext_LapCount_current_lap(ctx, field)
+			case "total_laps":
+				return ec.fieldContext_LapCount_total_laps(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type LapCount", field.Name)
 		},
 	}
 	return fc, nil
@@ -11528,6 +11759,50 @@ func (ec *executionContext) _Lap(ctx context.Context, sel ast.SelectionSet, obj 
 	return out
 }
 
+var lapCountImplementors = []string{"LapCount"}
+
+func (ec *executionContext) _LapCount(ctx context.Context, sel ast.SelectionSet, obj *model.LapCount) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, lapCountImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("LapCount")
+		case "current_lap":
+			out.Values[i] = ec._LapCount_current_lap(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "total_laps":
+			out.Values[i] = ec._LapCount_total_laps(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.processDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
 var lapTimeImplementors = []string{"LapTime"}
 
 func (ec *executionContext) _LapTime(ctx context.Context, sel ast.SelectionSet, obj *model.LapTime) graphql.Marshaler {
@@ -12505,6 +12780,8 @@ func (ec *executionContext) _Session(ctx context.Context, sel ast.SelectionSet, 
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
+		case "total_laps":
+			out.Values[i] = ec._Session_total_laps(ctx, field, obj)
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -12642,6 +12919,8 @@ func (ec *executionContext) _Subscription(ctx context.Context, sel ast.Selection
 		return ec._Subscription_driverLocations(ctx, fields[0])
 	case "qualifyingData":
 		return ec._Subscription_qualifyingData(ctx, fields[0])
+	case "lapCount":
+		return ec._Subscription_lapCount(ctx, fields[0])
 	default:
 		panic("unknown field " + strconv.Quote(fields[0].Name))
 	}
@@ -13447,6 +13726,20 @@ func (ec *executionContext) marshalNInt2ᚕᚖint(ctx context.Context, sel ast.S
 	}
 
 	return ret
+}
+
+func (ec *executionContext) marshalNLapCount2F1TelemetryᚑnewᚑserverᚋgraphᚋmodelᚐLapCount(ctx context.Context, sel ast.SelectionSet, v model.LapCount) graphql.Marshaler {
+	return ec._LapCount(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNLapCount2ᚖF1TelemetryᚑnewᚑserverᚋgraphᚋmodelᚐLapCount(ctx context.Context, sel ast.SelectionSet, v *model.LapCount) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._LapCount(ctx, sel, v)
 }
 
 func (ec *executionContext) marshalNLapTime2ᚕᚖF1TelemetryᚑnewᚑserverᚋgraphᚋmodelᚐLapTime(ctx context.Context, sel ast.SelectionSet, v []*model.LapTime) graphql.Marshaler {

@@ -48,6 +48,11 @@ type Lap struct {
 	LapNumber       int      `json:"lap_number"`
 }
 
+type LapCount struct {
+	CurrentLap int `json:"current_lap"`
+	TotalLaps  int `json:"total_laps"`
+}
+
 type LapTime struct {
 	SessionKey              int                  `json:"session_key"`
 	RacingNumber            string               `json:"racing_number"`
@@ -154,6 +159,7 @@ type Session struct {
 	SessionType string `json:"session_type"`
 	MeetingKey  int    `json:"meeting_key"`
 	Status      string `json:"status"`
+	TotalLaps   *int   `json:"total_laps,omitempty"`
 }
 
 type Stint struct {

@@ -12,6 +12,7 @@ type SessionInfoDB struct {
 	MeetingKey    int    `json:"MeetingKey"`
 	Name          string `json:"Name"`
 	Path          string `json:"Path"`
+	TotalLaps     int    `json:"TotalLaps"`
 }
 
 type MeetingDataDB struct {

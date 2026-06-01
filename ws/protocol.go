@@ -11,6 +11,7 @@ var ValidTopics = map[string]bool{
 	"segments":       true,
 	"trackStatus":    true,
 	"qualifyingData": true,
+	"lapCount":       true,
 }
 
 // InboundMessage represents a message from the client.

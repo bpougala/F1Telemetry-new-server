@@ -1,0 +1,4 @@
+{
+  "negotiateBaseURL": "https://livetiming.formula1.com",
+  "connectBaseURL": "wss://livetiming.formula1.com"
+}

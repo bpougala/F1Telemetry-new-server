@@ -1,6 +1,7 @@
 package livetiming
 
 import (
+	"F1Telemetry-new-server/config"
 	"F1Telemetry-new-server/graph"
 	"F1Telemetry-new-server/graph/model"
 	"F1Telemetry-new-server/ws"
@@ -39,7 +40,7 @@ var upgrader = websocket.Upgrader{
 	WriteBufferSize: 1024,
 }
 
-func Negotiate() ([]*http.Cookie, Connection, error) {
+func Negotiate(cfg *config.Config) ([]*http.Cookie, Connection, error) {
 	data := struct {
 		Name string `json:"name"`
 	}{Name: "Streaming"}
@@ -51,7 +52,7 @@ func Negotiate() ([]*http.Cookie, Connection, error) {
 	if err != nil {
 		return nil, connection, err
 	}
-	websocketUrl := fmt.Sprintf("https://livetiming.formula1.com/signalr/negotiate?connectionData=%s&clientProtocol=1.5", string(jsonData))
+	websocketUrl := fmt.Sprintf("%s/signalr/negotiate?connectionData=%s&clientProtocol=1.5", cfg.NegotiateBaseURL, string(jsonData))
 	req, err := http.NewRequest("GET", websocketUrl, nil)
 	if err != nil {
 		return nil, connection, err
@@ -91,7 +92,7 @@ type SubscribeMessage struct {
 	I int        `json:"I"`
 }
 
-func SetWebSocket(connectionToken string, cookies []*http.Cookie) (*websocket.Conn, *http.Response, error) {
+func SetWebSocket(cfg *config.Config, connectionToken string, cookies []*http.Cookie) (*websocket.Conn, *http.Response, error) {
 	connectionDataObj := ConnectionData{Name: "Streaming"}
 	connectionDataList := []ConnectionData{connectionDataObj}
 	connectionData, err := json.Marshal(connectionDataList)
@@ -99,7 +100,7 @@ func SetWebSocket(connectionToken string, cookies []*http.Cookie) (*websocket.Co
 		return nil, nil, err
 	}
 	connectionDataStr := string(connectionData)
-	path := fmt.Sprintf("wss://livetiming.formula1.com/signalr/connect?clientProtocol=1.5&transport=webSockets&connectionToken=%s&connectionData=%s", url.QueryEscape(connectionToken), url.QueryEscape(connectionDataStr))
+	path := fmt.Sprintf("%s/signalr/connect?clientProtocol=1.5&transport=webSockets&connectionToken=%s&connectionData=%s", cfg.ConnectBaseURL, url.QueryEscape(connectionToken), url.QueryEscape(connectionDataStr))
 	uri, err := url.Parse(path)
 	if err != nil {
 		return nil, nil, err
@@ -177,7 +178,7 @@ func ProcessSessionDataAndInfo(connection *websocket.Conn, dbClient *dynamodb.Cl
 		}
 	}()
 	logger := NewS3Logger(s3Client, ctx)
-	var sessionKey int
+	var sessionKey, meetingKey int
 	for {
 		_, message, err := connection.ReadMessage()
 		if err != nil {
@@ -194,15 +195,15 @@ func ProcessSessionDataAndInfo(connection *websocket.Conn, dbClient *dynamodb.Cl
 
 		if _, hasR := raw["R"]; hasR {
 			// Initial snapshot — dispatch to all initial parsers
-			sessionKey = processInitialSnapshot(message, sessionKey, dbClient, s3Client, ctx, resolver, hub, logger)
+			sessionKey, meetingKey = processInitialSnapshot(message, sessionKey, meetingKey, dbClient, s3Client, ctx, resolver, hub, logger)
 		} else if _, hasM := raw["M"]; hasM {
 			// Update messages — dispatch by topic
-			sessionKey = processUpdateMessages(message, sessionKey, dbClient, ctx, resolver, hub, logger)
+			sessionKey, meetingKey = processUpdateMessages(message, sessionKey, meetingKey, dbClient, ctx, resolver, hub, logger)
 		}
 	}
 }
 
-func processInitialSnapshot(msg []byte, sessionKey int, dbClient *dynamodb.Client, s3Client *s3.Client, ctx context.Context, resolver *graph.Resolver, hub *ws.Hub, logger *S3Logger) int {
+func processInitialSnapshot(msg []byte, sessionKey int, meetingKey int, dbClient *dynamodb.Client, s3Client *s3.Client, ctx context.Context, resolver *graph.Resolver, hub *ws.Hub, logger *S3Logger) (int, int) {
 	meetingData, err := BuildMeetingData(msg)
 	raceName := ""
 	if err == nil {
@@ -220,6 +221,7 @@ func processInitialSnapshot(msg []byte, sessionKey int, dbClient *dynamodb.Clien
 	sessionName := ""
 	if err == nil && sessionInfo.Key != 0 {
 		sessionKey = sessionInfo.Key
+		meetingKey = sessionInfo.MeetingKey
 		sessionName = sessionInfo.Name
 		hub.SetSessionKey(sessionKey)
 		resolver.ResetSegmentCounts()
@@ -303,14 +305,14 @@ func processInitialSnapshot(msg []byte, sessionKey int, dbClient *dynamodb.Clien
 	if err == nil {
 		processSegments(segments, resolver)
 	}
-	return sessionKey
+	return sessionKey, meetingKey
 }
 
-func processUpdateMessages(msg []byte, sessionKey int, dbClient *dynamodb.Client, ctx context.Context, resolver *graph.Resolver, hub *ws.Hub, logger *S3Logger) int {
+func processUpdateMessages(msg []byte, sessionKey int, meetingKey int, dbClient *dynamodb.Client, ctx context.Context, resolver *graph.Resolver, hub *ws.Hub, logger *S3Logger) (int, int) {
 	var updateData UpdateData
 	if err := json.Unmarshal(msg, &updateData); err != nil {
 		fmt.Println("error unmarshaling update data:", err)
-		return sessionKey
+		return sessionKey, meetingKey
 	}
 	for _, message := range updateData.M {
 		if len(message.A) < 2 {
@@ -332,6 +334,7 @@ func processUpdateMessages(msg []byte, sessionKey int, dbClient *dynamodb.Client
 					_, err := dbClient.UpdateItem(ctx, &dynamodb.UpdateItemInput{
 						TableName: aws.String("sessions"),
 						Key: map[string]types.AttributeValue{
+							"MeetingKey": &types.AttributeValueMemberN{Value: fmt.Sprintf("%d", meetingKey)},
 							"SessionKey": &types.AttributeValueMemberN{Value: fmt.Sprintf("%d", sessionKey)},
 						},
 						UpdateExpression: aws.String("SET ArchiveStatus = :newStatus"),
@@ -344,6 +347,7 @@ func processUpdateMessages(msg []byte, sessionKey int, dbClient *dynamodb.Client
 					}
 				} else {
 					sessionKey = sessionInfo.Key
+					meetingKey = sessionInfo.MeetingKey
 					hub.SetSessionKey(sessionKey)
 					resolver.ResetSegmentCounts()
 					err = SaveSession(dbClient, &ctx, sessionInfo)
@@ -359,6 +363,7 @@ func processUpdateMessages(msg []byte, sessionKey int, dbClient *dynamodb.Client
 					_, err := dbClient.UpdateItem(ctx, &dynamodb.UpdateItemInput{
 						TableName: aws.String("sessions"),
 						Key: map[string]types.AttributeValue{
+							"MeetingKey": &types.AttributeValueMemberN{Value: fmt.Sprintf("%d", meetingKey)},
 							"SessionKey": &types.AttributeValueMemberN{Value: fmt.Sprintf("%d", sessionKey)},
 						},
 						UpdateExpression: aws.String("SET ArchiveStatus = :newStatus"),
@@ -450,7 +455,7 @@ func processUpdateMessages(msg []byte, sessionKey int, dbClient *dynamodb.Client
 			}
 		}
 	}
-	return sessionKey
+	return sessionKey, meetingKey
 }
 
 func processPositions(positions []Position, sessionKey int, dbClient *dynamodb.Client, ctx context.Context, resolver *graph.Resolver) {

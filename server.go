@@ -3,9 +3,11 @@ package main
 import (
 	"F1Telemetry-new-server/auth"
 	"F1Telemetry-new-server/backfill"
+	appconfig "F1Telemetry-new-server/config"
 	dataingestor "F1Telemetry-new-server/data-ingestor"
 	"F1Telemetry-new-server/graph"
 	"F1Telemetry-new-server/livetiming"
+	"F1Telemetry-new-server/mocksignalr"
 	"F1Telemetry-new-server/ws"
 	"context"
 	"fmt"
@@ -35,8 +37,24 @@ func main() {
 		backfill.RunCircuits()
 		return
 	}
+	if len(os.Args) > 1 && os.Args[1] == "mockserver" {
+		file := "australian-fp2-1.txt"
+		if len(os.Args) > 2 {
+			file = os.Args[2]
+		}
+		addr := "127.0.0.1:9999"
+		log.Printf("mock SignalR server streaming %s on %s", file, addr)
+		if err := http.ListenAndServe(addr, mocksignalr.Handler(file)); err != nil {
+			log.Fatalf("mock server failed: %v", err)
+		}
+		return
+	}
 
 	ctx := context.Background()
+	cfg, err := appconfig.Load()
+	if err != nil {
+		log.Fatalf("Failed to load config: %v", err)
+	}
 	dbClient, err := dataingestor.GetDynamoClient(&ctx)
 	if err != nil {
 		log.Fatalf("Failed to connect to MongoDB: %v", err)
@@ -90,7 +108,7 @@ func main() {
 		maxBackoff := 60 * time.Second
 
 		for {
-			cookies, connObject, err := livetiming.Negotiate()
+			cookies, connObject, err := livetiming.Negotiate(cfg)
 			if err != nil {
 				fmt.Println("negotiate failed, retrying:", err)
 				time.Sleep(backoff)
@@ -102,7 +120,7 @@ func main() {
 			retries := 10
 			for retries > 0 {
 				var resp *http.Response
-				connection, resp, err = livetiming.SetWebSocket(connObject.ConnectionToken, cookies)
+				connection, resp, err = livetiming.SetWebSocket(cfg, connObject.ConnectionToken, cookies)
 				if err == nil {
 					break
 				}

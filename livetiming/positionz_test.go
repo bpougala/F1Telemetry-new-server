@@ -1,6 +1,7 @@
 package livetiming
 
 import (
+	"F1Telemetry-new-server/config"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -16,7 +17,11 @@ import (
 func connectWithRetry(t *testing.T) *websocket.Conn {
 	t.Helper()
 
-	cookies, connObject, err := Negotiate()
+	cfg := &config.Config{
+		NegotiateBaseURL: "https://livetiming.formula1.com",
+		ConnectBaseURL:   "wss://livetiming.formula1.com",
+	}
+	cookies, connObject, err := Negotiate(cfg)
 	if err != nil {
 		t.Fatalf("Negotiate failed: %v", err)
 	}
@@ -24,7 +29,7 @@ func connectWithRetry(t *testing.T) *websocket.Conn {
 
 	var connection *websocket.Conn
 	for attempt := 1; attempt <= 10; attempt++ {
-		connection, _, err = SetWebSocket(connObject.ConnectionToken, cookies)
+		connection, _, err = SetWebSocket(cfg, connObject.ConnectionToken, cookies)
 		if err == nil {
 			t.Logf("WebSocket connected on attempt %d", attempt)
 			return connection

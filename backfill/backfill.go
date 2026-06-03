@@ -216,7 +216,7 @@ func backfillYear(dbClient *dynamodb.Client, ctx context.Context, year int, forc
 }
 
 func backfillSession(dbClient *dynamodb.Client, ctx context.Context, meeting IndexMeeting, session IndexSession) {
-	fmt.Printf("  Backfilling session %s...\n", session)
+	fmt.Printf("  Backfilling session %s...\n", session.Name)
 	if session.Path == "" {
 		fmt.Printf("  Skipping session %d (%s) — no path\n", session.Key, session.Name)
 		return

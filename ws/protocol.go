@@ -28,4 +28,9 @@ type OutboundMessage struct {
 	Message    string      `json:"message,omitempty"`
 	SessionKey int         `json:"sessionKey,omitempty"`
 	Topics     []string    `json:"topics,omitempty"`
+	// Seq is a per-topic monotonic counter set on live "data" broadcasts, letting
+	// clients detect dropped messages as gaps in the sequence.
+	Seq uint64 `json:"seq,omitempty"`
+	// SentAt is the broadcast time in unix milliseconds, for end-to-end latency.
+	SentAt int64 `json:"sentAt,omitempty"`
 }

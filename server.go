@@ -63,7 +63,12 @@ func main() {
 	if err != nil {
 		log.Fatalf("Failed to load AWS config for S3: %v", err)
 	}
-	s3Client := s3.NewFromConfig(awsCfg)
+	s3Client := s3.NewFromConfig(awsCfg, func(o *s3.Options) {
+		// LocalStack (and other S3-compatible endpoints) require path-style addressing.
+		if os.Getenv("AWS_ENDPOINT_URL") != "" {
+			o.UsePathStyle = true
+		}
+	})
 	port := os.Getenv("PORT")
 	if port == "" {
 		port = defaultPort
@@ -84,10 +89,17 @@ func main() {
 		InitFunc: auth.WebsocketInitFunc(valkeyClient),
 	})
 
+	// In local mode, skip /ws auth (ServeWs treats a nil valkey client as "no auth")
+	// so load-test clients can connect without a seeded session token.
+	wsValkey := valkeyClient
+	if os.Getenv("APP_ENV") == "local" {
+		wsValkey = nil
+	}
+
 	http.Handle("/", playground.Handler("GraphQL playground", "/query"))
 	http.Handle("/query", auth.Middleware(valkeyClient, server))
 	http.HandleFunc("/ws", func(w http.ResponseWriter, r *http.Request) {
-		ws.ServeWs(hub, w, r, valkeyClient)
+		ws.ServeWs(hub, w, r, wsValkey)
 	})
 
 	log.Printf("connect to http://localhost:%s/ for lots of fun!\n", port)

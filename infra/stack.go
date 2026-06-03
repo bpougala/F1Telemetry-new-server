@@ -321,10 +321,12 @@ UNIT`),
 
 	keyPair := awsec2.KeyPair_FromKeyPairName(stack, jsii.String("KeyPair"), jsii.String("f1telemetry"))
 
-	instance := awsec2.NewInstance(stack, jsii.String("Server"), &awsec2.InstanceProps{
-		Vpc:           vpc,
-		InstanceType:  awsec2.NewInstanceType(jsii.String("t4g.small")),
-		MachineImage:  awsec2.MachineImage_LatestAmazonLinux2023(&awsec2.AmazonLinux2023ImageSsmParameterProps{}),
+	instance := awsec2.NewInstance(stack, jsii.String("ServerARM"), &awsec2.InstanceProps{
+		Vpc:          vpc,
+		InstanceType: awsec2.NewInstanceType(jsii.String("t4g.small")),
+		MachineImage: awsec2.MachineImage_LatestAmazonLinux2023(&awsec2.AmazonLinux2023ImageSsmParameterProps{
+			CpuType: awsec2.AmazonLinuxCpuType_ARM_64,
+		}),
 		SecurityGroup: sg,
 		Role:          role,
 		UserData:      userData,

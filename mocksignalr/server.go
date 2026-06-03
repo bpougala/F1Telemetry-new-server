@@ -72,6 +72,15 @@ func connectHandler(w http.ResponseWriter, r *http.Request, filePath string) {
 	}
 	defer file.Close()
 
+	// MOCK_REPLAY_DELAY paces the stream (e.g. "5ms") so broadcasts occur over a
+	// sustained window for load testing. Unset/0 streams as fast as possible (default).
+	var delay time.Duration
+	if d := os.Getenv("MOCK_REPLAY_DELAY"); d != "" {
+		if parsed, err := time.ParseDuration(d); err == nil {
+			delay = parsed
+		}
+	}
+
 	scanner := bufio.NewScanner(file)
 	// Recorded snapshot lines exceed bufio's 64KB default; allow up to 8MB per line.
 	scanner.Buffer(make([]byte, 0, 1024*1024), 8*1024*1024)
@@ -82,6 +91,9 @@ func connectHandler(w http.ResponseWriter, r *http.Request, filePath string) {
 		}
 		if err := conn.WriteMessage(websocket.TextMessage, line); err != nil {
 			return
+		}
+		if delay > 0 {
+			time.Sleep(delay)
 		}
 	}
 

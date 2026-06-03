@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+	"os"
 	"strings"
 	"sync"
 
@@ -19,6 +20,7 @@ type S3Logger struct {
 	raceName     string
 	sessionName  string
 	partCounters map[string]int
+	disabled     bool
 	mu           sync.Mutex
 }
 
@@ -27,6 +29,9 @@ func NewS3Logger(client *s3.Client, ctx context.Context) *S3Logger {
 		client:       client,
 		ctx:          ctx,
 		partCounters: make(map[string]int),
+		// Per-message archival is irrelevant to load tests and floods S3; allow
+		// disabling it so it doesn't compete with the live broadcast path.
+		disabled: os.Getenv("DISABLE_S3_LOGGER") != "",
 	}
 }
 
@@ -39,6 +44,9 @@ func (l *S3Logger) SetSession(raceName, sessionName string) {
 }
 
 func (l *S3Logger) LogMessage(dataType string, data []byte) {
+	if l.disabled {
+		return
+	}
 	l.mu.Lock()
 	if l.raceName == "" || l.sessionName == "" {
 		l.mu.Unlock()

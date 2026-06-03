@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"sync"
+	"time"
 
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
 )
@@ -20,19 +21,25 @@ type Hub struct {
 	sessionKey int
 	sessionMu  sync.RWMutex
 
+	seqByTopic map[string]uint64
+	seqMu      sync.Mutex
+
 	dbClient *dynamodb.Client
 }
 
 func NewHub(dbClient *dynamodb.Client) *Hub {
 	topics := make(map[string]map[*Client]bool)
+	seqByTopic := make(map[string]uint64)
 	for topic := range ValidTopics {
 		topics[topic] = make(map[*Client]bool)
+		seqByTopic[topic] = 0
 	}
 	return &Hub{
 		clients:    make(map[*Client]bool),
 		topics:     topics,
 		register:   make(chan *Client),
 		unregister: make(chan *Client),
+		seqByTopic: seqByTopic,
 		dbClient:   dbClient,
 	}
 }
@@ -162,10 +169,17 @@ func (h *Hub) forwardLapCount(ch <-chan *model.LapCount) {
 }
 
 func (h *Hub) broadcast(topic, msgType string, payload interface{}) {
+	h.seqMu.Lock()
+	h.seqByTopic[topic]++
+	seq := h.seqByTopic[topic]
+	h.seqMu.Unlock()
+
 	msg := OutboundMessage{
 		Type:    msgType,
 		Topic:   topic,
 		Payload: payload,
+		Seq:     seq,
+		SentAt:  time.Now().UnixMilli(),
 	}
 	jsonBytes, err := json.Marshal(msg)
 	if err != nil {

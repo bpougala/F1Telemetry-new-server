@@ -323,7 +323,7 @@ UNIT`),
 
 	instance := awsec2.NewInstance(stack, jsii.String("Server"), &awsec2.InstanceProps{
 		Vpc:           vpc,
-		InstanceType:  awsec2.NewInstanceType(jsii.String("t3.small")),
+		InstanceType:  awsec2.NewInstanceType(jsii.String("t4g.small")),
 		MachineImage:  awsec2.MachineImage_LatestAmazonLinux2023(&awsec2.AmazonLinux2023ImageSsmParameterProps{}),
 		SecurityGroup: sg,
 		Role:          role,
